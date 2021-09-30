@@ -1,0 +1,23 @@
+@startuml
+title Login
+
+participant Client
+participant LionBit
+database auth
+
+
+Client->LionBit: username + pass256 + totp
+LionBit->auth: Get by username
+auth->LionBit: User auth data
+LionBit->LionBit: Check pass256 and totp against auth data
+
+alt Fail
+LionBit->Client: False
+
+else Success
+  LionBit->LionBit: Encode JWTM2 with scope to access profile and offers.
+end
+
+LionBit->Client: JWTM2
+
+@enduml

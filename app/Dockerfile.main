@@ -1,0 +1,38 @@
+FROM node:14.5.0-buster
+
+USER root
+RUN npm install -g typescript mocha ts-node browserify
+
+ENV USER_ID=1300
+RUN usermod -u $USER_ID node
+
+WORKDIR /home/node/cypherpost/app
+
+
+COPY --chown=node:node package*.json ./
+RUN npm install
+COPY --chown=node:node . .
+RUN tsc
+RUN cd /home/node/cypherpost/app/src/services/client/public/js && npm install
+RUN cd /home/node/cypherpost/app/src/services/client/public && bash compile.bash
+
+USER node
+RUN mkdir -p /home/node/cypherpost/app/moltres/typescript
+RUN mkdir -p /home/node/winston && mkdir /home/node/.keys
+
+USER node
+
+ENV MOLTRES_PORT="3021"
+ENV DB_IP="database"
+ENV DB_PORT="27017"
+ENV DB_NAME="cypherpost"
+ENV DB_AUTH="cp:secret"
+
+ENV KEY_PATH="/home/node/.keys/"
+
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
+VOLUME ["/home/node/.keys","/home/node/winston"]
+EXPOSE $APP_PORT
+CMD ["npm", "start"]
+#------------------------------------------------------------------------------------

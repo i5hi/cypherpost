@@ -1,0 +1,90 @@
+@startuml
+
+title Post
+
+map Post{
+  id => String
+  
+  genesis => DateTime
+  expiry => DateTime
+  
+  username => String
+
+  derivation_scheme => String
+
+  cipher_post_detail => String
+}
+
+map SenderKey {
+  username => String
+  decryption_key* => String
+}
+
+
+map PostDetail {
+  message => String
+  type => OrderType
+  minimum => UInt
+  maximum => UInt
+  fiat_currency => FiatCurrency
+  payment_method => Array<PaymentMethod>
+  rate_type => RateType
+  fixed_rate => Float
+  reference_exchange => ReferenceExchange
+  reference_percent => Float
+  network => Array<BitcoinNetwork>
+}
+
+object BitcoinNetwork{
+  Mainnet,
+  Lightning,
+}
+object PaymentMethod{
+  Cash
+  CashAangadiya
+  CashBankDeposit
+  CashPost
+  UPI
+  IMPS
+  NEFT
+  RTGS
+  Cheque
+}
+
+object OrderType {
+  Buy
+  Sell
+}
+
+object RateType {
+  Fixed
+  Variable
+}
+
+object Visibility{
+  Following (default)
+  FollowingChain 
+  Followers
+  Link
+  Public
+}
+
+object FiatCurrency {
+  INR
+  CAD
+  GBP
+  AUD
+  EUR
+  USD
+  VES
+}
+
+object ReferenceExchange {
+  LocalBitcoins
+  BullBitcoin
+  Strike
+}
+
+@enduml
+
+

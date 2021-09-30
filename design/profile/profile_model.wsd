@@ -1,0 +1,60 @@
+@startuml
+
+title BitcoinerProfile
+
+map Bitcoiner {
+  username => String
+  nickname => String
+  status => String
+
+  recipient_xpub => String
+  derivation_scheme => String
+  
+  contact_info* => Array<String>
+
+  trusted_by_keys => Array<SenderKey>
+  trusting_keys => Array<RecipientKey>
+}
+
+note left
+"*" indicates end-to-end encrypted fields
+end note
+
+map SenderKey {
+  trusted_by_username => String
+  sender_xprv* => String
+  mute => Boolean
+}
+
+
+map RecipientKey {
+  trusting_username => String
+  recipient_xpub => String
+}
+
+Bitcoiner::followers_keys --> SenderKey : Followers sender_xprv* used to encrypt their contact.
+Bitcoiner::follows_keys --> RecipientKey : Follows recipient_xpub used to compute a shared_secret and encrypt self sender_key to further encrypt self contact
+
+
+
+@enduml
+
+
+' m/purpose'/service'/usecase'/index'/revoke'
+
+' PARENT
+' m/128'/0'
+
+
+' RECIPIENT
+' m/128'/0'/0'/0'/0'
+
+
+' PROFILE
+' m/128'/0'/1'/0'/0'
+
+
+' POSTS
+' m/128'/0'/2'/0'/1'
+' m/128'/0'/2'/1'/0'
+' m/128'/0'/2'/2'/0'

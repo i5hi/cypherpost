@@ -1,0 +1,36 @@
+###### CAREFUL WITH CHANGES IN THIS FILE
+
+FROM mongo:4.2-bionic
+
+USER root
+
+ARG USER_ID=1500
+RUN usermod -u ${USER_ID} mongodb
+###### CAREFUL WITH CHANGES IN THIS FILE
+
+RUN  mkdir -p /data/db /data/configdb /docker-entrypoint-initdb.d
+COPY docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY mongod.dev.conf /etc/mongod.conf
+COPY scripts/genesis.js /genesis.js
+
+RUN	chown -R mongodb:mongodb /data/db /data/configdb /docker-entrypoint-initdb.d /etc/mongod.conf /usr/local/bin/docker-entrypoint.sh
+
+VOLUME /data/db /data/configdb 
+###### CAREFUL WITH CHANGES IN THIS FILE
+
+
+###### CAREFUL WITH CHANGES IN THIS FILE
+ENTRYPOINT ["docker-entrypoint.sh"]
+EXPOSE 27017
+CMD ["mongod"]
+###### CAREFUL WITH CHANGES IN THIS FILE
+
+###### CAREFUL WITH CHANGES IN THIS FILE
+
+# docker run --name kj-mongo -it \
+# -p 27017:27017 \
+# -v /data/db:/data/db \
+# -v /data/configdb:/data/configdb \
+# -v /home/ishi/kj-mono/infra/mongo/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d 
+# kj-mongo --config /etc/mongod.conf

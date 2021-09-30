@@ -1,0 +1,20 @@
+ravi{
+  ravi,
+  sound money,
+  jpg,
+  [67817682/128'/0'/0']xpub/1/*
+  0
+  123123123:10293iuoweqjd982uji129e8osj129eoijs,
+  followers_keys: [
+    {
+      username: ishi
+      sender_xprv: myencryptedsecret_toseemycontactinfo,
+      mute: false
+    }
+  ],
+  following_keys: [
+      username: raj
+      recipient_xpub: xpub1209io3uej231e9ouij23lked9uioljk3e3
+  ]
+
+}

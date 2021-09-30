@@ -1,0 +1,18 @@
+https://www.getpagespeed.com/server-setup/security/nginx-honeypot-the-easiest-and-fastest-way-to-block-bots
+
+Implement fail2ban and ModSecurity with OWASP Core Set
+
+# first run the vault-init.conf to get ssl certs
+# in docker-compose use --staging with certbot first then change to --force-renewal
+
+# sudo openssl dhparam -out /mnt/s5persistence/dhparam/dhparam-2048.pem 2048
+
+# docker-compose up -d --force-recreate --no-deps webserver
+
+# call ssl_renew.sh in crontab -e
+
+#  grep CRON /var/log/syslog
+
+
+# docker run --add-host localnode:$(ifconfig en0 | grep inet | grep -v inet6 | awk '{print \$2}') ...
+# in proxypass use localnode instead of localhost or compose container name

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>CypherPost</title>
+  <!-- Font Awesome -->
+  <link rel="icon" type="image/png" href="/img/owl.png"/>
+
+  <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
+  <link rel="stylesheet" type='text/css' href="/css/mdb.min.css" />
+  <link rel="stylesheet" type='text/css' href="/css/light.css" />
+
+
+
+</head>
+
+<body>
+
+  <header>
+    <div class='row'>
+      <nav class="navbar fixed-top navbar-expand-lg navbar-light pink scrolling-navbar">
+        <div class="col-6 outline">
+          <img class="sats-ico" loading="lazy" src='/img/owl.png' href="https://cypherpost.io">
+        </div>
+        <div class="col-5 outline">
+          <a id="exit" class="container rightme outline">Exit</a>
+        </div>
+        <div class="col-1"></div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <br>
+    <div class="container outline">
+      <div class="row outline">
+
+        <ul class="nav nav-tabs outline">
+
+          <div class="col-4">
+
+            <li class="nav-item outline">
+              <a class="nav-link centerme outline" href="posts.html">Posts</a>
+            </li>
+          </div>
+          <div class="col-4">
+
+            <li class="nav-item outline">
+              <a class="nav-link centerme " href="profile.html">Profile</a>
+            </li>
+          </div>
+
+          <div class="col-4">
+
+            <li class="nav-item outline">
+              <a class="nav-link centerme " href="network.html">Network</a>
+            </li>
+          </div>
+
+        </ul>
+
+
+
+      </div>
+
+      <hr>
+
+      <div id="profile_bio" class="container outline bio">
+
+        <div class="row">
+          <div id="profile_nickname" class="col-12 outline nickname">
+            Welcome
+          </div>
+        </div>
+
+        <div class="row outline username">
+          <div id="profile_username" class="col-12">
+
+          </div>
+        </div>
+
+
+        <div class="row outline contact_info">
+          <div id="profile_contact" class="col-12">
+            Add contact info.
+          </div>
+        </div>
+        <div class="row outline status">
+          <div id="profile_status" class="col-12">
+            Add status.
+          </div>
+        </div>
+      </div>
+
+
+      <br>
+
+      <div class="row outline trusting">
+        <div class="col-3">
+          <div class="row outline centerme trusting_title">Trusting</div>
+        </div>
+        <div class="col-3">
+          <div id="profile_trusting" class="row outline centerme trust_value"></div>
+        </div>
+        <div class="col-3">
+          <div class="row outline centerme trusted_by_title">Trusted By</div>
+        </div>
+        <div class="col-3">
+          <div id="profile_trusted_by" class="row outline centerme trust_value"></div>
+        </div>
+      </div>
+
+      <br>
+      <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-12 outline">
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
+          <button id="edit_button" type="button" class="btn" data-toggle="modal" data-target="#edit_profile">
+            Edit
+          </button>
+        </div>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-12 outline">
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
+          <!-- Button trigger modal -->
+          <button id="import_keys_button" type="button" class="btn" data-toggle="modal" data-target="#import_keys">
+            Import
+          </button>
+        </div>
+      </div>
+      <br>
+
+      <div class="row invite">
+        <div class="col-sm-6 col-md-6 col-lg-12 outline">
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
+          <button id="invite_button" class="btn" type="submit">Invite</button>
+          <!-- <script>
+            document.getElementById("invite_button").addEventListener("click", (event) => {
+              event.preventDefault();
+              Profile.edit();
+            });
+          </script> -->
+
+        </div>
+      </div>
+      <br>
+      <div class="row outline invite">
+        <div id="invite_link_space" class="col-12 contact_info">
+
+        </div>
+
+      </div>
+
+
+
+
+    </div>
+    <br>
+  </main>
+
+
+
+  <!-- Import Modal -->
+  <div class="modal fade" id="import_keys" tabindex="-1" role="dialog" aria-labelledby="importKeysFromMnemonic"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Import Encryption Keys</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="import_keys_input" class="" placeholder="12 mnemonic words">
+          <br>
+          <input type="password" id="import_keys_password_input" class="" placeholder="Password">
+        </div>
+        <div class="modal-footer">
+          <button id="import_keys_execute" type="button" class="btn">Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modals -->
+  <div class="modal fade" id="edit_profile" tabindex="-1" role="dialog" aria-labelledby="editProfile"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Edit Profile</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="nickname_input" class="" placeholder="Nickname (Public)">
+          <br>
+          <input type="text" id="status_input" class="" placeholder="Status (Public)">
+          <br>
+          <input type="textx" id="contact_input" class="" placeholder="Contact Info (Private)">
+        </div>
+        <div class="modal-footer">
+          <button id="edit_profile_execute" type="button" class="btn">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <footer class="page-footer font-small teal pt-4">
+
+    <!-- Footer Text -->
+    <div class="container-fluid text-center text-md-left">
+
+      <!-- Copyright -->
+      <div class="footer-copyright text-center py-3">
+
+        <a href="https://cypherpost.io"> cypherpost.io</a> 2021
+        <br>
+
+        <i class="fab fa-bitcoin"></i>
+        <i class="fab fa-linux"></i>
+        <i class="fab fa-creative-commons"></i>
+      </div>
+    </div>
+    <!-- Copyright -->
+
+  </footer>
+  <!-- Footer -->
+  <!-- MDB -->
+
+  <script type="text/javascript" src="/js/bundles/mdb.min.js"></script>
+
+  <!-- Custom scripts -->
+
+  <script type="text/javascript" src="/js/bundles/profile_bundle.js"></script>
+
+</body>
+
+
+
+<div class="end-line"></div>
+
+</html>

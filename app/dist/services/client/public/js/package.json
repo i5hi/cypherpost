@@ -1,0 +1,28 @@
+{
+    "name": "hitmonchan",
+    "version": "1.0.0",
+    "description": "modules for lionbit client",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "node",
+        "modules",
+        "lionbit"
+    ],
+    "author": "ravi5hi",
+    "license": "MIT",
+    "devDependencies": {
+        "chai": "^4.3.4",
+        "mocha": "^9.1.1"
+    },
+    "dependencies": {
+        "axios": "^0.21.4",
+        "bip32": "^2.0.6",
+        "bip39": "^3.0.4",
+        "bitcoinjs-lib": "^5.2.0",
+        "browserify": "^17.0.0",
+        "crypto": "^1.0.1"
+    }
+}

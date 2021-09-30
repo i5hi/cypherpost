@@ -1,0 +1,32 @@
+@startuml
+title 2FA
+
+participant Bitcoiner
+participant LionBit
+database auth
+
+
+Bitcoiner->LionBit: JWTM1 + Request shared_secret_b32
+
+LionBit<->auth: Authenticate JWTM1 & Ensure that tfa_status != "established"
+alt Fail
+LionBit->Bitcoiner: Bad Token! OR 2FA already established
+else Success
+LionBit<->LionBit: Create new shared_secret_b32
+LionBit->auth: Store shared_secret_b32
+LionBit->Bitcoiner: shared_secret_b32
+end
+
+Bitcoiner<->Bitcoiner: Save shared_secret_b32 in authenticator app
+Bitcoiner<->Bitcoiner: Generate totp
+Bitcoiner->LionBit: JWTM1 + TOTP
+
+LionBit<->auth: Authenticate JWTM1 + TOTP
+alt Fail
+LionBit->Bitcoiner: Bad Token! OR Bad TOTP!
+else Success
+LionBit->auth: Update tfa_status to 'established'
+LionBit->Bitcoiner: JWTM2 with scope to access profile & offers
+end
+
+@enduml
