@@ -140,6 +140,7 @@ async function displayProfile(my_profile,my_keys,username) {
   // console.log(other_profile);
   const my_trusted_by = my_profile.trusted_by.map((item) => item.username);
   const my_trusting = my_profile.trusting.map((item) => item.username);
+  const other_trusting = other_profile.profile.trusting.map((item) => item.username);
   const other_trusted_by = other_profile.profile.trusted_by.map((item) => item.username);
   const trust_intersection = my_trusting.filter(username => { if (other_trusted_by.includes(username)) return username });
 
@@ -148,6 +149,8 @@ async function displayProfile(my_profile,my_keys,username) {
   document.getElementById("network_profile_username").textContent = other_profile.profile.username;
   document.getElementById("network_profile_status").textContent = other_profile.profile.status;
   document.getElementById("network_profile_trust_intersection").textContent = trust_intersection.length;
+  document.getElementById("network_profile_trusting_list").textContent = `Trusting : ${other_trusting.toString()}`;
+  document.getElementById("network_profile_trusted_by_list").textContent = `Trusted By : ${other_trusted_by.toString()}`;
 
 
   document.getElementById('trust_intersection_list').textContent = "";
