@@ -1,0 +1,6 @@
+**/out/
+**/target/
+**/node_modules/
+**/dist/
+**/bundles/
+.DS_Store
