@@ -17,7 +17,7 @@ RUN cd /home/node/cypherpost/app/src/services/client/public/js && npm install
 RUN cd /home/node/cypherpost/app/src/services/client/public && bash compile.bash
 
 USER node
-RUN mkdir -p /home/node/cypherpost/app/moltres/typescript
+RUN mkdir -p /home/node/cypherpost/app
 RUN mkdir -p /home/node/winston && mkdir /home/node/.keys
 
 USER node
