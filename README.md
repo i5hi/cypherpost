@@ -12,7 +12,7 @@ BIP39 key generation & BIP32 key derivation is used for portable end-to-end encr
 # PULL REPO TO YOUR HOME FOLDER
 
 # add node_modules and compiled ts code in dist
-cd ~/cypherpost/app/application/typescript
+cd ~/cypherpost/app
 npm i
 tsc
 // If changes are made to any .ts file, run tsc again and restart container
@@ -22,8 +22,8 @@ openssl genrsa -out ~/.keys/sats_sig.pem 2048
 openssl rsa -in ~/.keys/sats_sig.pem -outform PEM -pubout -out $HOME/.keys/sats_sig.pub
 
 # compile front-end js
-cd ~/cypherpost/app/application/typescript/src/services/client/public
-# compile.bash compiles each client side js module into  *_bundle.js files containing all dependency code 
+cd ~/cypherpost/app/src/services/client/public
+# compile.bash compiles each client side js module into  *_bundle.js files containing all dependency code
 ./compile.bash
 
 # If changes are made to any files in public/js, run compile.bash again
