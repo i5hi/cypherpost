@@ -6,8 +6,8 @@ const crypto = require("crypto");
 const store = require('./store');
 const { request } = require('./request');
 
-const api_url = (document.domain === 'localhost') ? "http://localhost/api/v1" : `https://lionbit.network/api/v1`;
-const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://lionbit.network`;
+const api_url = (document.domain === 'localhost') ? "http://localhost/api/v1" : `https://cypherpost.io/api/v1`;
+const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
 
 async function apiRegister(username, password, confirm) {
 

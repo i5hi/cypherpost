@@ -26,7 +26,7 @@ const {
   apiGetUsernames
 } = require("./api");
 
-const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://lionbit.network`;
+const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
 
 // DISPLAY
 function displayInvitation(valid, invited_by) {
