@@ -9,7 +9,7 @@ export interface PostInterface{
   create(username: string, expiry: number, cipher_json: string, derivation_scheme: string, decryption_keys: Array<Key>): Promise<UserPost | Error>;
   find(username: string): Promise<Array<UserPost> | Error>;
   findMany(ids: Array<string>): Promise<Array<UserPost> | Error>; 
-  removeById(id: string): Promise<boolean | Error>;
+  removeById(id: string, username: string): Promise<boolean | Error>;
   removeByUser(username:string): Promise<boolean | Error>;
   removeExpired(username:string): Promise<boolean | Error>;
 }

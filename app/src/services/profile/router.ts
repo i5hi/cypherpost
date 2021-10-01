@@ -19,7 +19,6 @@ const updateCheck = [
   val.check('nickname').optional({nullable: true, checkFalsy: true}).isAscii().isLength({max:50}), 
   val.check('status').optional({nullable: true, checkFalsy: true}).isAscii().isLength({max:160}),
   val.check('cipher_info').optional({nullable: true, checkFalsy: true}).isAscii().isLength({max:365}),
-
 ];
 const trustCheck = [
   val.check('trusting').exists(), 
@@ -46,7 +45,7 @@ router.post("/",updateCheck, handleUpdateProfile);
 router.post("/trust", trustCheck, handleTrustUser);
 router.post("/mute", muteCheck, handleMuteUser);
 router.post("/revoke", revokeCheck, handleRevokeTrustUser);
-router.delete("/:username",handleDeleteProfile);
+router.delete("/",handleDeleteProfile);
 
 
 

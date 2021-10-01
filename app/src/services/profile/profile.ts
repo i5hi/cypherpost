@@ -139,7 +139,7 @@ export class LionBitProfile implements ProfileInterface {
       return true;
     
   }
-  remove(username: string): Promise<boolean | Error> {
+  async remove(username: string): Promise<boolean | Error> {
     return store.remove(username);
   }
 

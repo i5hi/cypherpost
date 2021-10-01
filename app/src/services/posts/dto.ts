@@ -184,7 +184,8 @@ export async function handleDeletePost(req, res) {
       }
     }
 
-    const status = await posts.removeById(req.params.id);
+    
+    const status = await posts.removeById(req.params.id, request['headers']['user']);
     if(status instanceof Error) throw status;
 
     const response = {

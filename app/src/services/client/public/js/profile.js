@@ -16,7 +16,7 @@ const {
 
 
 // DISPLAY
-function displayProfile(profile, contact_info) {
+function  displayProfile(profile, contact_info) {
   document.getElementById("profile_nickname").textContent = profile.nickname;
   document.getElementById("profile_username").textContent = profile.username;
   document.getElementById("profile_status").textContent = profile.status;
@@ -34,7 +34,7 @@ function createCipherInfo(contact_info, derivation_scheme, profile_parent_xprv) 
   return encrypt(contact_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
 }
 function createContactInfo(cipher_info, derivation_scheme, profile_parent_xprv) {
-  const revoke = parseInt(derivation_scheme.split("/")[2].replace("'", ""));
+  const revoke = (derivation_scheme.includes("'"))?parseInt(derivation_scheme.split("/")[2].replace("'", "")):parseInt(derivation_scheme.split("/")[2].replace("h", ""));
   const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
   return decrypt(cipher_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
 }
@@ -67,7 +67,7 @@ async function editComposite() {
   const nickname = document.getElementById("nickname_input").value;
   const status = document.getElementById("status_input").value;
   const contact_info = document.getElementById("contact_input").value;
-  const cipher_info = (!contact_info=="") ? createCipherInfo(contact_info, store.getMyProfile()['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : null;
+  const cipher_info = (!contact_info=="") ? createCipherInfo(contact_info, store.getMyProfile()['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : undefined;
   const new_profile = await apiEditProfile(nickname, cipher_info, status, store.getToken());
   if (new_profile instanceof Error) {
     console.error({ e: new_profile })
@@ -237,5 +237,7 @@ module.exports = {
  *
  * ishi
  *
- */
+  best
+  mutual junk opera clever hurt crane garbage airport tennis beyond search expose
+*/
 

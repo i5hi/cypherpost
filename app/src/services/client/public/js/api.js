@@ -253,7 +253,12 @@ async function apiEditProfile(nickname, cipher_info, status, token) {
     cipher_info,
     status,
   }
+  
+  if(!cipher_info) delete body['cipher_info'];
+  if(!nickname) delete body['nickname'];
+  if(!status) delete body['status'];
 
+  console.log({body});
   const response = await request(method, url, body, token);
   if (response instanceof Error) {
     if (response.name === "401")

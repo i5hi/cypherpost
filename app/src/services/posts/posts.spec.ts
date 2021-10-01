@@ -111,7 +111,7 @@ describe("Initalizing Test: Posts Controller", function () {
 
 
     it("should delete By ID", async function () {
-      let response: any = await posts.removeById(id0);
+      let response: any = await posts.removeById(id0, username);
       if (response instanceof Error) throw response;
       expect(response).to.equal(true);
       response = await posts.find(username);

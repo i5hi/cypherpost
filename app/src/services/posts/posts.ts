@@ -57,8 +57,8 @@ export class LionBitPosts implements PostInterface{
   async findMany(ids: Array<string>): Promise<Array<UserPost> | Error>{
     return store.readMany(ids);
   }
-  async removeById(id:string): Promise<boolean | Error>{
-    return store.remove({id});
+  async removeById(id:string, username:string): Promise<boolean | Error>{
+    return store.remove({id, username});
   }
   removeByUser(username: string): Promise<boolean | Error> {
     return store.removeMany([{username}]);

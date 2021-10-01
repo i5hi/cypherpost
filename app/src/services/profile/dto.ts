@@ -414,16 +414,16 @@ export async function handleDeleteProfile(req, res) {
       }
     }
     else {
-      let status = await profile.remove(request.params.username);
+      let status = await profile.remove(request.headers['user']);
       if(status instanceof Error) throw status;
 
-      status = await keys.remove(request.params.username);
+      status = await keys.remove(request.headers['user']);
       if(status instanceof Error) throw status;
 
-      status = await posts.removeByUser(request.params.username);
+      status = await posts.removeByUser(request.headers['user']);
       if(status instanceof Error) throw status;
 
-      status = await auth.remove(request.params.username);
+      status = await auth.remove(request.headers['user']);
       if(status instanceof Error) throw status;
       
       const response = {
