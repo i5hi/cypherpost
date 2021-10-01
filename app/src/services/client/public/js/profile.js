@@ -67,7 +67,7 @@ async function editComposite() {
   const nickname = document.getElementById("nickname_input").value;
   const status = document.getElementById("status_input").value;
   const contact_info = document.getElementById("contact_input").value;
-  const cipher_info = (contact_info) ? createCipherInfo(contact_info, store.getMyProfile()['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : null;
+  const cipher_info = (!contact_info=="") ? createCipherInfo(contact_info, store.getMyProfile()['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : null;
   const new_profile = await apiEditProfile(nickname, cipher_info, status, store.getToken());
   if (new_profile instanceof Error) {
     console.error({ e: new_profile })
