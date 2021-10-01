@@ -107,7 +107,7 @@ export class MongoPostStore implements PostStore {
   async read(post: UserPost): Promise<Array<UserPost> | Error> {
     try {
       let query = (post.id) ? { id: post.id } : { username: post.username };
-      const docs = await postStore.find(query).exec();
+      const docs = await postStore.find(query).sort({"genesis": -1}).exec();
 
       if (docs) {
         if (docs instanceof mongoose.Error) {
@@ -140,7 +140,7 @@ export class MongoPostStore implements PostStore {
   async readMany(ids: Array<string>): Promise<Array<UserPost> | Error> {
     try {
       ;
-      const docs = await postStore.find({ id: { $in: ids } }).exec();
+      const docs = await postStore.find({ id: { $in: ids } }).sort({"genesis": -1}).exec();
 
       if (docs) {
         if (docs instanceof mongoose.Error) {
