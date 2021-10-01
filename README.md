@@ -1,6 +1,13 @@
 # cypherpost.io
 
-A private social network to selectively post ads and messages to members of a trusted network.
+A private, end-to-end encrypted social network to selectively post ads and messages to members of a trusted network.
+
+- Each post is encrypted with new private key.
+- Server can't decrypt this posts
+- Posts can be decrypted by people you are trusting.
+- Conatct info under profile page is encrypted. Only people you trust can decrypt it.
+- Ability to trust/untrust
+- List of people you are trusting is not encrypted. Anyone can see who is trusting whome.
 
 BIP39 key generation & BIP32 key derivation is used for portable end-to-end encryption; to allow users to recover their accounts on any device without the need to maintain a master device holding a non-human readable master key.
 
@@ -23,7 +30,7 @@ openssl rsa -in ~/.keys/sats_sig.pem -outform PEM -pubout -out $HOME/.keys/sats_
 
 # compile front-end js
 cd ~/cypherpost/app/src/services/client/public
-# compile.bash compiles each client side js module into  *_bundle.js files containing all dependency code 
+# compile.bash compiles each client side js module into  *_bundle.js files containing all dependency code
 ./compile.bash
 
 # If changes are made to any files in public/js, run compile.bash again
@@ -94,7 +101,7 @@ db.auths.insert(doc)
 
 # to update a document
 # !! ALWAYS USE $set !!
-# IF NOT, IT WILL REPLACE RATHER THAN UPDATE 
+# IF NOT, IT WILL REPLACE RATHER THAN UPDATE
 
 let query = {
   "username": "ravi"
