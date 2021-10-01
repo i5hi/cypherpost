@@ -9,7 +9,9 @@ export interface PostInterface{
   create(username: string, expiry: number, cipher_json: string, derivation_scheme: string, decryption_keys: Array<Key>): Promise<UserPost | Error>;
   find(username: string): Promise<Array<UserPost> | Error>;
   findMany(ids: Array<string>): Promise<Array<UserPost> | Error>; 
-  remove(id: string): Promise<boolean | Error>;
+  removeById(id: string): Promise<boolean | Error>;
+  removeByUser(username:string): Promise<boolean | Error>;
+  removeExpired(username:string): Promise<boolean | Error>;
 }
 
 export interface PostStore{
@@ -18,7 +20,10 @@ export interface PostStore{
   readMany(ids: Array<string>): Promise<Array<UserPost> | Error>;
   // update_push(id: string, update:Comment): Promise<boolean | Error>;
   // update_pull(id: string, update:Comment): Promise<boolean | Error>;
-  remove(id:string): Promise<boolean | Error>;
+  removeOne(query:UserPost): Promise<boolean | Error>;
+  removeMany(items:Array<UserPost>): Promise<boolean | Error>;
+  // If a single item is passed it must be a username for which all posts are to be removed
+  // If many items are passed it must have an id for each item
 }
  
 export interface UserPost{

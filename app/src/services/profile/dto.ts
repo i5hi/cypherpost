@@ -10,6 +10,7 @@ import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { LionBitAuth } from "../auth/auth";
 import { LionBitKeys } from "../keys/keys";
+import { LionBitPosts } from "../posts/posts";
 import { UserProfile } from "./interface";
 import { LionBitProfile } from "./profile";
 const { validationResult } = require('express-validator');
@@ -20,7 +21,7 @@ const server_rsa_filename = "sats_sig";
 const profile = new LionBitProfile();
 const keys = new LionBitKeys();
 const auth = new LionBitAuth();
-
+const posts = new LionBitPosts();
 const local_jwt = new S5LocalJWT();
 
 export async function profileMiddleware(req, res, next) {
@@ -387,6 +388,51 @@ export async function handleGetUsernames(req, res) {
     };
 
     respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+}
+
+export async function handleDeleteProfile(req, res) {
+  const request = parseRequest(req);
+
+  try {
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        code: 400,
+        message: errors.array()
+      }
+    }
+    if (request.params.username === undefined) {
+      throw {
+        code: 400,
+        message: "No username specified."
+      }
+    }
+    else {
+      let status = await profile.remove(request.params.username);
+      if(status instanceof Error) throw status;
+
+      status = await keys.remove(request.params.username);
+      if(status instanceof Error) throw status;
+
+      status = await posts.removeByUser(request.params.username);
+      if(status instanceof Error) throw status;
+
+      status = await auth.remove(request.params.username);
+      if(status instanceof Error) throw status;
+      
+      const response = {
+        status
+      };
+  
+      respond(200, response, res, request);
+    }
+
   }
   catch (e) {
     const result = filterError(e, r_500, request);

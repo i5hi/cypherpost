@@ -12,7 +12,7 @@ BIP39 key generation & BIP32 key derivation is used for portable end-to-end encr
 # PULL REPO TO YOUR HOME FOLDER
 
 # add node_modules and compiled ts code in dist
-cd ~/cypherpost/app/application/typescript
+cd ~/cypherpost/app
 npm i
 tsc
 // If changes are made to any .ts file, run tsc again and restart container
@@ -22,7 +22,7 @@ openssl genrsa -out ~/.keys/sats_sig.pem 2048
 openssl rsa -in ~/.keys/sats_sig.pem -outform PEM -pubout -out $HOME/.keys/sats_sig.pub
 
 # compile front-end js
-cd ~/cypherpost/app/application/typescript/src/services/client/public
+cd ~/cypherpost/app/src/services/client/public
 # compile.bash compiles each client side js module into  *_bundle.js files containing all dependency code 
 ./compile.bash
 
@@ -66,30 +66,15 @@ docker restart application
 docker exec -it application sh -c "npm test"
 
 # Unit tests
-docker exec -it application bash
+docker exec -it application sh -c "bash units.bash"
 
-cd services/auth
-mocha -r ts-node/register auth.spec.ts --exit
-mocha -r ts-node/register mongo.spec.ts --exit
-
-cd services/profile
-mocha -r ts-node/register profile.spec.ts --exit
-mocha -r ts-node/register mongo.spec.ts --exit
-
-cd services/keys
-mocha -r ts-node/register keys.spec.ts --exit
-mocha -r ts-node/register mongo.spec.ts --exit
-
-cd services/posts
-mocha -r ts-node/register posts.spec.ts --exit
-mocha -r ts-node/register mongo.spec.ts --exit
 ```
 
 ## Inspect Database
 
 ```bash
 # to initialize with genesis user
-docker exec -it database sh -c "mongo genesis.js"
+docker exec -it database sh -c "mongo scripts/genesis.js"
 
 docker exec -it database mongo
 
@@ -109,6 +94,7 @@ db.auths.insert(doc)
 
 # to update a document
 # !! ALWAYS USE $set !!
+# IF NOT, IT WILL REPLACE RATHER THAN UPDATE 
 
 let query = {
   "username": "ravi"
@@ -121,10 +107,6 @@ let update = {
 
 db.auths.updateOne(query,update)
 
-# to clear dbs
-db.auths.drop()
-db.keys.drop()
-db.profiles.drop()
-db.posts.drop()
+# Checkout infra/mongo/scripts for more.
 
 ```

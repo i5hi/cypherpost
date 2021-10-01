@@ -5,7 +5,7 @@ Developed @ Stackmate India
 // ------------------ '(◣ ◢)' ---------------------
 import { Router } from "express";
 import * as val from "express-validator";
-import { handleGetManyProfiles, handleGetProfile, handleGetUsernames, handleMuteUser, handlePostGenesis, handleRevokeTrustUser, handleTrustUser, handleUpdateProfile, profileMiddleware } from "./dto";
+import { handleDeleteProfile, handleGetManyProfiles, handleGetProfile, handleGetUsernames, handleMuteUser, handlePostGenesis, handleRevokeTrustUser, handleTrustUser, handleUpdateProfile, profileMiddleware } from "./dto";
 
 
 // ------------------ '(◣ ◢)' ---------------------
@@ -46,7 +46,7 @@ router.post("/",updateCheck, handleUpdateProfile);
 router.post("/trust", trustCheck, handleTrustUser);
 router.post("/mute", muteCheck, handleMuteUser);
 router.post("/revoke", revokeCheck, handleRevokeTrustUser);
-// router.post("/reveal/:aspect");
+router.delete("/:username",handleDeleteProfile);
 
 
 

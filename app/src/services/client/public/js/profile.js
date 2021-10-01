@@ -9,7 +9,8 @@ const {
   apiCheckSeed256, 
   apiEditProfile, 
   apiGetMyProfile, 
-  apiProfileGenesis
+  apiProfileGenesis,
+  apiDeleteMyProfile
 } = require("./api");
 
 
@@ -186,6 +187,18 @@ async function loadProfileEvents() {
         alert("Copied invitation link to clipboard.")
       });
 
+      document.getElementById("profile_delete_button").addEventListener("click", (event) => {
+        event.preventDefault();
+        if (confirm(`Deleting your profile is irreversible!\n Are you sure?`)) {
+          apiDeleteMyProfile(store.getToken());
+        }
+        else{
+          return; 
+        }
+      });
+
+
+     
       break;
 
     default:

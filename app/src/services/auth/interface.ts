@@ -6,7 +6,7 @@ export interface AuthInterface {
   register(username: string, pass256: string, seed256: string, invited_by: string, invite_code: string): Promise<string | Error>; // JWT
   login(username: string, pass256: string): Promise<string | Error>; // JWT
   reset(seed256: string, pass256: string): Promise<string | Error>;  // JWT
-  remove(username: string, pass256: string): Promise<boolean | Error>; 
+  remove(username: string): Promise<boolean | Error>; 
   invite(invited_by: string): Promise<string | Error>; 
   check_invite(invited_by: string, invite_code: string): Promise<boolean | Error>;
 };

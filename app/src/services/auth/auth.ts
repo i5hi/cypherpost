@@ -130,8 +130,8 @@ export class LionBitAuth implements AuthInterface {
     return token;
   }
  
-  async remove(username: string, pass256: string): Promise<boolean | Error>{
-    const status = await store.remove({username: username, pass256: pass256});
+  async remove(username: string): Promise<boolean | Error>{
+    const status = await store.remove({username: username});
     if (status instanceof Error) return status;
 
     return status;

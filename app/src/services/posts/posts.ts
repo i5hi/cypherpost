@@ -15,6 +15,7 @@ const keys  = new LionBitKeys();
 const uuid = new S5UID();
 
 export class LionBitPosts implements PostInterface{
+
   async create(username: string, expiry: number,  cipher_json: string, derivation_scheme: string, decryption_keys: Array<Key>): Promise<UserPost | Error>{
     const post: UserPost = {
       id: uuid.createPostCode(),
@@ -32,6 +33,7 @@ export class LionBitPosts implements PostInterface{
     const valid_decryption_keys = await keys.findMany([...decryption_keys.map(key => key.id)]);
     if(valid_decryption_keys instanceof Error) return valid_decryption_keys;
 
+    console.log({valid_decryption_keys,decryption_keys})
     if(valid_decryption_keys.length !== decryption_keys.length) return handleError({
       code: 400,
       message: "Decryption Keys contains invalid user"
@@ -55,7 +57,21 @@ export class LionBitPosts implements PostInterface{
   async findMany(ids: Array<string>): Promise<Array<UserPost> | Error>{
     return store.readMany(ids);
   }
-  async remove(id:string): Promise<boolean | Error>{
-    return store.remove(id);
+  async removeById(id:string): Promise<boolean | Error>{
+    return store.remove({id});
+  }
+  removeByUser(username: string): Promise<boolean | Error> {
+    return store.removeMany([{username}]);
+  }
+  async removeExpired(username:string): Promise<boolean | Error> {
+    const user_posts = await store.read({username});
+    if(user_posts instanceof Error) return user_posts;
+    const expired_ids = user_posts.filter((post) => {
+      if(post.expiry < Date.now())
+        return {id: post.id};
+    });
+    if(expired_ids.length === 0) return true;
+    else
+    return store.removeMany([...expired_ids]);
   }
 }

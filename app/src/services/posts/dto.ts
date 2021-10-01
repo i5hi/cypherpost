@@ -99,6 +99,9 @@ export async function handleGetMyPosts(req, res) {
       }
     }
 
+    const status =  await posts.removeExpired(req.headers['user']);
+    if (status instanceof Error) throw status;
+
     const my_posts = await posts.find(req.headers['user']);
     if (my_posts instanceof Error) throw my_posts;
 
@@ -163,7 +166,7 @@ export async function handleDeletePost(req, res) {
       }
     }
 
-    const status = await posts.remove(req.params.id);
+    const status = await posts.removeById(req.params.id);
     if(status instanceof Error) throw status;
 
     const response = {

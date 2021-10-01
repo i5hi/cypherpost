@@ -38,8 +38,8 @@ describe("Initalizing Test: Auth Controller", function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
       ip: process.env.DB_IP,
-      name: 'lionbit',
-      auth: 'lb:secret',
+      name: process.env.DB_NAME,
+      auth: process.env.DB_AUTH,
     };
 
     await db.connect(connection);
@@ -47,7 +47,9 @@ describe("Initalizing Test: Auth Controller", function () {
   });
 
   after(async function () {
-    await store.remove({username: "ravi"});
+    await store.remove({username: invited_by});
+    await store.remove({username});
+
   });
 
   describe("AUTH CONTROLLER OPERATIONS:", async function () {
@@ -101,7 +103,7 @@ describe("Initalizing Test: Auth Controller", function () {
     });
     
     it("should REMOVE a user", async function () {
-      const response = await auth.remove(username,pass256);
+      const response = await auth.remove(username);
       if(response instanceof Error) throw response;
       
       expect(response).to.equal(true);

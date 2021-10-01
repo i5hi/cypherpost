@@ -62,8 +62,8 @@ describe("Initalizing Test: Posts Storage", function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
       ip: process.env.DB_IP,
-      name: 'lionbit',
-      auth: 'lb:secret',
+      name: process.env.DB_NAME,
+      auth: process.env.DB_AUTH,
     };
 
     await db.connect(connection);
@@ -94,13 +94,13 @@ describe("Initalizing Test: Posts Storage", function () {
     });
 
     it("should REMOVE each POST", async function () {
-      let response = await store.remove(id0);
+      let response = await store.remove({id:id0});
       if(response instanceof Error) throw response;
       expect(response).to.equal(true);
-      response = await store.remove(id1);
+      response = await store.remove({id:id1});
       if(response instanceof Error) throw response;
       expect(response).to.equal(true);
-      response = await store.remove(id2);
+      response = await store.remove({id:id2});
       if(response instanceof Error) throw response;
       expect(response).to.equal(true);
 

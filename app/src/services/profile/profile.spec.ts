@@ -76,8 +76,8 @@ describe("Initalizing Test: Profile Controller", function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
       ip: process.env.DB_IP,
-      name: 'lionbit',
-      auth: 'lb:secret',
+      name: process.env.DB_NAME,
+      auth: process.env.DB_AUTH,
     };
 
     await db.connect(connection);
@@ -109,7 +109,7 @@ describe("Initalizing Test: Profile Controller", function () {
     it("should FIND a PROFILE collection", async function () {
       const response = await profile.find(username0);
       if (response instanceof Error) throw response;
-      expect(response['nickname']).to.equal(nickname0);
+      expect(response['username']).to.equal(username0);
     });
 
     it("should FIND MANY PROFILE collections", async function () {

@@ -188,6 +188,26 @@ async function apiGetMyProfile(token) {
 
 
 }
+async function apiDeleteMyProfile(token) {
+  const end_point = "/profile/";
+  const url = api_url + end_point;
+  const method = "DELETE";
+
+
+  const response = await request(method, url, {}, token);
+  if (response instanceof Error) {
+    if (response.name === "401")
+      window.location.href = web_url + "/login";
+    else
+      return response;
+  }
+
+  alert("Profile Deleted!")
+  window.location.href = web_url;
+  return response;
+
+
+}
 async function apiGetUserProfile(token, username) {
   const end_point = `/profile?username=${username}`;
   const method = "GET";
@@ -434,6 +454,7 @@ module.exports = {
   apiGetUserProfile,
   apiGetManyProfiles,
   apiProfileGenesis,
+  apiDeleteMyProfile,
   apiTrust,
   apiRevoke,
   apiMuteUser,

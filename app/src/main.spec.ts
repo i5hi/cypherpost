@@ -114,8 +114,8 @@ describe("LIONBIT: API BEHAVIOUR SPECIFICATION", async function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
       ip: process.env.DB_IP,
-      name: 'cypherpost',
-      auth: 'cp:secret',
+      name: process.env.DB_NAME,
+      auth: process.env.DB_AUTH,
     };
     sinon.stub(logger, "debug");
     await db.connect(connection);

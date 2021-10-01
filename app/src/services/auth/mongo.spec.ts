@@ -47,8 +47,8 @@ describe("Initalizing Test: Auth Storage", function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
       ip: process.env.DB_IP,
-      name: 'lionbit',
-      auth: 'lb:secret',
+      name: process.env.DB_NAME,
+      auth: process.env.DB_AUTH,
     };
 
     await db.connect(connection);
