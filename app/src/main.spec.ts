@@ -125,9 +125,9 @@ describe("LIONBIT: API BEHAVIOUR SPECIFICATION", async function () {
   });
 
   after(async function () {
-    await auth.remove(username, pass256);
-    await auth.remove(username1, pass256);
-    await auth.remove(admin_username, admin_pass256);
+    await auth.remove(username);
+    await auth.remove(username1);
+    await auth.remove(admin_username);
     await profile.remove(username);
     await profile.remove(username1);
     await profile.remove(admin_username);
@@ -496,7 +496,6 @@ describe("LIONBIT: API BEHAVIOUR SPECIFICATION", async function () {
 
     it("should CREATE a new profile for USER0, USER1 & ADMIN", function (done) {
 
-
       chai
         .request(server)
         .post("/api/v1/profile/genesis")
@@ -532,7 +531,6 @@ describe("LIONBIT: API BEHAVIOUR SPECIFICATION", async function () {
           "authorization": `Bearer ${admin_token}`
         })
         .send({
-        
           recipient_xpub: ravi_recipient_xkeys.xpub,
           derivation_scheme: ravi_profile_ds
         })
@@ -978,7 +976,7 @@ describe("LIONBIT: API BEHAVIOUR SPECIFICATION", async function () {
         })
         .end((err, res) => {
           res.should.have.status(200);
-          const decrypted_cipher_json = crypto.decryptAESMessageWithIV(res.body.others_posts.posts[0]['cipher_json'], plain_decryption_key_user0_user1 as string);
+          const decrypted_cipher_json = crypto.decryptAESMessageWithIV(res.body.posts[0]['cipher_json'], plain_decryption_key_user0_user1 as string);
           if (decrypted_cipher_json instanceof Error) throw decrypted_cipher_json;
           expect(JSON.parse(decrypted_cipher_json).message).to.equal(ishi_post_json0.message);
           done();
