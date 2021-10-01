@@ -17,7 +17,7 @@ async function populateOthersPosts(others_posts) {
     others_posts.map(async (post) => {
       // get your post_keys from my_profile
       // compute shared_secret for this posts user
-      console.log("CONDITION", trusted_by_usernames.includes(post.username));
+      // console.log("CONDITION", trusted_by_usernames.includes(post.username));
 
       if (post.expiry < Date.now()) return;
 
@@ -32,19 +32,19 @@ async function populateOthersPosts(others_posts) {
       }
       store.setUserProfile(post.username, other_profile);
 
-      console.log({ other_profile });
+      // console.log({ other_profile });
       const my_recipient_xprv = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']['xprv'], 0, 0)['xprv'];
       const other_recipient_xpub = other_profile.recipient_xpub;
-      console.log({ other_recipient_xpub })
+      // console.log({ other_recipient_xpub })
       const ecdsa_grouped = bitcoin.extract_ecdsa_pair({ xpub: other_recipient_xpub, xprv: my_recipient_xprv });
       const shared_secret = bitcoin.calculate_shared_secret(ecdsa_grouped.private_key, ecdsa_grouped.public_key);
 
-      console.log({ shared_secret });
+      // console.log({ shared_secret });
       const this_posts_cipher_key = my_keys['post_keys'].filter((item) => { if (item.id === post.id) return item; })[0]['key'];
-      console.log({ this_posts_cipher_key });
+      // console.log({ this_posts_cipher_key });
 
       const this_posts_plain_key = decrypt(this_posts_cipher_key, shared_secret);
-      console.log({ this_posts_plain_key });
+      // console.log({ this_posts_plain_key });
 
       const this_post_plain_json = decrypt(post.cipher_json, this_posts_plain_key);
 
@@ -57,7 +57,7 @@ async function populateOthersPosts(others_posts) {
       const matching_profile_keys = my_keys['profile_keys'].filter((item) => { if (item.id === post.username) return item });
       const contact_cipher_key = (matching_profile_keys.length === 1) ? matching_profile_keys[0].key : "none";
 
-      console.log({ contact_cipher_key });
+      // console.log({ contact_cipher_key });
       let contact_info = other_profile['profile']['cipher_info'];
 
       if (contact_cipher_key !== "none") {
@@ -93,7 +93,6 @@ function populateMyPosts(my_posts) {
   const my_profile = store.getMyProfile();
   if (my_posts.length > 0) {
     my_posts.map((post) => {
-      if (post.expiry < Date.now()) return;
       const post_index = parseInt(post.derivation_scheme.split("/")[1].replace("'", ""));
       const post_revoke = parseInt(post.derivation_scheme.split("/")[2].replace("'", ""));
       const post_encryption_pair = bitcoin.derive_child_indexes(store.getParentKeys()['posts_parent']['xprv'], post_index, post_revoke);
@@ -198,11 +197,11 @@ async function createPost(message, expiry_string) {
     console.error({ my_posts })
     return;
   }
-  console.log({ my_posts });
+  // console.log({ my_posts });
 
   const current_posts_ds = (my_posts.length === 0) ? "m/0'/0'" : sortProperties(my_posts, 'genesis', true, true)[0][1]['derivation_scheme'];
   // console.log(sortProperties(my_posts, 'genesis', true, true)[0][1]['derivation_scheme'])
-  console.log(current_posts_ds);
+  // console.log(current_posts_ds);
   const index = parseInt(current_posts_ds.split("/")[1].replace("'", ""));
   const derivation_scheme = "m/" + index + "/0'";
 
@@ -216,7 +215,7 @@ async function createPost(message, expiry_string) {
   const trusting_usernames = store.getMyProfile().trusting.map(item => item.username);
   const trusting_profiles = await apiGetManyProfiles(store.getToken(), trusting_usernames);
 
-  console.log({ trusting_profiles });
+  // console.log({ trusting_profiles });
 
   trusting_profiles.keys.map((item) => {
     const ecdsa_grouped = bitcoin.extract_ecdsa_pair({ xpub: item.recipient_xpub, xprv: my_recipient_xprv });
@@ -251,7 +250,7 @@ async function updatePage() {
 
   // console.log("\nAT UPDATE\n");
   // console.log({ my_posts });
-  console.log({ others_posts });
+  // console.log({ others_posts });
 
   // store.setMyPosts(my_posts);
   store.setOthersPosts(others_posts);
@@ -284,7 +283,7 @@ async function loadPostsEvents() {
     document.getElementById("others_posts_list").classList.remove("hidden");
     document.getElementById("my_posts_list").classList.add("hidden");
     const others_posts = await apiGetOthersPosts(store.getToken());
-    console.log({ others_posts });
+    // console.log({ others_posts });
     store.setOthersPosts(others_posts);
     populateOthersPosts(others_posts);
 
@@ -305,7 +304,7 @@ async function loadPostsEvents() {
   trusted_by_usernames = my_profile.profile.trusted_by.map((item) => item.username);
   const many_profiles = await apiGetManyProfiles(store.getToken(), trusted_by_usernames);
   if (many_profiles instanceof Error) {
-    console.log({ many_profiles })
+    // console.log({ many_profiles })
   }
   many_profiles.profiles.map((profile) => {
     store.setUserProfile(profile);
@@ -316,7 +315,7 @@ async function loadPostsEvents() {
   });
 
   const others_posts = await apiGetOthersPosts(store.getToken());
-  console.log({ others_posts });
+  // console.log({ others_posts });
   store.setOthersPosts(others_posts);
   populateOthersPosts(others_posts);
 
