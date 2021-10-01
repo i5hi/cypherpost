@@ -414,6 +414,20 @@ export async function handleDeleteProfile(req, res) {
       }
     }
     else {
+
+      const user_profile = await profile.find(request.headers['user']);
+      if(user_profile instanceof Error) throw user_profile;
+
+      const user_posts = await posts.find(request.headers['user']);
+      if(user_posts instanceof Error) throw user_posts;
+
+      user_profile.trusting.map(async (trusting) => {
+        await keys.remove_profile_key(trusting.username,request.headers['user']);
+        user_posts.map(async (post) => {
+          await keys.remove_post_key(trusting.username, post.id);
+        });
+      });
+
       let status = await profile.remove(request.headers['user']);
       if(status instanceof Error) throw status;
 

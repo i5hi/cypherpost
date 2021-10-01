@@ -62,8 +62,18 @@ export class LionBitPosts implements PostInterface {
   async removeById(id: string, username: string): Promise<boolean | Error> {
     return store.remove({ id, username });
   }
-  removeByUser(username: string): Promise<boolean | Error> {
-    return store.removeMany([{ username }]);
+  async removeByUser(username: string): Promise<boolean | Error> {
+    const user_profile = await profile.find(username);
+    if (user_profile instanceof Error) return user_profile;
+    const posts = await store.read({ username });
+    if (posts instanceof Error) return posts;
+        
+    user_profile.trusting.map(async (trusting) => {
+      posts.map(async (post) => {
+        await keys.remove_post_key(trusting.username, post.id);
+      })
+    });
+    store.removeMany([{ username }]);
   }
   async removeExpired(username: string): Promise<boolean | Error> {
     try {
