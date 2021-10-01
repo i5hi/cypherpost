@@ -400,20 +400,6 @@ export async function handleDeleteProfile(req, res) {
 
   try {
 
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      throw {
-        code: 400,
-        message: errors.array()
-      }
-    }
-    if (request.params.username === undefined) {
-      throw {
-        code: 400,
-        message: "No username specified."
-      }
-    }
-    else {
 
       const user_profile = await profile.find(request.headers['user']);
       if(user_profile instanceof Error) throw user_profile;
@@ -445,7 +431,7 @@ export async function handleDeleteProfile(req, res) {
       };
   
       respond(200, response, res, request);
-    }
+    
 
   }
   catch (e) {
