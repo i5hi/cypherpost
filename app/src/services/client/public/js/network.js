@@ -153,15 +153,15 @@ async function displayProfile(my_profile,my_keys,username) {
   document.getElementById("network_profile_trusted_by_list").textContent = `Trusted By : ${other_trusted_by.toString()}`;
 
 
-  document.getElementById('trust_intersection_list').textContent = "";
+  document.getElementById('trust_intersection_list').textContent = `Trust Intersection: ${trust_intersection.toString()}`;
 
-  trust_intersection.map((username, i, array) => {
-    if (array.length - 1 < 0) return;
-    if (i === 0) document.getElementById('trust_intersection_list').textContent += "Trusted By ";
-    else if (array.length - 1 === i) document.getElementById('trust_intersection_list').textContent += `${username}.`
-    else if (array.length - 2 === i) document.getElementById('trust_intersection_list').textContent += `${username} & `
-    else document.getElementById('trust_intersection_list').textContent += `${username}, `
-  });
+  // trust_intersection.map((username, i, array) => {
+  //   if (array.length - 1 < 0) return;
+  //   if (i === 0) document.getElementById('trust_intersection_list').textContent += "Trusted By ";
+  //   else if (array.length - 1 === i) document.getElementById('trust_intersection_list').textContent += `${username}.`
+  //   else if (array.length - 2 === i) document.getElementById('trust_intersection_list').textContent += `${username} & `
+  //   else document.getElementById('trust_intersection_list').textContent += `${username}, `
+  // });
 
   console.log({my_trusted_by:my_profile.trusted_by});
   if (my_trusted_by.includes(username)) {

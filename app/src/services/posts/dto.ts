@@ -8,6 +8,7 @@ import { S5LocalJWT } from "../../lib/jwt/jwt";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { LionBitKeys } from "../keys/keys";
+import { LionBitProfile } from "../profile/profile";
 import { LionBitPosts } from "./posts";
 const { validationResult } = require('express-validator');
 
@@ -15,7 +16,7 @@ const s5crypto = new S5Crypto();
 const server_rsa_filename = "sats_sig";
 const posts = new LionBitPosts();
 const keys = new LionBitKeys();
-
+const profile = new LionBitProfile();
 const local_jwt = new S5LocalJWT();
 
 export async function postMiddleware(req, res, next) {
@@ -129,6 +130,15 @@ export async function handleGetOthersPosts(req, res) {
       }
     }
     
+    const my_profile = await profile.find(req.headers['user']);
+    if (my_profile instanceof Error) throw my_profile;
+    let muted_users = [];
+    my_profile.trusted_by.map((user)=>{
+      if(user.mute){
+        muted_users.push(user.username);
+      }
+    });
+    
     const my_keys = await keys.find(req.headers['user']);
     if(my_keys instanceof Error) throw my_keys;
 
@@ -138,8 +148,16 @@ export async function handleGetOthersPosts(req, res) {
     const others_posts = await posts.findMany(allowed_posts);
     if(others_posts instanceof Error) throw others_posts;
 
+    let filtered_posts = [];
+
+    others_posts.map((post)=>{
+      if(!muted_users.includes(post.username)){
+        filtered_posts.push(post);
+      }
+    });
+
     const response = {
-      posts:others_posts
+      posts:filtered_posts
     };
     
     respond(200, response, res, request);

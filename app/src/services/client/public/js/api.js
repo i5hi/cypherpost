@@ -45,8 +45,8 @@ async function apiRegister(username, password, confirm) {
   };
 
   const response = await request(method, url, body);
-  if (response instanceof Error)  return response;
-  
+  if (response instanceof Error) return response;
+
   return response.token;
 
 }
@@ -195,10 +195,8 @@ async function apiDeleteMyProfile(token) {
 
   const response = await request(method, url, {}, token);
   if (response instanceof Error) {
-    if (response.name === "401")
-      window.location.href = web_url + "/login";
-    else
-      return response;
+    // no redirect on 401 since used in invitation
+    return response;
   }
 
   alert("Profile Deleted!")
@@ -292,7 +290,7 @@ async function apiProfileGenesis(recipient_xpub, token) {
   return response;
 }
 
-async function apiMuteUser(token,trusted_by,toggle_mute) {
+async function apiMuteUser(token, trusted_by, toggle_mute) {
 
   const method = "POST";
   const end_point = "/profile/mute";
@@ -355,7 +353,7 @@ async function apiDeletePost(token, post_id) {
 
   const url = api_url + end_point;
   const method = "DELETE";
-  
+
   const response = await request(method, url, {}, token);
   if (response instanceof Error) {
     if (response.name === "401")
