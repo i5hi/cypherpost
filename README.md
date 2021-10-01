@@ -1,6 +1,6 @@
 # cypherpost.io
 
-A private, invite-only network to selectively post ads and messages to members of a trusted network.
+A private social network to selectively post ads and messages to members of a trusted network.
 
 BIP39 key generation & BIP32 key derivation is used for portable end-to-end encryption; to allow users to recover their accounts on any device without the need to maintain a master device holding a non-human readable master key.
 
