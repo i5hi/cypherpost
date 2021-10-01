@@ -74,7 +74,8 @@ async function editComposite() {
   }
   else {
     store.setMyProfile(new_profile.profile);
-    displayProfile(new_profile.profile, createContactInfo(new_profile["profile"]["cipher_info"], new_profile["profile"]['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']));
+    const contact_info = (new_profile['profile']['contact_info'])?createContactInfo(new_profile["profile"]["cipher_info"], new_profile["profile"]['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : "No contact info added.";
+    displayProfile(new_profile.profile, );
   }
   window.location.reload()
 }

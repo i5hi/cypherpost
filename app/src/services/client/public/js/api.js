@@ -192,7 +192,6 @@ async function apiDeleteMyProfile(token) {
   const url = api_url + end_point;
   const method = "DELETE";
 
-
   const response = await request(method, url, {}, token);
   if (response instanceof Error) {
     // no redirect on 401 since used in invitation
@@ -253,7 +252,7 @@ async function apiEditProfile(nickname, cipher_info, status, token) {
     cipher_info,
     status,
   }
-  
+
   if(!cipher_info) delete body['cipher_info'];
   if(!nickname) delete body['nickname'];
   if(!status) delete body['status'];
