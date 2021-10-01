@@ -110,7 +110,7 @@ async function decodeJWTUser(token){
 // COMPOSITES
 
 async function registerComposite() {
-  const username = document.getElementById("register_username").value;
+  const username = document.getElementById("register_username").value.toLowerCase();
   const password = document.getElementById("register_pass").value;
   const confirm = document.getElementById("register_confirm_pass").value;
   document.getElementById("register_pass").value = "";
@@ -153,7 +153,7 @@ async function resetComposite() {
 }
 
 async function loginComposite() {
-  const username = document.getElementById("login_username").value;
+  const username = document.getElementById("login_username").value.toLowerCase();
   const password = document.getElementById("login_pass").value;
   document.getElementById("login_pass").value = "";
 

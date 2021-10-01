@@ -45,9 +45,8 @@ async function apiRegister(username, password, confirm) {
   };
 
   const response = await request(method, url, body);
-  if (response instanceof Error) {
-    return response;
-  }
+  if (response instanceof Error)  return response;
+  
   return response.token;
 
 }
