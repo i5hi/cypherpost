@@ -70,13 +70,13 @@
       <h5>Revocation</h5>
       <p>When you stop trusting a user (revoke trust) you reencrypt your cypherdata with a new key and repeat the process of computing the shared secret and encrypting the key with the shared secret for all your remaining trusted users.</p>
       <br/>
-      <h5>BIP32 Key Derivation</h5>
-      <p>The BIP32 key derivation model is used to derive the keys for each. This is done by deriving a new key from the user's master key which is derived from a BIP39 seed.</p>
+      <h5>Bitcoin Keys</h5>
+      <p>The BIP32 key derivation model is used to derive an infinite amount of child keys that are used to encrypt/decrypt all data flowing through cypherpost. This is done by deriving a new key from the user's master key which is derived from a BIP39 seed.</p>
       <p>We use the following path standard:  <span class="" >m/purpose'/service'/usecase'/index'/revoke'</span>; where cypherpost has 3 main use cases:</p>
       <ul>
         <li>Recipient: Used to compute shared secrets</li>
-        <li>Profile: Used to encrypt profile</li>
-        <li>Posts: Used to encrypt posts</li>
+        <li>Profile: Used to encrypt/decrypt profile</li>
+        <li>Posts: Used to encrypt/decrypt posts</li>
       </ul>
       <p>More information can be found at <a href="https://github.com/i5hi/cypherpost/blob/main/docs/BIP32InCypherPost.md">BIP32InCypherPost</a></p>
     </div>
