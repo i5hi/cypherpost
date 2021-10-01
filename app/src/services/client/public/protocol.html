@@ -43,36 +43,36 @@
 
       <h2>Features</h2>
       <br/>
-      <h5>BIP39 & BIP32 based Portable End-to-end Encryption</h5>
+      <h3>Portable E2EE</h3>
       
       <p>Currently, all e2ee applications use RSA keys. The problem with RSA keys are primarily the lack of portability and the need to maintain a master device to recover your account.</p>
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> leverages the flexibility of the BIP32 HD Key standard and simiplicity of BIP39 to achieve a more portable form of e2ee.</p>
+      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> to achieve a more portable form of e2ee.</p>
       <br/>
 
-      <h5>Trust Model</h5>
+      <h3>Trust Model</h3>
       <p>The way a user expands their network on <a href="https://github.com/i5hi/cypherpost">cypherpost</a> is through the 'Trust' action. </p>
       <p>Trusting another user, gives them access to view your posts and contact information. This give you privacy via the ability to selectively reveal yourself.</p>
       <br/>
 
-      <h5>Muting Users</h5>
+      <h3>Muting Users</h3>
       <p>If many users trust you, you will have a lot of posts on your feed. You have the ability to 'Mute' users that are flooding your feed with unwanted and unproductive posts.</p>
       <br/>
 <hr>
       <h2>Mechanism</h2>
       <br/>
-      <h5>ECDSA Shared Secret</h5>
+      <h3>ECDSA Shared Secret</h3>
       <p>At the core of the e2ee model is the ECDSA shared secret.</p>
       <p>All users have a primary 'recipient' key pair comprised of a public key and private key.</p>
       <p>Given two users, Alice and Bob; both can compute the same shared secret with their private key and the other's public key.</p>
       <p>This shared secret is used to encrypt the key that is used to encrypt/decrypt cypherdata (posts or contact_info).</p>
       <p>If a user is trusting 10 other users, they only encrypt their data with a single key; and then, encrypt this key with a shared secret computed for each of their trusted users (creating 10 copies of encrypted keys) and share the encrypted key with each of them; which they can each use to decrypt on their end and use to view the cypherdata.</p>
       <br/>
-      <h5>Revocation</h5>
+      <h3>Revocation</h3>
       <p>When you stop trusting a user (revoke trust) you reencrypt your cypherdata with a new key and repeat the process of computing the shared secret and encrypting the key with the shared secret for all your remaining trusted users.</p>
       <br/>
-      <h5>Bitcoin Keys</h5>
+      <h3>Bitcoin Keys</h3>
       <p>The BIP32 key derivation model is used to derive an infinite amount of child keys that are used to encrypt/decrypt all data flowing through cypherpost. This is done by deriving a new key from the user's master key which is derived from a BIP39 seed.</p>
-      <p>We use the following path standard:  <span class="" >m/purpose'/service'/usecase'/index'/revoke'</span>; where cypherpost has 3 main use cases:</p>
+      <p>We use the following path standard:  <span class="" >m/purpose'/service'/usecase'/index'/revoke'</span>; with 3 main use cases:</p>
       <ul>
         <li>Recipient: Used to compute shared secrets</li>
         <li>Profile: Used to encrypt/decrypt profile</li>
