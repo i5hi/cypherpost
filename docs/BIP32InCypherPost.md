@@ -1,8 +1,4 @@
-### cypherpost
-
-`cypherpost` is a private bitcoiner's social network for trading (offers) and orange pilling (status), where e2ee is used to protect personally identifiable data. Contact details are the only such data shared on the platform, therefore only creating a single usecase for e2ee on the platform. 
-
-### abra
+### BIP32InCypherPost
 
 ```
 m/purpose'/service'/usecase'/index'/revoke'
