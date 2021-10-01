@@ -124,8 +124,13 @@ async function loadProfileEvents() {
     case "profile":
       document.getElementById("profile_username").textContent = store.getUsername();
 
-      if (!localStorage.getItem(`${store.getUsername()}_parent_128`)) {
+      if (!store.getParent128()) {
         document.getElementById("import_keys_button").click();
+      }
+
+      if (!store.getMyProfile()['cipher_info']) {
+        alert("Add some cypher contact info!")
+        document.getElementById("edit_profile_button").click();
       }
 
       document.getElementById("exit").addEventListener("click", (event) => {
