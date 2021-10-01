@@ -1,5 +1,7 @@
 # cypherpost.io
 
+## Note: This project is in extreme BETA and actively looking for community support. We see this project forming a basis for privacy respecting social networks; if this is something you are interested in, please reach out.
+
 A private, end-to-end encrypted social network to selectively post ads and messages to members of a trusted network.
 
 - Each post is encrypted with new private key.
