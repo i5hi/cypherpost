@@ -67,7 +67,7 @@ export class LionBitPosts implements PostInterface{
     const user_posts = await store.read({username});
     if(user_posts instanceof Error) return user_posts;
     const expired_ids = user_posts.filter((post) => {
-      if(post.expiry < Date.now())
+      if(post.expiry < Date.now() && post.expiry!=0)
         return {id: post.id};
     });
     if(expired_ids.length === 0) return true;
