@@ -23,6 +23,13 @@ function  displayProfile(profile, contact_info) {
   document.getElementById("profile_trusting").textContent = profile.trusting.length;
   document.getElementById("profile_trusted_by").textContent = profile.trusted_by.length;
   document.getElementById("profile_contact").textContent = contact_info;
+  (profile.trusting.length>0)?
+  document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${profile.trusting.toString()}</span>` :
+  document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>` ;
+  (profile.trusted_by.length>0)?
+  document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${profile.trusted_by.toString()}</span>` :
+  document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
+
 }
 
 
