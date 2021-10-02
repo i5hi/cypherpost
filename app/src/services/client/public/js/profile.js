@@ -23,10 +23,15 @@ function  displayProfile(profile, contact_info) {
   document.getElementById("profile_trusting").textContent = profile.trusting.length;
   document.getElementById("profile_trusted_by").textContent = profile.trusted_by.length;
   document.getElementById("profile_contact").textContent = contact_info;
-  (profile.trusting.length>0)?
+  // let  = [];
+  // let my_trusted_by =  [];
+  const my_trusting = profile.trusting.map((item)=>(item.username));
+  const my_trusted_by = profile.trusted_by.map((item)=>(item.username));
+  
+  (my_trusting.length>0)?
   document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${profile.trusting.toString().replaceAll("," , ", ")}.</span>` :
   document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>` ;
-  (profile.trusted_by.length>0)?
+  (my_trusted_by.length>0)?
   document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${profile.trusted_by.toString().replaceAll("," , ", ")}.</span>` :
   document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
 
