@@ -149,11 +149,15 @@ async function displayProfile(my_profile,my_keys,username) {
   document.getElementById("network_profile_username").textContent = other_profile.profile.username;
   document.getElementById("network_profile_status").textContent = other_profile.profile.status;
   document.getElementById("network_profile_trust_intersection").textContent = trust_intersection.length;
-  document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${other_trusting.toString()}</span>`;
-  document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${other_trusted_by.toString()}</span>`;
+  (other_trusting.length>0)?
+  document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${other_trusting.toString().replace(",",", ")}.</span>` :
+  document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>`;
+  (other_trusted_by.length>0)?
+  document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${other_trusted_by.toString().replace(",",", ")}.</span>` :
+  document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
 
 
-  document.getElementById('trust_intersection_list').innerHTML = `Trust Intersection: <span class="contact_info">${trust_intersection.toString()}</span>`;
+  document.getElementById('trust_intersection_list').innerHTML = `Trust Intersection: <span class="contact_info">${trust_intersection.toString().replace(",",", ")}.</span>`;
 
   // trust_intersection.map((username, i, array) => {
   //   if (array.length - 1 < 0) return;
