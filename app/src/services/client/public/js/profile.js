@@ -24,10 +24,10 @@ function  displayProfile(profile, contact_info) {
   document.getElementById("profile_trusted_by").textContent = profile.trusted_by.length;
   document.getElementById("profile_contact").textContent = contact_info;
   (profile.trusting.length>0)?
-  document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${profile.trusting.toString().replace(",",", ")}.</span>` :
+  document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${profile.trusting.toString().replaceAll("," , ", ")}.</span>` :
   document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>` ;
   (profile.trusted_by.length>0)?
-  document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${profile.trusted_by.toString().replace(",",", ")}.</span>` :
+  document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${profile.trusted_by.toString().replaceAll("," , ", ")}.</span>` :
   document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
 
 }
@@ -36,12 +36,12 @@ function  displayProfile(profile, contact_info) {
 // HELPERS
 
 function createCipherInfo(contact_info, derivation_scheme, profile_parent_xprv) {
-  const revoke = parseInt(derivation_scheme.split("/")[2].replace("'", ""));
+  const revoke = parseInt(derivation_scheme.split("/")[2].replaceAll("'", ""));
   const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
   return encrypt(contact_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
 }
 function createContactInfo(cipher_info, derivation_scheme, profile_parent_xprv) {
-  const revoke = (derivation_scheme.includes("'"))?parseInt(derivation_scheme.split("/")[2].replace("'", "")):parseInt(derivation_scheme.split("/")[2].replace("h", ""));
+  const revoke = (derivation_scheme.includes("'"))?parseInt(derivation_scheme.split("/")[2].replaceAll("'", "")):parseInt(derivation_scheme.split("/")[2].replaceAll("h", ""));
   const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
   return decrypt(cipher_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
 }

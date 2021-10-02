@@ -30,7 +30,7 @@ async function trust(username) {
   // console.log(shared_secret);
   // check derivation scheme first
   const derivation_scheme = store.getMyProfile()['derivation_scheme'];
-  const revoke = parseInt(derivation_scheme.split("/")[2].replace("'", ""));
+  const revoke = parseInt(derivation_scheme.split("/")[2].replaceAll("'", ""));
   // console.log(revoke);
 
   const profile_encryption_key = crypto.createHash('sha256')
@@ -77,7 +77,7 @@ async function revoke(username) {
 
     const my_profile = store.getMyProfile();
     const current_profile_ds = my_profile.derivation_scheme;
-    const revoke = parseInt(current_profile_ds.split("/")[2].replace("'", ""));
+    const revoke = parseInt(current_profile_ds.split("/")[2].replaceAll("'", ""));
     const derivation_scheme_update = "m/0'/" + (revoke + 1) + "'";
 
     // console.log(derivation_scheme_update);
@@ -150,14 +150,14 @@ async function displayProfile(my_profile,my_keys,username) {
   document.getElementById("network_profile_status").textContent = other_profile.profile.status;
   document.getElementById("network_profile_trust_intersection").textContent = trust_intersection.length;
   (other_trusting.length>0)?
-  document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${other_trusting.toString().replace(",",", ")}.</span>` :
+  document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${other_trusting.toString().replaceAll("," , ", ")}.</span>` :
   document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>`;
   (other_trusted_by.length>0)?
-  document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${other_trusted_by.toString().replace(",",", ")}.</span>` :
+  document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${other_trusted_by.toString().replaceAll("," , ", ")}.</span>` :
   document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
 
 
-  document.getElementById('trust_intersection_list').innerHTML = `Trust Intersection: <span class="contact_info">${trust_intersection.toString().replace(",",", ")}.</span>`;
+  document.getElementById('trust_intersection_list').innerHTML = `Trust Intersection: <span class="contact_info">${trust_intersection.toString().replaceAll("," , ", ")}.</span>`;
 
   // trust_intersection.map((username, i, array) => {
   //   if (array.length - 1 < 0) return;

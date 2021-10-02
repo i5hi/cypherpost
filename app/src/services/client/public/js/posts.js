@@ -93,14 +93,14 @@ function populateMyPosts(my_posts) {
   const my_profile = store.getMyProfile();
   if (my_posts.length > 0) {
     my_posts.map((post) => {
-      const post_index = parseInt(post.derivation_scheme.split("/")[1].replace("'", ""));
-      const post_revoke = parseInt(post.derivation_scheme.split("/")[2].replace("'", ""));
+      const post_index = parseInt(post.derivation_scheme.split("/")[1].replaceAll("'", ""));
+      const post_revoke = parseInt(post.derivation_scheme.split("/")[2].replaceAll("'", ""));
       const post_encryption_pair = bitcoin.derive_child_indexes(store.getParentKeys()['posts_parent']['xprv'], post_index, post_revoke);
       const plain_json = decrypt(post.cipher_json, crypto.createHash('sha256').update(post_encryption_pair['xprv']).digest('hex'));
       const message = JSON.parse(plain_json).message;
 
       const current_profile_ds = my_profile.derivation_scheme;
-      const profile_revoke = parseInt(current_profile_ds.split("/")[2].replace("'", ""));
+      const profile_revoke = parseInt(current_profile_ds.split("/")[2].replaceAll("'", ""));
 
       const profile_encryption_pair = bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']['xprv'], 0, profile_revoke);
       const contact_info = (my_profile.cipher_info)?decrypt(my_profile.cipher_info, crypto.createHash('sha256').update(profile_encryption_pair['xprv']).digest('hex')):"No Contact Info Added.";
@@ -202,7 +202,7 @@ async function createPost(message, expiry_string) {
   const current_posts_ds = (my_posts.length === 0) ? "m/0'/0'" : sortProperties(my_posts, 'genesis', true, true)[0][1]['derivation_scheme'];
   // console.log(sortProperties(my_posts, 'genesis', true, true)[0][1]['derivation_scheme'])
   // console.log(current_posts_ds);
-  const index = parseInt(current_posts_ds.split("/")[1].replace("'", ""));
+  const index = parseInt(current_posts_ds.split("/")[1].replaceAll("'", ""));
   const derivation_scheme = "m/" + index + "/0'";
 
   // console.log(derivation_scheme_update);
