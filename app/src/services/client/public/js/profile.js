@@ -153,7 +153,9 @@ async function loadProfileEvents() {
       
       displayProfile(init_profile['profile'], contact_info);
 
-
+      document.getElementById("profile_page").classList.remove("hidden");
+      document.getElementById("profile_page_spinner").classList.add("hidden");
+    
       /***
        * 
        * 
