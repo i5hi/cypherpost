@@ -277,8 +277,8 @@ async function loadNetworkEvents() {
 
   const { trusting_usernames, trusted_by_usernames, search_usernames } = filterUsernamesByTrust(store.getMyProfile(), store.getExistingUsernames());
 
-  document.getElementById("network_page").classList.remove("hidden");
   document.getElementById("network_page_spinner").classList.add("hidden");
+  document.getElementById("network_page").classList.remove("hidden");
 
   search_usernames.map((username) => {
     document.getElementById('search_userlist').innerHTML += `<div id="search_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trust_${username}" class="btn-sm centerme" type="submit">Trust</button></div></div><hr>`
