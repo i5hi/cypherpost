@@ -22,6 +22,7 @@ const {
 async function loadInitialState(token, username, password) {
   store.setToken(token);
   store.setUsername(username);
+  store.setTriplePass256(password);
   // MY PROFILE
   try {
     const my_profile_and_keys = await apiGetMyProfile(token);

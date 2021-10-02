@@ -30,6 +30,17 @@ function getSeed256() {
   return sessionStorage.getItem("seed256");
 }
 
+function setTriplePass256(passowrd){
+  const round1 = crypto.createHash("sha256").update(passowrd).digest("hex");
+  const round2 = crypto.createHash("sha256").update(round1).digest("hex");
+  const round3 = crypto.createHash("sha256").update(round2).digest("hex");
+  sessionStorage.setItem("triple_pass256",round3);
+  return true;
+}
+function getTriplePass256(passowrd){
+  return sessionStorage.getItem("triple_pass256");
+}
+
 function setToken(token) {
   sessionStorage.setItem("token", token);
   return true;
@@ -208,6 +219,9 @@ module.exports = {
   getMyPosts,
   setOthersPosts,
   getOthersPosts,
+
+  setTriplePass256,
+  getTriplePass256
 
 
 }

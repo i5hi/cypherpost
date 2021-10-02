@@ -81,15 +81,29 @@ async function editComposite() {
 }
 async function importKeys() {
   const seed = document.getElementById("import_keys_input").value;
-  document.getElementById("import_keys_input").value = "";
   const password = document.getElementById("import_keys_password_input").value;
-  document.getElementById("import_keys_password_input").value = "";
+
+  const triple_pass256 =  store.getTriplePass256();
+  // if(!triple_pass256) {
+  //   window.location.href = "/login";
+  // }
+  const round1 =  crypto.createHash('sha256').update(password).digest('hex');
+  const round2 =  crypto.createHash('sha256').update(round1).digest('hex');
+  const round3 =  crypto.createHash('sha256').update(round2).digest('hex');
+
+  if(triple_pass256 != round3) {
+    alert("Incorrect password");
+    return false;
+  }
 
   const status = await apiCheckSeed256(store.getToken(), seed, store.getUsername(), password);
   if (status instanceof Error) {
     console.error({ apiCheckSeed256: status })
   }
   else if (status) {
+    document.getElementById("import_keys_input").value = "";
+    document.getElementById("import_keys_password_input").value = "";
+
     const root = await bitcoin.seed_root(seed);
     const parent_128 = bitcoin.derive_parent_128(root);
 
