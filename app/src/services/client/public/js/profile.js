@@ -155,10 +155,6 @@ async function loadProfileEvents() {
       if (!localStorage.getItem(`${store.getUsername()}_parent_128`)) {
         document.getElementById("import_keys_button").click();
       }
-      if (store.getMyProfile() && !store.getMyProfile()['contact_info']) {
-        alert("Add come cypher contact info!")
-        document.getElementById("edit_button").click();
-      }
 
       document.getElementById("exit").addEventListener("click", (event) => {
         event.preventDefault();
@@ -179,6 +175,11 @@ async function loadProfileEvents() {
           "No contact info added.";
       
       displayProfile(init_profile['profile'], contact_info);
+
+      if (contact_info === "No contact info added.") {
+        alert("Add come cypher contact info!")
+        document.getElementById("edit_button").click();
+      }
 
       document.getElementById("profile_page_spinner").classList.add("hidden");
       document.getElementById("profile_page").classList.remove("hidden");
