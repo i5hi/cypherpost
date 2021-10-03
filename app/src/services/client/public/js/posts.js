@@ -105,7 +105,7 @@ function populateMyPosts(my_posts) {
       const profile_encryption_pair = bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']['xprv'], 0, profile_revoke);
       const contact_info = (my_profile.cipher_info) ? decrypt(my_profile.cipher_info, crypto.createHash('sha256').update(profile_encryption_pair['xprv']).digest('hex')) : "No Contact Info Added.";
 
-      if (post.expiry !== 0) {
+      if (post.expiry != 0) {
         let expiry_time;
         if ((post.expiry - Date.now()) / (1000 * 60 * 60) >= 24)
           expiry_time = `${Math.round((post.expiry - Date.now()) / (1000 * 60 * 60 * 24))} days`
@@ -120,19 +120,23 @@ function populateMyPosts(my_posts) {
       else {
         document.getElementById('my_posts_list').innerHTML += `<div class="container border outline"><br><div class="container"><div class="row"><div class="container"><div id="my_post_username_${post.id}" class="row post_username">@${post.username}</div><div id="my_post_message_${post.id}" class="row post_message"><div>${message}</div></div><div id="my_post_contact_${post.id}" class="row contact_info"><div><div class="container">${contact_info}</div></div></div><hr><div id="my_post_genesis_${post.id}" class="row contact_info">Genesis: ${new Date(post.genesis)}</div><div id="my_post_expiry_${post.id}" class="row contact_info">Expiry: Never</div></div></div><div class="row"><div class="col-8"></div><div class="col-4"><button id="delete_post_${post.id}"" class="btn-sm centerme" type="button"><i class="far fa-trash-alt"></i></button></div></div><br></div></div><br>`;
       }
-      document.getElementById(`delete_post_${post.id}`).addEventListener("click", (event) => {
-        event.preventDefault();
-        apiDeletePost(store.getToken(), post.id);
-        alert("Deleted Post")
-        document.getElementById("my_posts_menu").click();
-      });
 
     });
-
   }
   else
     document.getElementById('my_posts_list').innerHTML += "You have not made any posts yet."
 
+}
+
+function addDeleteEventListener(my_posts) {
+  my_posts.map((post) => {
+    document.getElementById(`delete_post_${post.id}`).addEventListener("click", (event) => {
+      event.preventDefault();
+      apiDeletePost(store.getToken(), post.id);
+      alert("Deleted Post")
+      document.getElementById("my_posts_menu").click();
+    });
+  })
 }
 
 // HELPERS
@@ -267,6 +271,7 @@ async function loadPostsEvents() {
     const my_posts = await apiGetMyPosts(store.getToken());
     store.setMyPosts(my_posts);
     await populateMyPosts(my_posts);
+    if(my_posts.length>0) addDeleteEventListener(my_posts);
 
   });
 
