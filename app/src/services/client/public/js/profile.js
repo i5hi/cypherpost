@@ -134,7 +134,8 @@ async function importKeys() {
   else {
     alert("Incorrect Seed!!!");
   }
-  window.location.reload();
+  document.getElementById("close_import_keys_modal").click();
+  // window.location.reload();
 
 }
 
