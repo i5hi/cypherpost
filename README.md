@@ -13,6 +13,14 @@ A private, end-to-end encrypted social network to selectively post ads and messa
 
 BIP39 key generation & BIP32 key derivation is used for portable end-to-end encryption; to allow users to recover their accounts on any device without the need to maintain a master device holding a non-human readable master key.
 
+### Actualization
+
+The aim of this project is to facilitate such a scenario:
+
+- You wish to buy/sell bitcoin (or anything else?).
+- You cypherpost an ad.
+- Someone from your trusted network contacts you within minutes ready to fulfil your order.
+
 ![cypherpost](design/assets/owl.png)
 
 ## Run on localhost

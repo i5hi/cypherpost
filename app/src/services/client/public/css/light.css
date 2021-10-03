@@ -66,13 +66,13 @@ input {
 input[type=text]:focus{
   background-color: transparent !important;
   outline: none !important;
-  border-bottom: 5px solid #8900A7;     /* oranges! yey */
+  border-bottom: 2px solid #8900A7;     /* oranges! yey */
 }
 input[type=password]:focus{
   background-color: transparent !important;
 
   outline: none !important;
-  border-bottom: 5px solid #8900A7;     /* oranges! yey */
+  border-bottom: 2px solid #8900A7;     /* oranges! yey */
 }
 input {
   min-height: auto;
