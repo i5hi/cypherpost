@@ -54,7 +54,7 @@ function createContactInfo(cipher_info, derivation_scheme, profile_parent_xprv) 
 
 // COMPOSITES
 async function initProfileState() {
-  const my_profile_and_keys = (store.getMyProfile() && store.getMyKeys()) ? { profile: store.getMyProfile(), keys: store.getMyKeys() } : await apiGetMyProfile(store.getToken());
+  const my_profile_and_keys = await apiGetMyProfile(store.getToken());
 
   if (my_profile_and_keys instanceof Error) {
     if (my_profile_and_keys.name === "404" && my_profile_and_keys.message.startsWith("No profile")) {
@@ -155,7 +155,7 @@ async function loadProfileEvents() {
       if (!localStorage.getItem(`${store.getUsername()}_parent_128`)) {
         document.getElementById("import_keys_button").click();
       }
-      if (!store.getMyProfile()['cipher_info']) {
+      if (store.getMyProfile() && !store.getMyProfile()['contact_info']) {
         alert("Add come cypher contact info!")
         document.getElementById("edit_button").click();
       }
