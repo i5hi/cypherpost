@@ -9,6 +9,7 @@ const { exit } = require("./auth");
 const { apiGetOthersPosts, apiGetMyProfile, apiGetManyProfiles, apiGetMyPosts, apiCreatePost, apiGetUserProfile, apiDeletePost } = require("./api");
 const store = require("./store");
 
+// DISPLAY
 async function populateOthersPosts(others_posts) {
 
   document.getElementById('others_posts_list').innerHTML = ``;
@@ -62,7 +63,7 @@ async function populateOthersPosts(others_posts) {
 
       if (contact_cipher_key !== "none") {
         const contact_plain_key = decrypt(contact_cipher_key, shared_secret);
-        contact_info = (other_profile['profile']['cipher_info'])?decrypt(other_profile['profile']['cipher_info'], contact_plain_key): "No Contact Info Added.";
+        contact_info = (other_profile['profile']['cipher_info']) ? decrypt(other_profile['profile']['cipher_info'], contact_plain_key) : "No Contact Info Added.";
 
       }
 
@@ -87,7 +88,6 @@ async function populateOthersPosts(others_posts) {
 
 }
 
-
 function populateMyPosts(my_posts) {
   document.getElementById('my_posts_list').innerHTML = ``;
   const my_profile = store.getMyProfile();
@@ -103,7 +103,7 @@ function populateMyPosts(my_posts) {
       const profile_revoke = parseInt(current_profile_ds.split("/")[2].replaceAll("'", ""));
 
       const profile_encryption_pair = bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']['xprv'], 0, profile_revoke);
-      const contact_info = (my_profile.cipher_info)?decrypt(my_profile.cipher_info, crypto.createHash('sha256').update(profile_encryption_pair['xprv']).digest('hex')):"No Contact Info Added.";
+      const contact_info = (my_profile.cipher_info) ? decrypt(my_profile.cipher_info, crypto.createHash('sha256').update(profile_encryption_pair['xprv']).digest('hex')) : "No Contact Info Added.";
 
       if (post.expiry !== 0) {
         let expiry_time;
@@ -115,7 +115,7 @@ function populateMyPosts(my_posts) {
           expiry_time = `${Math.round((post.expiry - Date.now()) / (1000 * 60))} minutes`;
 
         document.getElementById('my_posts_list').innerHTML += `<div class="container border outline"><br><div class="container"><div class="row"><div class="container"><div id="my_post_username_${post.id}" class="row post_username">@${post.username}</div><div id="my_post_message_${post.id}" class="row post_message"><div>${message}</div></div><div id="my_post_contact_${post.id}" class="row contact_info"><div><div class="container">${contact_info}</div></div></div><hr><div id="my_post_genesis_${post.id}" class="row contact_info">Genesis: ${new Date(post.genesis)}</div><div id="my_post_expiry_${post.id}" class="row contact_info">Expiry: In ${expiry_time}</div></div></div><div class="row"><div class="col-8"></div><div class="col-4"><button id="delete_post_${post.id}" class="btn-sm centerme" type="button"><i class="far fa-trash-alt"></i></button></div></div><br></div></div><br>`;
-        
+
       }
       else {
         document.getElementById('my_posts_list').innerHTML += `<div class="container border outline"><br><div class="container"><div class="row"><div class="container"><div id="my_post_username_${post.id}" class="row post_username">@${post.username}</div><div id="my_post_message_${post.id}" class="row post_message"><div>${message}</div></div><div id="my_post_contact_${post.id}" class="row contact_info"><div><div class="container">${contact_info}</div></div></div><hr><div id="my_post_genesis_${post.id}" class="row contact_info">Genesis: ${new Date(post.genesis)}</div><div id="my_post_expiry_${post.id}" class="row contact_info">Expiry: Never</div></div></div><div class="row"><div class="col-8"></div><div class="col-4"><button id="delete_post_${post.id}"" class="btn-sm centerme" type="button"><i class="far fa-trash-alt"></i></button></div></div><br></div></div><br>`;
@@ -126,15 +126,16 @@ function populateMyPosts(my_posts) {
         alert("Deleted Post")
         document.getElementById("my_posts_menu").click();
       });
-      
+
     });
-    
+
   }
   else
     document.getElementById('my_posts_list').innerHTML += "You have not made any posts yet."
 
 }
 
+// HELPERS
 function sortProperties(obj, sortedBy, isNumericSort, reverse) {
   sortedBy = sortedBy || 1; // by default first key
   isNumericSort = isNumericSort || false; // by default text sort
@@ -160,7 +161,6 @@ function sortProperties(obj, sortedBy, isNumericSort, reverse) {
     });
   return sortable; // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
 }
-
 function expiryStringtoTimestamp(expiry_string) {
 
   switch (expiry_string) {
@@ -180,6 +180,20 @@ function expiryStringtoTimestamp(expiry_string) {
       return 0;
   }
 }
+
+function createPostDecryptionKeys(trusting_profiles, my_recipient_xprv, post_encryption_key) {
+  const decryption_keys = trusting_profiles.keys.map((item) => {
+    const ecdsa_grouped = bitcoin.extract_ecdsa_pair({ xpub: item.recipient_xpub, xprv: my_recipient_xprv });
+    const shared_secret = bitcoin.calculate_shared_secret(ecdsa_grouped['private_key'], ecdsa_grouped['public_key']);
+    const encrypted_posts_key = encrypt(post_encryption_key, shared_secret);
+    return {
+      key: encrypted_posts_key,
+      id: item.username
+    };
+  });
+  return decryption_keys;
+};
+
 async function createPost(message, expiry_string) {
 
   const expiry = expiryStringtoTimestamp(expiry_string);
@@ -188,7 +202,6 @@ async function createPost(message, expiry_string) {
     message
   });
 
-  let decryption_keys = [];
 
   const my_posts = await apiGetMyPosts(store.getToken());
   if (my_posts instanceof Error) {
@@ -203,29 +216,20 @@ async function createPost(message, expiry_string) {
   // console.log(sortProperties(my_posts, 'genesis', true, true)[0][1]['derivation_scheme'])
   // console.log(current_posts_ds);
   const index = parseInt(current_posts_ds.split("/")[1].replaceAll("'", ""));
+  const revoke = 0; // new post
   const derivation_scheme = "m/" + index + "/0'";
 
-  // console.log(derivation_scheme_update);
-
-  const post_encryption_key = bitcoin.derive_child_indexes(store.getParentKeys()['posts_parent']["xprv"], index, 0);
-
-  const cipher_json = encrypt(plain_json, crypto.createHash('sha256').update(post_encryption_key.xprv).digest('hex'));
-
+  const post_encryption_key = crypto.createHash('sha256').update(
+    bitcoin.derive_child_indexes(store.getParentKeys()['posts_parent']["xprv"], index, revoke)['xprv']
+  ).digest('hex');
+  const cipher_json = encrypt(plain_json, post_encryption_key);
   const my_recipient_xprv = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']['xprv'], 0, 0)['xprv'];
   const trusting_usernames = store.getMyProfile().trusting.map(item => item.username);
   const trusting_profiles = await apiGetManyProfiles(store.getToken(), trusting_usernames);
 
-  // console.log({ trusting_profiles });
+  // console.log({ post_encryption_key });
 
-  trusting_profiles.keys.map((item) => {
-    const ecdsa_grouped = bitcoin.extract_ecdsa_pair({ xpub: item.recipient_xpub, xprv: my_recipient_xprv });
-    const shared_secret = bitcoin.calculate_shared_secret(ecdsa_grouped['private_key'], ecdsa_grouped['public_key']);
-    const encrypted_posts_key = encrypt(crypto.createHash('sha256').update(post_encryption_key.xprv).digest('hex'), shared_secret);
-    decryption_keys.push({
-      key: encrypted_posts_key,
-      id: item.username
-    });
-  });
+  const decryption_keys = createPostDecryptionKeys(trusting_profiles, my_recipient_xprv, post_encryption_key);
 
   const post = await apiCreatePost(store.getToken(), expiry, decryption_keys, derivation_scheme, cipher_json);
   if (post instanceof Error) {
@@ -234,6 +238,7 @@ async function createPost(message, expiry_string) {
     alert(`Failed to create post`);
   }
   else {
+    document.getElementById("close_create_post_modal").click();
     document.getElementById("my_posts_menu").click();
   }
 }
@@ -244,20 +249,7 @@ function displayNewPost(post) {
   document.getElementById("others_posts_list").classList.add("hidden");
 }
 
-async function updatePage() {
-  // const my_posts = await apiGetMyPosts(store.getToken());
-  const others_posts = await apiGetOthersPosts(store.getToken());
 
-  // console.log("\nAT UPDATE\n");
-  // console.log({ my_posts });
-  // console.log({ others_posts });
-
-  // store.setMyPosts(my_posts);
-  store.setOthersPosts(others_posts);
-  // populateMyPosts(my_posts);
-  populateOthersPosts(others_posts);
-
-}
 
 async function loadPostsEvents() {
 
@@ -275,7 +267,7 @@ async function loadPostsEvents() {
     const my_posts = await apiGetMyPosts(store.getToken());
     store.setMyPosts(my_posts);
     await populateMyPosts(my_posts);
-    
+
   });
 
   document.getElementById(`others_posts_menu`).addEventListener("click", async (event) => {
@@ -318,7 +310,7 @@ async function loadPostsEvents() {
   // console.log({ others_posts });
   store.setOthersPosts(others_posts);
   await populateOthersPosts(others_posts);
-  
+
   document.getElementById("posts_page_spinner").classList.add("hidden");
   document.getElementById("posts_page").classList.remove("hidden");
 
