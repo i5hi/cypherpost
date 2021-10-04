@@ -219,9 +219,9 @@ async function createPost(message, expiry_string) {
   const current_posts_ds = (my_posts.length === 0) ? "m/0'/0'" : sortProperties(my_posts, 'genesis', true, true)[0][1]['derivation_scheme'];
   // console.log(sortProperties(my_posts, 'genesis', true, true)[0][1]['derivation_scheme'])
   // console.log(current_posts_ds);
-  const index = parseInt(current_posts_ds.split("/")[1].replaceAll("'", ""));
+  const index = parseInt(current_posts_ds.split("/")[0].replaceAll("'", ""));
   const revoke = 0; // new post
-  const derivation_scheme = "m/" + index + "/0'";
+  const derivation_scheme = "m/" + index + "'/0'";
 
   const post_encryption_key = crypto.createHash('sha256').update(
     bitcoin.derive_child_indexes(store.getParentKeys()['posts_parent']["xprv"], index, revoke)['xprv']
