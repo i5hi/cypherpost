@@ -5,10 +5,10 @@
 A private, end-to-end encrypted social network to selectively post ads and messages to members of a trusted network.
 
 - Each post is encrypted with new private key.
-- Server can't decrypt this posts
+- Server can't decrypt these posts.
 - Posts can be decrypted by people you are trusting.
 - Conatct info under profile page is encrypted. Only people you trust can decrypt it.
-- Ability to trust/untrust
+- Ability to trust/untrust.
 - List of people you are trusting is not encrypted. Anyone can see who is trusting whome.
 
 BIP39 key generation & BIP32 key derivation is used for portable end-to-end encryption; to allow users to recover their accounts on any device without the need to maintain a master device holding a non-human readable master key.
