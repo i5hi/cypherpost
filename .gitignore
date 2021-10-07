@@ -3,4 +3,5 @@
 **/node_modules/
 **/dist/
 **/bundles/
+**/react-client/
 .DS_Store
