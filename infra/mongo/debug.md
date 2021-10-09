@@ -21,7 +21,7 @@ In development:
 nano ~/.ssh/config
 # make sure you have the remote User, IP and Port under Host cypherpost
 scp cypherpost:/mnt/persistence/mongo/data/db/mongodump.01 ~/cypherpost/infra/mongo/dumps/mongodump.01
-# This will bring the archive into the cypherpost workspace into a folder called dumps which is git ignored.
+# This will bring the archive into the cypherpost workspace into a folder called dumps whose contents are git ignored.
 
 cd ~/cypherpost/compose
 docker-compose -f dev-compose.yaml up -d --force-recreate --build --no-deps mongo
