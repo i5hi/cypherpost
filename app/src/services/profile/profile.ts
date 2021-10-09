@@ -116,6 +116,10 @@ export class LionBitProfile implements ProfileInterface {
       if (updated_self_profile instanceof Error) return updated_self_profile;
   
 
+      // update my own recipient_keys
+      const recipient_key_status = await keys.remove_recipient_key(username, revoking);
+      if (recipient_key_status instanceof Error) return recipient_key_status;
+
 
       return updated_self_profile;
     }
