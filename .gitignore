@@ -3,5 +3,5 @@
 **/node_modules/
 **/dist/
 **/bundles/
-infra/mongo/dumps
+infra/mongo/dumps/*
 .DS_Store

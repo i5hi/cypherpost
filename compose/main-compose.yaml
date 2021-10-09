@@ -21,7 +21,7 @@ services:
   mongo:
     build:
       context: ../infra/mongo
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     image: cypherpost-mongo
     container_name: database
     restart: unless-stopped
