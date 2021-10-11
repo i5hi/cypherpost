@@ -23,7 +23,7 @@ async function loadInitialState(token, username, password) {
   store.setToken(token);
   store.setUsername(username);
   store.setTriplePass256(password);
-  console.log("My password is definately not", password);
+  // console.log("My password is definately not", password);
 
   // MY PROFILE
   try {
