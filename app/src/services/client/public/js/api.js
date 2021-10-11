@@ -11,7 +11,6 @@ const web_url = (document.domain === 'localhost') ? "http://localhost" : `https:
 
 async function apiRegister(username, password, confirm) {
 
-  console.log("My password is definately not", password);
 
   if (store.getExistingUsernames().includes(username)) {
     alert("Username taken!");
@@ -54,7 +53,6 @@ async function apiRegister(username, password, confirm) {
 }
 
 async function apiLogin(username, password) {
-  console.log("My password is definately not", password);
 
   // alert(({parent_128_plain:JSON.parse(parent_128_plain).xpub}));
   const username_regex = /^(?=.{1,15}$)(?![_.])(?!.*[_.]{2})[a-z][a-z0-9_.]+$/;
