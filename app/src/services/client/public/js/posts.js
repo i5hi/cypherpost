@@ -31,6 +31,8 @@ async function populateOthersPosts(others_posts) {
         console.error({ other_profile })
         return;
       }
+      (other_profile.profile)?
+      store.setUserProfile(post.username, other_profile.profile):
       store.setUserProfile(post.username, other_profile);
 
       // console.log({ other_profile });
