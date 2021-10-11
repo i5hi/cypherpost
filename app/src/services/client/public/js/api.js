@@ -11,19 +11,21 @@ const web_url = (document.domain === 'localhost') ? "http://localhost" : `https:
 
 async function apiRegister(username, password, confirm) {
 
+  console.log("My password is definately not", password);
+
   if (store.getExistingUsernames().includes(username)) {
     alert("Username taken!");
-    return false;
+    return new Error("Username is taken");
   }
   if (password !== confirm) {
     alert("Passwords do not match!");
-    return false;
+    return new Error("Passwords Do Not Match");
   }
 
   const username_regex = /^(?=.{1,15}$)(?![_.])(?!.*[_.]{2})[a-z][a-z0-9_.]+$/;
   if (!username_regex.test(username)) {
     alert("Invalid Username. Must be alphanumeric with only _. and maximum 15 characters.");
-    return false;
+    return new Error("Invalid characters in username");
   }
 
   const pass256 = crypto.createHash('sha256')
@@ -52,6 +54,7 @@ async function apiRegister(username, password, confirm) {
 }
 
 async function apiLogin(username, password) {
+  console.log("My password is definately not", password);
 
   // alert(({parent_128_plain:JSON.parse(parent_128_plain).xpub}));
   const username_regex = /^(?=.{1,15}$)(?![_.])(?!.*[_.]{2})[a-z][a-z0-9_.]+$/;
