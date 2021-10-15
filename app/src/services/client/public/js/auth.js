@@ -104,7 +104,7 @@ async function decodeJWTUser(token){
   const split_token = token.split(".");
   const header = JSON.parse(Buffer.from(split_token[0],"base64"));
   const payload = JSON.parse(Buffer.from(split_token[1],"base64"));
-  console.log(header, payload['payload']);
+  // console.log(header, payload['payload']);
   return payload['payload']['user'];
 }
 // COMPOSITES
