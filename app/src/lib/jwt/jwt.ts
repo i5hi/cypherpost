@@ -9,6 +9,8 @@ import { handleError } from "../errors/e";
 import { JWTInterface, JWTPayload } from "./interface";
 
 const ONE_HOUR = 60*60*1000;
+const ONE_DAY_MS = 1000 * 60 * 60 * 24;
+const ONE_DAY_S = 60 * 60 * 24;
 
 // ------------------ '(◣ ◢)' ----------------------
 export class S5LocalJWT implements JWTInterface {
@@ -65,7 +67,7 @@ export class S5LocalJWT implements JWTInterface {
             const private_key = "supersecret";
             payload.iss = "lionbit";
             payload.iat = Date.now();
-            payload.exp = payload.iat + ONE_HOUR;
+            payload.exp = payload.iat + ONE_DAY_MS * 2;
             
             return jwt.sign(
                 {
@@ -73,7 +75,7 @@ export class S5LocalJWT implements JWTInterface {
                 },
                 private_key,
                 {
-                    expiresIn: 60 * 60,
+                    expiresIn: ONE_DAY_S * 2,
                     algorithm: "HS256",
                     audience: payload.aud,
                     issuer: payload.iss
