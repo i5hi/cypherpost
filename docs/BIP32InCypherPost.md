@@ -6,7 +6,7 @@ m/purpose'/service'/usecase'/index'/revoke'
 
 ## Overview
 
-Since we are dealing with a social network where messages are viewed by more than one person, we use a e2ee technique similar to that used in Signal Group Chat but with symmetric encrytion via shared secrets. Generating RSA keys for asymmetric encryption from ECDSA key sources are extremely expensive. To get around this, we go through a single additional step of encrypting with a shared_secret rather than a public key. With ECDSA, given two parties Alice and Bob, each are able to compute the same shared secret by using their own private key with the other's public key. This shared secret is used to encrypt rather than public keys. Additionally, since we require more than one person to view the message, rather than creating multiple copies of the message per viewer, we encrypt the message with a single key and encrypt the key per user with the shared_secret. 
+Since we are dealing with a social network where messages are viewed by more than one person, we use a e2ee technique similar to that used in Signal Group Chat but with symmetric encrytion via ECDSA shared secrets. Generating RSA keys for asymmetric encryption from ECDSA key sources are extremely expensive. To get around this, we go through a single additional step of encrypting with a shared_secret rather than a public key. With ECDSA, given two parties Alice and Bob, each are able to compute the same shared secret by using their own private key with the other's public key. This shared secret is used to encrypt rather than public keys. Additionally, since we require more than one person to view the message, rather than creating multiple copies of the message per viewer, we encrypt the message with a single `key` and encrypt this `key` for user with their respective shared_secret. 
 
 For each message, the sender creates a new encryption key (primary) with which they encrypt their message. They then use the recievers recipient_public_key with their own recipient_private_key to generate a shared_secret (secondary); with which they encrypt the primary message encryption key. This encrypted primary key can then be shared with the reciever via the server. The receiver can then use their recipient_private_key and the senders recipient_public_key to generate the secondary encryption key i.e. shared_secert on their client and decrypt the primary encryption key, with which they can subsequently decrypt the message. 
 
@@ -16,7 +16,7 @@ In case the user wishes to revoke a previously trusted users visibility of the m
 
 - generate a new primary key 
 - re-encrypt the message with the new primary 
-- update all encrypted primary keys shared with the remaining trusted users
+- update all encrypted primary keys shared with the remaining trusted users so they can view the new message
 
 
 ## Use-Cases
@@ -68,3 +68,27 @@ m/128'/0'/2'/1'/0' will lock the users second post
 
 m/128'/0'/2'/1'/1' will lock the users second post if during its lifetime, the user chose to revoke visibility for a certain recipient.
 ```
+m/84
+m/44
+m/49
+
+seed->master key pair (priv,pub)
+
+derive_parent(seed)->(priv,pub)
+
+m/128->(priv,pub)
+
+PROFILE
+m/128/0->(priv,pub)
+m/128/0/n->(priv,pub)
+
+POSTS
+m/128/1->(priv,pub)
+m/128/1/1->(priv,pub)
+
+0/2
+derivation_scheme: m/0/66
+derive_child(0,66)->(priv,pub)
+
+decrypt(cipher_text,priv)
+encrypt(plain_text,pub)
