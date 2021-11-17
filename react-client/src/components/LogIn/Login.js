@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import bitcoin from "../../utils/js/bitcoin"
+import { apiLogin } from "../../utils/js/api";
 
 import "../../css/mdb.min.css"
 import "../../css/mdb.min.css.map"
@@ -11,13 +12,27 @@ import Owl from "../../img/owl.png"
 
 const Login = (props) => {
 
-    // const username = useFormInput('');
-    // const password = useFormInput('');
+    const username = useFormInput('');
+    const password = useFormInput('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
+
     const handleLogin = () => {
-        props.history.push('/dashboard');
+        setError(null);
+        setLoading(true);
+        
+        const token = apiLogin(username.value, password.value);
+        if (token instanceof Error) {
+            setLoading(false);
+            if (Error.response.status === 401) setError(Error.response.data.message);
+            else setError("Something went wrong. Please try again later.");
+
+            alert(token.message)
+            return false;
+        }
+        console.log(token);
+        // props.history.push('/dashboard');
     }
     
     // handle button click of login form
@@ -51,18 +66,19 @@ const Login = (props) => {
 
                             <div class="col-sm-12 col-md-12 col-lg-12">
 
-                                <form class="text-center" action="#!">
+                                
 
                                     <p class="h4 mb-4">Login</p>
 
-                                        <input type="text" id="login_username" class="" placeholder="Username"/>
+                                        <input type="text" {...username} id="login_username" class="" placeholder="Username"/>
                                         <br/>
-                                        <input type="password" id="login_pass" class="" placeholder="Password"/>
+                                        <input type="password" {...password} id="login_pass" class="" placeholder="Password"/>
                                         <br/>
-                                        <button id="login_button" class="btn centerme" type="submit" value={loading ? 'Loading...' : 'Login'} onClick={handleLogin} disabled={loading} >Enter</button>
+                                        <input id="login_input" class="btn centerme" type="button" value={loading ? 'Loading...' : 'Login'} onClick={handleLogin} disabled={loading} />
 
 
-                                </form>
+                               
+                            {error && <><small style={{ color: 'red' }}>{error}</small><br /></>}<br />
                             </div>
                             <div class="col-sm-12 col-md-12 col-lg-12"/>
 
@@ -93,5 +109,17 @@ const Login = (props) => {
         </div>
     )
   }
+
+const useFormInput = initialValue => {
+    const [value, setValue] = useState(initialValue);
+
+    const handleChange = e => {
+        setValue(e.target.value);
+    }
+    return {
+        value,
+        onChange: handleChange
+    }
+}
 
 export default Login;

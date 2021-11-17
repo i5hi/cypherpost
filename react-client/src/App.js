@@ -8,6 +8,7 @@ import "./App.css";
 import Index from "./components/Index/Index";
 import Reset from "./components/Reset/Reset";
 import LogIn from "./components/LogIn/Login";
+import Dashboard from "./components/Dashboard/Dashboard";
 
 require("dotenv").config();
 
@@ -33,6 +34,9 @@ const App = () => {
           </Route>
           <Route path="/reset">
             <Reset />
+          </Route>
+          <Route path="/dashboard">
+            <Dashboard />
           </Route>
        </Switch>
 
