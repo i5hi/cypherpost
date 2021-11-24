@@ -37,12 +37,12 @@ export enum UseCase{
 
 export interface UserKeys{
   //mine
-  username?: string;
-  recipient_xpub?: string;
+  username?: string;// my identity name
+  recipient_xpub?: string;// my identity pubkey
   //others
-  recipient_keys?: Array<Key>;//0
-  profile_keys?: Array<Key>;//1
-  post_keys?: Array<Key>;//2
+  recipient_keys?: Array<Key>;//0 who i trust
+  profile_keys?: Array<Key>;//1 who trust me
+  post_keys?: Array<Key>;//2 based on visibility
 };
 
 export interface Key{

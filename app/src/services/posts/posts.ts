@@ -18,7 +18,14 @@ const uuid = new S5UID();
 
 export class LionBitPosts implements PostInterface {
 
-  async create(username: string, expiry: number, cipher_json: string, derivation_scheme: string, decryption_keys: Array<Key>): Promise<UserPost | Error> {
+  async create(
+    username: string, 
+    expiry: number, 
+    cipher_json: string, 
+    derivation_scheme: string, 
+    decryption_keys: Array<Key>,
+    ): Promise<UserPost | Error> {
+  
     const post: UserPost = {
       id: uuid.createPostCode(),
       username: username,

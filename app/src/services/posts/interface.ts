@@ -31,7 +31,6 @@ export interface UserPost{
   genesis?: number;
   expiry?: number;
   username?: string;
-  // visibility?: PostVisibility;
   cipher_json?: string;
   derivation_scheme?: string;
   // comments?: Array<Comment>;
@@ -44,8 +43,3 @@ export interface Comment {
   genesis?: string;
 }
 
-// export enum PostVisibility {
-//   Trusting,
-//   // TrustingChain,
-//   Public, // plaintext
-// }

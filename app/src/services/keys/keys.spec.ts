@@ -35,7 +35,7 @@ const profile_key = {
 };
 
 const post_key = {
-  key: "14e8d62ede0506a61d87a18b842b77b0:+LXi9HaE2Ep4HVeLv6OPfHW0KPdDxhtUhz5DFmf+2QnjsVKm/d07oxHuNcQ6uZwo7/UHZCfg0CpH7Ob0SGfwOsSKYbryP6LeRBl7Aa/w0UmJ8D9z1GBsI3gFFWb58tOGpQW7DGizCPaR0IQ2lnBjjw==",
+  key: "diffd62ede0506a61d87a18b842b77b0:+LXi9HaE2Ep4HVeLv6OPfHW0KPdDxhtUhz5DFmf+2QnjsVKm/d07oxHuNcQ6uZwo7/UHZCfg0CpH7Ob0SGfwOsSKYbryP6LeRBl7Aa/w0UmJ8D9z1GBsI3gFFWb58tOGpQW7DGizCPaR0IQ2lnBjjw==",
   id: "s5id08uoijlk897u8u"
 };
 
@@ -79,7 +79,7 @@ describe("Initalizing Test: Keys Controller", function () {
       expect(response.length).equals(1);
     });
 
-    it("should ADD a PROFILE KEY to the collection", async function () {
+    it("should ADD a RECIPIENT KEY to the collection", async function () {
       let response: boolean | UserKeys | Error = await keys.add_recipient_key(username,recipient_key);
       if (response instanceof Error) throw response;
       expect(response).equals(true);
@@ -108,6 +108,7 @@ describe("Initalizing Test: Keys Controller", function () {
       expect(response['profile_keys'].length).equals(1);
       expect(response['post_keys'].length).equals(0);
     });
+
 
     it("should ADD a POST KEY to the collection", async function () {
       let response: boolean | UserKeys | Error = await keys.add_post_key(username,post_key);
@@ -139,6 +140,12 @@ describe("Initalizing Test: Keys Controller", function () {
       expect(response['post_keys'].length).equals(1);
     });
 
+    it("should ATTEMPT to ADD DUPLICATE PROFILE KEY", async function () {
+      let response: boolean | Error = await keys.add_profile_key(username,profile_key);
+      console.log({response});
+      expect(response instanceof Error).equals(true);
+    });
+    
     it("should REMOVE a PROFILE KEY to the collection", async function () {
       let response: boolean | UserKeys | Error = await keys.remove_profile_key(username,profile_key.id);
       if (response instanceof Error) throw response;
@@ -167,6 +174,8 @@ describe("Initalizing Test: Keys Controller", function () {
       expect(response['profile_keys'].length).equals(0);
       expect(response['post_keys'].length).equals(0);
     });
+
+
 
   });
 });
