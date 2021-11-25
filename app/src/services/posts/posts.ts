@@ -52,9 +52,8 @@ export class LionBitPosts implements PostInterface {
       const trusting_username = decryption_key.id;
       decryption_key.id = post.id;
       const status = await keys.add_post_key(trusting_username, decryption_key);
-      if (status instanceof Error) {
-        console.error("!!!ERROR: NOTIFY ADMIN!!!\nCOULD NOT UPDATE KEYS IN POST", status)
-        return status;
+      if (status instanceof Error && status.name != "409") {
+        return status
       }
     });
 

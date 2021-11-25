@@ -60,9 +60,6 @@ export async function handleCreatePost(req, res) {
   const request = parseRequest(req);
 
   try {
-
-
-    
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       throw {

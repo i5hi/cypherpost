@@ -65,10 +65,14 @@ export class LionBitProfile implements ProfileInterface {
     if (other_keys instanceof Error) return other_keys;
 
     const self_key_update = await keys.add_recipient_key(username, { key: other_keys.recipient_xpub, id: other_keys.username, signature });
-    if (self_key_update instanceof Error) return self_key_update;
+    if (self_key_update instanceof Error && self_key_update.name != "409"){ 
+      return self_key_update
+    };
 
     const other_key_update = await keys.add_profile_key(trusting, { key: decryption_key, id: username });
-    if (other_key_update instanceof Error) return other_key_update;
+    if (other_key_update instanceof Error && other_key_update.name != "409"){ 
+      return other_key_update
+    };
 
     return true;
   }
@@ -109,7 +113,9 @@ export class LionBitProfile implements ProfileInterface {
         if (status instanceof Error) return status;
         // add new keys
         status = await keys.add_profile_key(decryption_key.id, decryption_key);
-        if (status instanceof Error) return status;
+        if (status instanceof Error && status.name != "409"){ 
+          return status
+        };
 
       });
       const updated_self_profile = await store.update(username,{derivation_scheme});
