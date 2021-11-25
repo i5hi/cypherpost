@@ -96,13 +96,13 @@ async function isUnique(username: string, key: Key): Promise<boolean | Error> {
     let status = true;
 
     doc.recipient_keys.map((element) => {
-      if (element.key === key.key) status = false;
+      if (element.key === key.key || element.id === key.id) status = false;
     });
     doc.profile_keys.map((element) => {
-      if (element.key === key.key) status = false;
+      if (element.key === key.key || element.id === key.id) status = false;
     });
     doc.post_keys.map((element) => {
-      if (element.key === key.key) status = false;
+      if (element.key === key.key || element.id === key.id ) status = false;
     });
     console.log({status})
     return status;
