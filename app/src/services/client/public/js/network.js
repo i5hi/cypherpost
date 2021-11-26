@@ -185,7 +185,7 @@ async function displayProfile(my_profile,my_keys,username) {
 
     const decryption_key = (encrypted_contact_decryption_key) ? decrypt(encrypted_contact_decryption_key, shared_secret) : null;
     // console.log({ decryption_key })
-    const contact_info = (decryption_key && other_profile.profile.cipher_info.includes(":")) ? decrypt(other_profile.profile.cipher_info, decryption_key) : other_profile.profile.cipher_info | "Not Set";
+    const contact_info = (decryption_key && other_profile.profile.cipher_info) ? decrypt(other_profile.profile.cipher_info, decryption_key) : other_profile.profile.cipher_info | "Not Set";
     // console.log({shared_secret})
     document.getElementById("network_profile_contact").textContent = contact_info;
 
