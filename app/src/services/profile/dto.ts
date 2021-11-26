@@ -286,6 +286,8 @@ export async function handleTrustUser(req, res) {
       message: "Trust in self is implied."
     };
 
+    console.log({request});
+    
     const status = await profile.trust(request.headers['user'], request.body.trusting, request.body.decryption_key, request.body.signature);
     if (status instanceof Error) throw status;
 
