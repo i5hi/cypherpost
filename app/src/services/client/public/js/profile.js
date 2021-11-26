@@ -42,12 +42,12 @@ function  displayProfile(profile, contact_info) {
 
 function createCipherInfo(contact_info, derivation_scheme, profile_parent_xprv) {
   const revoke = parseInt(derivation_scheme.split("/")[2].replaceAll("'", ""));
-  const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke + 1);
+  const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
   return encrypt(contact_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
 }
 function createContactInfo(cipher_info, derivation_scheme, profile_parent_xprv) {
   const revoke = (derivation_scheme.includes("'"))?parseInt(derivation_scheme.split("/")[2].replaceAll("'", "")):parseInt(derivation_scheme.split("/")[2].replaceAll("h", ""));
-  const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke + 1);
+  const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
   return decrypt(cipher_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
 }
 
