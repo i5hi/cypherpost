@@ -17,9 +17,7 @@ const { apiRevoke, apiTrust, apiGetMyProfile, apiGetUsernames, apiGetUserProfile
 async function trust(username) {
 
   const other_profile = (store.getUserProfile(username)) ? store.getUserProfile(username) : await apiGetUserProfile(store.getToken(), username);
-
   store.setUserProfile(username, other_profile);
-
 
   const other_recipient_xpub = other_profile.recipient_xpub;
   const my_recipient_xprv = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']['xprv'], 0, 0)['xprv'];
@@ -84,7 +82,6 @@ async function revoke(username) {
     // console.log(trusting_usernames);
 
     const contact_decryption_key = bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']["xprv"], 0, revoke);
-
     const contact_info = decrypt(my_profile.cipher_info, crypto.createHash('sha256').update(contact_decryption_key.xprv).digest('hex'));
 
     const new_profile_key = bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']['xprv'], 0, revoke + 1);
@@ -176,7 +173,7 @@ async function displayProfile(my_profile,my_keys,username) {
     });
     const encrypted_contact_decryption_key = (encrypted_contact_decryption_key_array.length > 0) ? encrypted_contact_decryption_key_array[0]['key'] : null;
 
-    // console.log({ encrypted_contact_decryption_key })
+    console.log({ encrypted_contact_decryption_key })
 
     const my_recipient_xprv = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']['xprv'], 0, 0)['xprv'];
     const other_recipient_xpub = other_profile.recipient_xpub;
@@ -188,7 +185,7 @@ async function displayProfile(my_profile,my_keys,username) {
 
     const decryption_key = (encrypted_contact_decryption_key) ? decrypt(encrypted_contact_decryption_key, shared_secret) : null;
     // console.log({ decryption_key })
-    const contact_info = (decryption_key) ? decrypt(other_profile.profile.cipher_info, decryption_key) : other_profile.profile.cipher_info;
+    const contact_info = (decryption_key && other_profile.profile.cipher_info.includes(":")) ? decrypt(other_profile.profile.cipher_info, decryption_key) : other_profile.profile.cipher_info | "Not Set";
     // console.log({shared_secret})
     document.getElementById("network_profile_contact").textContent = contact_info;
 
