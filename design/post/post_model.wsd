@@ -4,14 +4,10 @@ title Post
 
 map Post{
   id => String
-  
   genesis => DateTime
   expiry => DateTime
-  
   username => String
-
   derivation_scheme => String
-
   cipher_post_detail => String
 }
 
@@ -19,7 +15,6 @@ map SenderKey {
   username => String
   decryption_key* => String
 }
-
 
 map PostDetail {
   message => String
