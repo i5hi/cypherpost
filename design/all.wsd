@@ -9,6 +9,7 @@ end note
 map UserProfile {
   genesis => DateTime
   uid => String
+  recipient_xpub => String
   username => String
   nickname => String
   status => String
@@ -18,7 +19,6 @@ map UserProfile {
 
 map UserKeys {
   uid => String
-  recipient_xpub => String
   recipient_keys => Array<Key>
   profile_keys* => Array<Key> 
   post_keys* => Array<Key>
@@ -28,7 +28,7 @@ map Post {
   genesis => DateTime
   id => String
   expiry => DateTime
-  username => String
+  uid => String
   derivation_scheme => String
   post_detail* => String
 }
