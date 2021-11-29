@@ -14,7 +14,7 @@ map UserProfile {
   nickname => String
   status => String
   derivation_scheme => String
-  contact_info* => Array<String>
+  contact_info* => String
 }
 
 map UserKeys {
