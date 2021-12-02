@@ -17,13 +17,6 @@ map UserProfile {
   contact_info* => String
 }
 
-map UserKeys {
-  uid => String
-  recipient_keys => Array<Key>
-  profile_keys* => Array<Key> 
-  post_keys* => Array<Key>
-}
-
 map Post {
   genesis => DateTime
   id => String
@@ -33,11 +26,27 @@ map Post {
   post_detail* => String
 }
 
-map Key {
-  genesis => DateTime
+map UserKeys {
+  uid => String
+  trusting_keys => TrustingKeyStore
+  contact_keys* => ContactInfoKeyStore 
+  post_keys* => PostKeyStore
+}
+
+map TrustingKeyStore {
   id => String
   key => String
   signature => String
+}
+
+map ContactInfoKeyStore {
+  id => String
+  key => String
+}
+
+map PostKeyStore {
+  id => String
+  key => String
 }
 
 map PostDetail {
