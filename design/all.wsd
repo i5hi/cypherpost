@@ -26,26 +26,22 @@ map Post {
   post_detail* => String
 }
 
-map UserKeys {
-  uid => String
-  trusting_keys => TrustingKeyStore
-  contact_keys* => ContactInfoKeyStore 
-  post_keys* => PostKeyStore
-}
-
 map TrustingKeyStore {
-  id => String
+  uname => String   //user who will is getting trusted 
+  id => String      //username who is trusing, who is creating signature
   key => String
   signature => String
 }
 
 map ContactInfoKeyStore {
-  id => String
+  uname => String   // user who will be able to read contact info 
+  id => String      // username who created/updated his contact info
   key => String
 }
 
 map PostKeyStore {
-  id => String
+  uname => String   // user who will be able to read post 
+  id => String      // post id
   key => String
 }
 
