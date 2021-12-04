@@ -187,6 +187,10 @@ async function loadAuthEvents() {
         event.preventDefault();
         window.location.href = "reset";
       });
+      document.getElementById("home_signup").addEventListener("click", (event) => {
+        event.preventDefault();
+        window.location.href = "invitation?invited_by=ravi&invite_code=foo";
+      });
       break;
 
     case "login":
@@ -222,7 +226,7 @@ async function loadAuthEvents() {
       const usernames = await apiGetUsernames(false, invite_code, invited_by);
       if (usernames && usernames.includes(invited_by)) {
         storeInvitation();
-        displayInvitation(true, invited_by);
+        // displayInvitation(true, invited_by);
         store.setExistingUsernames(usernames);
       }
       else displayInvitation(false);

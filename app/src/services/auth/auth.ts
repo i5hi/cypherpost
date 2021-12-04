@@ -20,32 +20,33 @@ const ONE_HOUR = 60 * 60 * 1000;
 
 export class LionBitAuth implements AuthInterface {
   async check_invite(invited_by: string, invite_code: string): Promise<boolean | Error> {
-    const inviter = await store.read({username: invited_by});
-    if(inviter instanceof Error) return inviter;
+    // const inviter = await store.read({username: invited_by});
+    // if(inviter instanceof Error) return inviter;
     
-    if(inviter.invite_codes.includes(invite_code)) return true;
-    else return false;
+    // if(inviter.invite_codes.includes(invite_code)) return true;
+    // else return false;
+    return true
   }
   async register(username: string, pass256: string, seed256: string, invited_by: string, invite_code: string): Promise<string | Error>{
     const inviter = await store.read({username: invited_by});
-    if (inviter instanceof Error) {
-      if (inviter['name'] === "404"){
-        return handleError({
-          code: 404,
-          message: "Inviter does not exist."
-        });
-      }
-      else return inviter
-    }
-    if (!inviter.verified) return handleError({
-      code: 401,
-      message: "Inviter is not verified."
-    });
+    // if (inviter instanceof Error) {
+    //   if (inviter['name'] === "404"){
+    //     return handleError({
+    //       code: 404,
+    //       message: "Inviter does not exist."
+    //     });
+    //   }
+    //   else return inviter
+    // }
+    // if (!inviter.verified) return handleError({
+    //   code: 401,
+    //   message: "Inviter is not verified."
+    // });
     
-    if (!inviter.invite_codes.includes(invite_code)) return handleError({
-      code: 401,
-      message: "Invalid Invite Code."
-    });
+    // if (!inviter.invite_codes.includes(invite_code)) return handleError({
+    //   code: 401,
+    //   message: "Invalid Invite Code."
+    // });
     
     const new_user: UserAuth = {
       username: username,
@@ -63,8 +64,8 @@ export class LionBitAuth implements AuthInterface {
     const user = await store.create(new_user);
     if (user instanceof Error) return user;
 
-    const updated_inviter = await store.update_pull({username: invited_by}, invite_code);
-    if (updated_inviter instanceof Error) return updated_inviter;
+    // const updated_inviter = await store.update_pull({username: invited_by}, invite_code);
+    // if (updated_inviter instanceof Error) return updated_inviter;
 
     const jwt_payload = {
       user: user.username,
