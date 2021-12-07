@@ -12,7 +12,7 @@ map Profile {
   pubkey => String
   username => String
   derivation_scheme => String
-  cypher_json* => String
+  profile_detail* => String
 }
 map ProfileKeyStore {
   genesis => UInt
@@ -41,7 +41,7 @@ map Post {
   pubkey => String
   expiry => DateTime
   derivation_scheme => String
-  cypher_json* => String
+  post_detail* => String
 }
 map PostKeyStore {
   genesis => UInt
