@@ -30,8 +30,8 @@ map ProfileDetails {
 map TrustRelations{
   genesis => UInt
   id => String
-  pubkey_trusting => String
-  pubkey_trusted_by => String
+  pubkey_trust_receiver => String
+  pubkey_trust_giver => String
   signature => String
 }
 
