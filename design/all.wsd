@@ -6,54 +6,69 @@ note left
 "*" indicates end-to-end encrypted fields
 end note
 
-map UserProfile {
-  genesis => DateTime
-  uid => String
-  recipient_xpub => String
+map Profile {
+  genesis => UInt
+  id => String
+  pubkey => String
   username => String
+  derivation_scheme => String
+  cypher_json* => String
+}
+map ProfileKeyStore {
+  genesis => UInt
+  id => String
+  pubkey_reciever => String
+  pubkey_sender => String
+  decryption_key => String
+}
+map ProfileDetails {
   nickname => String
   status => String
-  derivation_scheme => String
-  contact_info* => String
+  contact_info => String
 }
 
-map UserKeys {
-  uid => String
-  recipient_keys => Array<Key>
-  profile_keys* => Array<Key> 
-  post_keys* => Array<Key>
+map TrustRelations{
+  genesis => UInt
+  id => String
+  pubkey_trusting => String
+  pubkey_trusted_by => String
+  signature => String
 }
 
 map Post {
   genesis => DateTime
   id => String
+  pubkey => String
   expiry => DateTime
-  uid => String
   derivation_scheme => String
-  post_detail* => String
+  cypher_json* => String
 }
-
-map Key {
-  genesis => DateTime
+map PostKeyStore {
+  genesis => UInt
   id => String
-  key => String
-  signature => String
+  post_id => String
+  pubkey_reciever => String
+  pubkey_sender => String
+  decryption_key => String
 }
-
 map PostDetail {
   message => String
-  network => Array<BitcoinNetwork>
+  network => BitcoinNetwork(s)
   type => OrderType
   minimum => UInt
   maximum => UInt
   fiat_currency => FiatCurrency
-  payment_method => Array<PaymentMethod>
+  payment_method => PaymentMethod(s)
   rate_type => RateType
   fixed_rate => Float
   reference_exchange => ReferenceExchange
   reference_percent => Float
 }
-
+'
+'
+'
+'
+'
 object BitcoinNetwork{
   Mainnet,
   Lightning,
