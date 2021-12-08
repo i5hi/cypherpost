@@ -19,7 +19,8 @@ export interface AuthStore{
   update_pull(query: UserAuth, update: string): Promise<boolean | Error>;
   remove(user:UserAuth): Promise<boolean | Error>;
 }
- 
+
+
 export interface UserAuth{
   genesis?: number;
   uid?: string;
@@ -31,9 +32,3 @@ export interface UserAuth{
   inviter_code?: string;
   invite_codes?:Array<string>;
 };
-
-// export interface InviteCode{
-//   expiry: number,
-//   code: string,
-//   is_valid: boolean
-// };

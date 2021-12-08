@@ -6,18 +6,21 @@ note left
 "*" indicates end-to-end encrypted fields
 end note
 
+map Identity{
+  genesis => UInt
+  username => String
+  pubkey => String
+}
 map Profile {
   genesis => UInt
-  profile_id => String
-  pubkey => String
-  username => String
+  owner_id => String
   derivation_scheme => String
   profile_detail* => String
 }
 map Post {
   genesis => UInt
   post_id => String
-  profile_reference => String
+  owner_id => String
   expiry => DateTime
   derivation_scheme => String
   post_detail* => String
@@ -59,12 +62,23 @@ map ProfileKeyStore {
   owner_id => String
   profile_reference => String
   decryption_key => String
+  mute => Boolean
 }
 map PostKeyStore {
   genesis => UInt
   owner_id => String
   post_reference => String
   decryption_key => String
+  mute => Boolean
+}
+'
+'
+'
+'
+'
+map Muted{
+  owner_id => String
+  profile_reference => String
 }
 '
 '

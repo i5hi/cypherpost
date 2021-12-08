@@ -11,6 +11,7 @@ import { handleDeleteProfile, handleGetManyProfiles, handleGetProfile, handleGet
 // ------------------ '(◣ ◢)' ---------------------
 export const router = Router();
 // ------------------ '(◣ ◢)' ---------------------
+
 const genesisCheck = [
   val.check('derivation_scheme').isAscii().isLength({min:3, max:21}),
   val.check('recipient_xpub').exists(),

@@ -26,13 +26,12 @@ export interface ProfileStore{
 }
  
 export interface UserProfile{
+  pubkey?: string;
   username ?: string,
   nickname ?: string,
   status ?: string,
   cipher_info ?: string,
-
   derivation_scheme ?: string,
-
   trusted_by ?: Array<UserSet>,
   trusting ?: Array<UserSet>,
 
