@@ -7,7 +7,7 @@ import chai from "chai";
 import chaiHttp from "chai-http";
 import * as node_crypto from "crypto";
 import "mocha";
-import { LionBitClientKeyOps } from "./lib/bitcoin/bitcoin";
+import { CypherpostBitcoinOps } from "./lib/bitcoin/bitcoin";
 import { S5Crypto } from "./lib/crypto/crypto";
 import { logger } from "./lib/logger/winston";
 import * as express from "./lib/server/express";
@@ -20,7 +20,7 @@ import { LionBitProfile } from "./services/profile/profile";
 
 const sinon = require('sinon');
 
-const bitcoin = new LionBitClientKeyOps();
+const bitcoin = new CypherpostBitcoinOps();
 const crypto = new S5Crypto();
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 // GLOBAL CONFIGURATIONS

@@ -13,14 +13,9 @@ import { BitcoinKeyOperations, ECDSAKeys, ExtendedKeys } from "./interface";
 var bitcoin = require('bitcoinjs-lib') // v4.x.x
 var bitcoinMessage = require('bitcoinjs-message')
 
-
-
-
-
-
 const key_path = process.env.KEY_PATH;
 
-export class LionBitClientKeyOps implements BitcoinKeyOperations {
+export class CypherpostBitcoinOps implements BitcoinKeyOperations {
 
   generate_mnemonic(): string | Error {
     try {
@@ -85,6 +80,15 @@ export class LionBitClientKeyOps implements BitcoinKeyOperations {
         public_key: parent_key.publicKey.toString("hex")
       };
       return ecdsa_keys;
+      
+    } catch (error) {
+      return handleError(error);
+    }
+  }
+  extract_ecdsa_pub(xpub: string): Error | string{
+    try {
+      const parent_key = bip32.fromBase58(xpub);
+      return parent_key.publicKey.toString('hex');
       
     } catch (error) {
       return handleError(error);

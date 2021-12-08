@@ -3,14 +3,18 @@ cypherpost.io
 Developed @ Stackmate India
 */
 
+import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
 import { S5Crypto } from "../../lib/crypto/crypto";
 import * as jwt from "../../lib/jwt/jwt";
 import { S5UID } from "../../lib/uid/uid";
 import { IdentityIndex, IdentityInterface, UserIdentity } from "./interface";
 import { MongoIdentityStore } from "./mongo";
 
+
+
 const uid = new S5UID();
 
+const bitcoin = new CypherpostBitcoinOps();
 const local_jwt = new jwt.S5LocalJWT();
 const store = new MongoIdentityStore();
 const crypto = new S5Crypto();
@@ -22,7 +26,10 @@ export class CypherpostIdentity implements IdentityInterface {
     const identity = await store.read(username, IdentityIndex.Username);
     if (identity instanceof Error) return identity;
 
-    let verified = crypto.verifyS256Signature(message, signature, identity.pubkey);
+    const public_key = bitcoin.extract_ecdsa_pub(identity.pubkey);
+    if(public_key instanceof Error) return public_key;
+    
+    let verified = bitcoin.verify(message, signature, public_key);
     return verified;
   }
 

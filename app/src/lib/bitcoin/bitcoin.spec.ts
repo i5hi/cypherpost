@@ -5,9 +5,9 @@ Developed @ Stackmate India
 
 import { expect } from "chai";
 import "mocha";
-import { LionBitClientKeyOps } from "./bitcoin";
+import { CypherpostBitcoinOps } from "./bitcoin";
 
-const bitcoin = new LionBitClientKeyOps();
+const bitcoin = new CypherpostBitcoinOps();
 
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 // GLOBAL CONFIGURATIONS
