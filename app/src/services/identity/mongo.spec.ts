@@ -16,7 +16,7 @@ const db = new MongoDatabase();
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 let username = "ishi";
 // let message = "POST identity/registration";
-let pubkey = "xpub6CAEPnbkCHtuM1BR5iVQsXEkPBzDoEYF3gyHcZSzJW23CEJm55tmVxwVcdSX6FJFTrwccY8YG4ur3Wjyg2SoxVjGhpJpwUcMd3eBrC4wHdH";
+let xpub = "xpub6CAEPnbkCHtuM1BR5iVQsXEkPBzDoEYF3gyHcZSzJW23CEJm55tmVxwVcdSX6FJFTrwccY8YG4ur3Wjyg2SoxVjGhpJpwUcMd3eBrC4wHdH";
 /*
 {
   "xprv": "[8f8bb5c0/128'/0'/0']xprv9yAszH4rMvLc8X6wygxQWPJ1qA9jPmpPgU3gpB3NkAV4KRycXYaWxAd1mPo9yzybuhANVb7WmnjjLWyWjt5tq772RKPpcRF2FAN2nRTBMMC/*",
@@ -26,7 +26,7 @@ let pubkey = "xpub6CAEPnbkCHtuM1BR5iVQsXEkPBzDoEYF3gyHcZSzJW23CEJm55tmVxwVcdSX6F
 let userIdentity: UserIdentity = {
   username,
   genesis: Date.now(),
-  pubkey,
+  xpub: xpub,
 };
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 describe("Initalizing Test: Identity Storage", function () {
@@ -45,15 +45,21 @@ describe("Initalizing Test: Identity Storage", function () {
       expect(response).to.equal(true);
       const identity = await store.read(username, IdentityIndex.Username);
       expect(identity['username']).to.equal(username);
-      expect(identity['pubkey']).to.equal(pubkey);
+      expect(identity['xpub']).to.equal(xpub);
     });
     it("should NOT ALLOW CREATE of DUPLICATE entry", async function () {
       const response = await store.create(userIdentity);
       console.log({response});
       expect(response["name"]).to.equal("409");
     });
+    it("should READ ALL", async function () {
+      const response = await store.readAll();
+      if (response instanceof Error) throw response;
+      console.log({response});
+      expect(response.length).to.equal(1);
+    });
     it("should REMOVE a user identity in mongo and verify via READ", async function () {
-      const status = await store.remove(username);
+      const status = await store.remove(xpub);
       expect(status).to.equal(true);
       const response = await store.read(username, IdentityIndex.Username);
       expect(response['name']).to.equal("404");

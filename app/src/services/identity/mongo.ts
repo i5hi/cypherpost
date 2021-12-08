@@ -18,7 +18,7 @@ const identity_schema = new mongoose.Schema(
       index: true,
       dropDups: true,
     },
-    pubkey: {
+    xpub: {
       type: String,
       unique: true,
       required: true,
@@ -35,30 +35,31 @@ const identity_schema = new mongoose.Schema(
 const identityStore = mongoose.model("identity", identity_schema);
 // ------------------ '(◣ ◢)' ---------------------
 export class MongoIdentityStore implements IdentityStore {
-  async create(identity: UserIdentity):Promise<boolean | Error> {
+  readMany(usernames: string[]): Promise<UserIdentity[] | Error> {
+    throw new Error("Method not implemented.");
+  }
+  async create(identity: UserIdentity): Promise<boolean | Error> {
     try {
-        const status = await ensureUnique(identity);
-        // console.log({new_identity});
-        if (status instanceof Error) return status;
-        
-        const doc = await identityStore.create(identity);
-        console.log({doc});
-        // let status = await doc.validate();
-        // console.log({status});
-        if (doc instanceof mongoose.Error) {
-          return handleError(doc);
-        } else {
-          return true;
-        }
-
+      const doc = await identityStore.create(identity);
+      if (doc instanceof mongoose.Error) {
+        return handleError(doc);
+      } else {
+        return true;
+      }
     } catch (e) {
+      if (e['code'] && e['code'] == 11000) {
+        return handleError({
+          code: 409,
+          message: "Duplicate Index."
+        })
+      }
       return handleError(e);
     }
   }
-  async remove(username: string): Promise<boolean | Error> {
+  async remove(xpub: string): Promise<boolean | Error> {
     try {
-      const query = {username};
-      const status = await identityStore.deleteOne(query)
+      const query = { xpub };
+      const status = await identityStore.deleteMany(query)
       if (status instanceof mongoose.Error) {
         return handleError(status);
       }
@@ -69,9 +70,9 @@ export class MongoIdentityStore implements IdentityStore {
       return handleError(e);
     }
   }
-  async read(index:string, indexType: IdentityIndex):  Promise<UserIdentity | Error> {
+  async read(index: string, indexType: IdentityIndex): Promise<UserIdentity | Error> {
     try {
-      const query = (indexType===IdentityIndex.Username) ? { username: index } : { pubkey: index };
+      const query = (indexType === IdentityIndex.Username) ? { username: index } : { xpub: index };
       const doc = await identityStore.findOne(query).exec();
 
       if (doc) {
@@ -82,9 +83,9 @@ export class MongoIdentityStore implements IdentityStore {
         const out: UserIdentity = {
           genesis: doc["genesis"],
           username: doc["username"],
-          pubkey: doc["pubkey"],
+          xpub: doc["xpub"],
         };
-        
+
         return out;
       } else {
         // no data from findOne
@@ -97,75 +98,64 @@ export class MongoIdentityStore implements IdentityStore {
       return handleError(e);
     }
   }
-  async readMany(usernames: Array<string>): Promise<Array<UserIdentity> | Error> {
-    try {;
-      const docs = (usernames[0]==="all")?
-        await identityStore.find().exec():
-        await identityStore.find({username:{$in: usernames}}).exec();
-      
-      if (docs) {
-        if (docs instanceof mongoose.Error) {
-          return handleError(docs);
-        }
-        const auths = docs.map(doc=>{
-          return {
-            genesis: doc["genesis"],
-            username: doc["username"],
-            pubkey: doc["pubkey"],
-          }; 
-        });
-        
-        return auths;
-      
-      } else {
-        return handleError({
-          code: 404,
-          message: `No Identity Entry`
-        });
+  async readAll(): Promise<Array<UserIdentity> | Error> {
+    try {
+      const docs = await identityStore.find().exec();
+      if (docs instanceof mongoose.Error) {
+        return handleError(docs);
       }
+      const identities = docs.map(doc => {
+        return {
+          genesis: doc["genesis"],
+          username: doc["username"],
+          xpub: doc["xpub"],
+        };
+      });
+      return identities;
     } catch (e) {
       return handleError(e);
     }
   }
 }
-async function ensureUnique(identity: UserIdentity): Promise<boolean | Error> {
-  try {
-    const doc = await identityStore.findOne({ username: identity.username }).exec();
-    if (doc === null) return true;
 
-    if (doc) {
-      const err = doc.validateSync();
-      if (err instanceof mongoose.Error) {
-        return handleError(err);
-      }
+// async function ensureUnique(identity: UserIdentity): Promise<boolean | Error> {
+//   try {
+//     const doc = await identityStore.findOne({ username: identity.username }).exec();
+//     if (doc === null) return true;
 
-      return handleError({
-        code: 409,
-        message:
-          "Username Exists"
-      });
-    } else {
-      const doc = await identityStore.findOne({ pubkey: identity.pubkey }).exec();
-      if (doc === null) return true;
-  
-      if (doc) {
-        const err = doc.validateSync();
-        if (err instanceof mongoose.Error) {
-          return handleError(err);
-        }
-  
-        return handleError({
-          code: 409,
-          message:
-            "Public Key Exists"
-        });
-      } else return true;
-      
-    }
+//     if (doc) {
+//       const err = doc.validateSync();
+//       if (err instanceof mongoose.Error) {
+//         return handleError(err);
+//       }
+
+//       return handleError({
+//         code: 409,
+//         message:
+//           "Username Exists"
+//       });
+//     } else {
+//       const doc = await identityStore.findOne({ xpub: identity.xpub }).exec();
+//       if (doc === null) return true;
+
+//       if (doc) {
+//         const err = doc.validateSync();
+//         if (err instanceof mongoose.Error) {
+//           return handleError(err);
+//         }
+
+//         return handleError({
+//           code: 409,
+//           message:
+//             "Public Key Exists"
+//         });
+//       } else return true;
+
+//     }
 
 
-  } catch (e) {
-    return handleError(e);
-  }
-}
+//   } catch (e) {
+//     return handleError(e);
+//   }
+// }
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------

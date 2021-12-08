@@ -22,22 +22,22 @@ const crypto = new S5Crypto();
 const ONE_HOUR = 60 * 60 * 1000;
 
 export class CypherpostIdentity implements IdentityInterface {
-  async verify(username: string, message: string, signature: string): Promise<boolean | Error> {
-    const identity = await store.read(username, IdentityIndex.Username);
+  async verify(xpub: string, message: string, signature: string): Promise<boolean | Error> {
+    const identity = await store.read(xpub, IdentityIndex.XPub);
     if (identity instanceof Error) return identity;
 
-    const public_key = bitcoin.extract_ecdsa_pub(identity.pubkey);
-    if(public_key instanceof Error) return public_key;
+    const pubkey = bitcoin.extract_ecdsa_pub(identity.xpub);
+    if(pubkey instanceof Error) return pubkey;
     
-    let verified = bitcoin.verify(message, signature, public_key);
+    let verified = bitcoin.verify(message, signature, pubkey);
     return verified;
   }
 
-  async register(username: string, pubkey: string): Promise<boolean | Error> {
+  async register(username: string, xpub: string): Promise<boolean | Error> {
     const new_identity: UserIdentity = {
       genesis: Date.now(),
       username: username,
-      pubkey: pubkey
+      xpub: xpub
     };
 
     const user = await store.create(new_identity);
@@ -52,7 +52,7 @@ export class CypherpostIdentity implements IdentityInterface {
   }
 
   async all(): Promise<Array<UserIdentity> | Error> {
-    const identities = await store.readMany(["all"]);
+    const identities = await store.readAll();
     return identities;
   }
 

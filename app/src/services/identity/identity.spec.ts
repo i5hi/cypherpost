@@ -32,7 +32,7 @@ let signature;
 let userIdentity: UserIdentity = {
   username,
   genesis: Date.now(),
-  pubkey:xpub,
+  xpub:xpub,
 };
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 describe("Initalizing Test: Identity Service", function () {
@@ -56,15 +56,20 @@ describe("Initalizing Test: Identity Service", function () {
       expect(response).to.equal(true);
     });
     it("should VERIFY a user signature", async function () {
-      const response = await identity.verify(username,message,signature);
+      const response = await identity.verify(xpub,message,signature);
       expect(response).to.equal(true);
     });
     it("should NOT ALLOW REGISTER of DUPLICATE User", async function () {
       const response = await identity.register(username, xpub);
       expect(response["name"]).to.equal("409");
     });
+    it("should GET ALL identities", async function () {
+      const response = await identity.all();
+      if (response instanceof Error) throw response;
+      expect(response.length).to.equal(1);
+    });
     it("should REMOVE a user identity and verify", async function () {
-      const response = await identity.remove(username);
+      const response = await identity.remove(xpub);
       expect(response).to.equal(true);
     });
   });
