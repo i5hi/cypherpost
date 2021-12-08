@@ -8,49 +8,28 @@ end note
 
 map Profile {
   genesis => UInt
-  id => String
+  profile_id => String
   pubkey => String
   username => String
   derivation_scheme => String
   profile_detail* => String
 }
-map ProfileKeyStore {
+map Post {
   genesis => UInt
-  id => String
-  pubkey_reciever => String
-  pubkey_sender => String
-  decryption_key => String
+  post_id => String
+  profile_reference => String
+  expiry => DateTime
+  derivation_scheme => String
+  post_detail* => String
 }
+
+
 map ProfileDetails {
   nickname => String
   status => String
   contact_info => String
 }
 
-map TrustRelations{
-  genesis => UInt
-  id => String
-  pubkey_trust_receiver => String
-  pubkey_trust_giver => String
-  signature => String
-}
-
-map Post {
-  genesis => DateTime
-  id => String
-  pubkey => String
-  expiry => DateTime
-  derivation_scheme => String
-  post_detail* => String
-}
-map PostKeyStore {
-  genesis => UInt
-  id => String
-  post_id => String
-  pubkey_reciever => String
-  pubkey_sender => String
-  decryption_key => String
-}
 map PostDetail {
   message => String
   network => BitcoinNetwork(s)
@@ -63,6 +42,29 @@ map PostDetail {
   fixed_rate => Float
   reference_exchange => ReferenceExchange
   reference_percent => Float
+}
+'
+'
+'
+'
+'
+map RecipientKeyStore {
+  genesis => UInt
+  owner_id => String
+  recipient_reference => String
+  signature => String
+}
+map ProfileKeyStore {
+  genesis => UInt
+  owner_id => String
+  profile_reference => String
+  decryption_key => String
+}
+map PostKeyStore {
+  genesis => UInt
+  owner_id => String
+  post_reference => String
+  decryption_key => String
 }
 '
 '
