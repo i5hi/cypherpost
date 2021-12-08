@@ -38,7 +38,7 @@ export class MongoIdentityStore implements IdentityStore {
   readMany(usernames: string[]): Promise<UserIdentity[] | Error> {
     throw new Error("Method not implemented.");
   }
-  async create(identity: UserIdentity): Promise<boolean | Error> {
+  async createOne(identity: UserIdentity): Promise<boolean | Error> {
     try {
       const doc = await identityStore.create(identity);
       if (doc instanceof mongoose.Error) {
@@ -56,7 +56,7 @@ export class MongoIdentityStore implements IdentityStore {
       return handleError(e);
     }
   }
-  async remove(xpub: string): Promise<boolean | Error> {
+  async removeOne(xpub: string): Promise<boolean | Error> {
     try {
       const query = { xpub };
       const status = await identityStore.deleteMany(query)
@@ -70,7 +70,7 @@ export class MongoIdentityStore implements IdentityStore {
       return handleError(e);
     }
   }
-  async read(index: string, indexType: IdentityIndex): Promise<UserIdentity | Error> {
+  async readOne(index: string, indexType: IdentityIndex): Promise<UserIdentity | Error> {
     try {
       const query = (indexType === IdentityIndex.Username) ? { username: index } : { xpub: index };
       const doc = await identityStore.findOne(query).exec();

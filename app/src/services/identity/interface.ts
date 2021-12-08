@@ -11,10 +11,10 @@ export interface IdentityInterface{
 }
 
 export interface IdentityStore{
-  create(identity: UserIdentity): Promise<boolean | Error>;
-  read(index: string, indexType: IdentityIndex): Promise<UserIdentity | Error>;
+  createOne(identity: UserIdentity): Promise<boolean | Error>;
+  readOne(index: string, indexType: IdentityIndex): Promise<UserIdentity | Error>;
   readAll(): Promise<Array<UserIdentity> | Error>;
-  remove(xpub: string): Promise<boolean | Error>;
+  removeOne(xpub: string): Promise<boolean | Error>;
 }
 
 export interface UserIdentity{

@@ -23,7 +23,7 @@ const ONE_HOUR = 60 * 60 * 1000;
 
 export class CypherpostIdentity implements IdentityInterface {
   async verify(xpub: string, message: string, signature: string): Promise<boolean | Error> {
-    const identity = await store.read(xpub, IdentityIndex.XPub);
+    const identity = await store.readOne(xpub, IdentityIndex.XPub);
     if (identity instanceof Error) return identity;
 
     const pubkey = bitcoin.extract_ecdsa_pub(identity.xpub);
@@ -40,14 +40,14 @@ export class CypherpostIdentity implements IdentityInterface {
       xpub: xpub
     };
 
-    const user = await store.create(new_identity);
+    const user = await store.createOne(new_identity);
     if (user instanceof Error) return user;
 
     return user;
   };
 
   async remove(username: string): Promise<boolean | Error> {
-    const status = await store.remove(username);
+    const status = await store.removeOne(username);
     return status;
   }
 

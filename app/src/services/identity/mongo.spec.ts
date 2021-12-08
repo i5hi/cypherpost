@@ -41,14 +41,14 @@ describe("Initalizing Test: Identity Storage", function () {
   });
   describe("IDENTITY STORAGE OPERATIONS:", async function () {
     it("should CREATE a new user identity in mongo AND verify via READ", async function () {
-      const response = await store.create(userIdentity);
+      const response = await store.createOne(userIdentity);
       expect(response).to.equal(true);
-      const identity = await store.read(username, IdentityIndex.Username);
+      const identity = await store.readOne(username, IdentityIndex.Username);
       expect(identity['username']).to.equal(username);
       expect(identity['xpub']).to.equal(xpub);
     });
     it("should NOT ALLOW CREATE of DUPLICATE entry", async function () {
-      const response = await store.create(userIdentity);
+      const response = await store.createOne(userIdentity);
       console.log({response});
       expect(response["name"]).to.equal("409");
     });
@@ -59,9 +59,9 @@ describe("Initalizing Test: Identity Storage", function () {
       expect(response.length).to.equal(1);
     });
     it("should REMOVE a user identity in mongo and verify via READ", async function () {
-      const status = await store.remove(xpub);
+      const status = await store.removeOne(xpub);
       expect(status).to.equal(true);
-      const response = await store.read(username, IdentityIndex.Username);
+      const response = await store.readOne(username, IdentityIndex.Username);
       expect(response['name']).to.equal("404");
     });
   });
