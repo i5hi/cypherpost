@@ -2,17 +2,15 @@
 cypherpost.io
 Developed @ Stackmate India
 */
-import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
+import { CypherpostProfile } from "../profile/profile";
 import { CypherpostIdentity } from "./identity";
 
 const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
-const s5crypto = new S5Crypto();
-const server_rsa_filename = "sats_sig";
-
+const profile =  new CypherpostProfile();
 
 export async function identityMiddleware(req, res, next) {
   const request = parseRequest(req);
@@ -36,7 +34,10 @@ export async function handleRegistration(req, res) {
       }
     }
 
-    const status = await identity.register(request.body.username, request.body.pubkey);
+    let status = await identity.register(request.body.username, request.body.xpub);
+    if (status instanceof Error) throw status;
+
+    status = await profile.initialize(request.body.xpub);
     if (status instanceof Error) throw status;
 
     const response = {

@@ -12,7 +12,7 @@ export const router = Router();
 // ------------------ '(◣ ◢)' ---------------------
 const registrationCheck = [
   val.check('username').exists().matches(/^(?=.{1,15}$)(?![_.])(?!.*[_.]{2})[a-z][a-z0-9_.]+$/), 
-  val.check('pubkey').exists(),
+  val.check('xpub').exists(),
 ];
 
 const removeCheck = [
