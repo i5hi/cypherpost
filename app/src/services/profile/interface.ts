@@ -34,7 +34,6 @@ export interface UserProfile{
   derivation_scheme ?: string,
   trusted_by ?: Array<UserSet>,
   trusting ?: Array<UserSet>,
-
 };
 
 
