@@ -3,32 +3,43 @@ cypherpost.io
 Developed @ Stackmate India
 */
 
+import { Key } from "../keys/interface";
+
 export interface PostInterface{
-  create(owner: string, expiry: number, cypher_json: string, derivation_scheme: string): Promise<string | Error>;
-  findManyById(ids: Array<string>): Promise<Array<UserPost> | Error>;
-  findAllByOwner(owner: string): Promise<Array<UserPost> | Error>; 
-  removeOneById(id: string, owner: string): Promise<boolean | Error>;
-  removeAllByOwner(owner:string): Promise<Array<string> | Error>;
-  removeAllExpired(owner:string): Promise<Array<string> | Error>;
+  create(username: string, expiry: number, cipher_json: string, derivation_scheme: string, decryption_keys: Array<Key>): Promise<UserPost | Error>;
+  find(username: string): Promise<Array<UserPost> | Error>;
+  findMany(ids: Array<string>): Promise<Array<UserPost> | Error>; 
+  removeById(id: string, username: string): Promise<boolean | Error>;
+  removeByUser(username:string): Promise<boolean | Error>;
+  removeExpired(username:string): Promise<boolean | Error>;
 }
 
 export interface PostStore{
-  createOne(post: UserPost):Promise<boolean | Error>;
-  readMany(indexes: Array<string>, index_type: PostStoreIndex): Promise<Array<UserPost> | Error>;
-  removeOne(owner: string, id: string): Promise<boolean | Error>;
-  removeMany(indexes:Array<string>, index_type: PostStoreIndex): Promise<boolean | Error>;
+  create(post: UserPost):Promise<UserPost | Error>;
+  read(post:UserPost): Promise<Array<UserPost> | Error>;
+  readMany(ids: Array<string>): Promise<Array<UserPost> | Error>;
+  // update_push(id: string, update:Comment): Promise<boolean | Error>;
+  // update_pull(id: string, update:Comment): Promise<boolean | Error>;
+  removeOne(query:UserPost): Promise<boolean | Error>;
+  removeMany(items:Array<UserPost>): Promise<boolean | Error>;
+  // If a single item is passed it must be a username for which all posts are to be removed
+  // If many items are passed it must have an id for each item
 }
  
 export interface UserPost{
   id?: string;
   genesis?: number;
   expiry?: number;
-  owner?: string;
-  cypher_json?: string;
+  username?: string;
+  cipher_json?: string;
   derivation_scheme?: string;
+  // comments?: Array<Comment>;
 }
 
-export enum PostStoreIndex{
-  Owner,
-  PostId
+export interface Comment {
+  id?: string;
+  username?: string;
+  comment?: string;
+  genesis?: string;
 }
+

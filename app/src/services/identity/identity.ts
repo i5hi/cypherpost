@@ -36,16 +36,18 @@ export class CypherpostIdentity implements IdentityInterface {
   async register(username: string, xpub: string): Promise<boolean | Error> {
     const new_identity: UserIdentity = {
       genesis: Date.now(),
-      username,
-      xpub
+      username: username,
+      xpub: xpub
     };
 
-    const status = await store.createOne(new_identity);
-    return status;
+    const user = await store.createOne(new_identity);
+    if (user instanceof Error) return user;
+
+    return user;
   };
 
-  async remove(xpub: string): Promise<boolean | Error> {
-    const status = await store.removeOne(xpub);
+  async remove(username: string): Promise<boolean | Error> {
+    const status = await store.removeOne(username);
     return status;
   }
 

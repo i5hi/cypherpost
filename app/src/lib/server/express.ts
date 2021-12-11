@@ -5,9 +5,10 @@ Developed @ Stackmate India
 // ------------------ '(◣ ◢)' ---------------------
 import express from "express";
 import helmet from "helmet";
+import { router as auth } from "../../services/auth/router";
 import { router as client } from "../../services/client/router";
-import { router as identity } from "../../services/identity/router";
-// import { router as posts } from "../../services/posts/router";
+import { router as posts } from "../../services/posts/router";
+import { router as profile } from "../../services/profile/router";
 import { logger } from "../logger/winston";
 import { respond } from "./handler";
 
@@ -33,9 +34,9 @@ export async function start(port: string) {
       });
       
       // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-      server.use("/api/v1/identity", identity);
-      // server.use("/api/v1/profile", profile);
-      // server.use("/api/v1/posts", posts);
+      server.use("/api/v1/auth", auth);
+      server.use("/api/v1/profile", profile);
+      server.use("/api/v1/posts", posts);
       server.use("/", client);
       // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

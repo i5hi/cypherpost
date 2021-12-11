@@ -40,7 +40,6 @@ export class MongoIdentityStore implements IdentityStore {
   }
   async createOne(identity: UserIdentity): Promise<boolean | Error> {
     try {
-      await identityStore.syncIndexes();
       const doc = await identityStore.create(identity);
       if (doc instanceof mongoose.Error) {
         return handleError(doc);

@@ -279,8 +279,7 @@ export interface S5User {
 
 export interface S5Input {
   username?:string;
-  xpub?:string;
-  cypher_json?: string;
+  pubkey?:string;
   pass256?: string;
   seed256?: string;
   pass512?: string;

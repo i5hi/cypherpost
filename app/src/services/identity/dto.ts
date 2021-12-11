@@ -2,15 +2,17 @@
 cypherpost.io
 Developed @ Stackmate India
 */
+import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
-import { CypherpostProfile } from "../profile/profile";
 import { CypherpostIdentity } from "./identity";
 
 const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
-const profile =  new CypherpostProfile();
+const s5crypto = new S5Crypto();
+const server_rsa_filename = "sats_sig";
+
 
 export async function identityMiddleware(req, res, next) {
   const request = parseRequest(req);
@@ -34,10 +36,33 @@ export async function handleRegistration(req, res) {
       }
     }
 
-    let status = await identity.register(request.body.username, request.headers['x-client-xpub']);
+    const status = await identity.register(request.body.username, request.body.pubkey);
     if (status instanceof Error) throw status;
 
-    status = await profile.initialize(request.body.xpub);
+    const response = {
+      status
+    };
+
+    respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+}
+
+export async function handleDelete(req, res) {
+  const request = parseRequest(req);
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        code: 400,
+        message: errors.array()
+      }
+    }
+
+    const status = await identity.remove(request.body.username);
     if (status instanceof Error) throw status;
 
     const response = {

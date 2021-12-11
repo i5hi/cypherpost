@@ -4,55 +4,74 @@ Developed @ Stackmate India
 */
 
 import { expect } from "chai";
-import crypto from "crypto";
 import "mocha";
-import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
-import { S5Crypto } from "../../lib/crypto/crypto";
 import { DbConnection } from "../../lib/storage/interface";
 import { MongoDatabase } from "../../lib/storage/mongo";
+import { LionBitKeys } from "../keys/keys";
 import { UserProfile } from "./interface";
-import { CypherpostProfile } from "./profile";
+import { MongoProfileStore } from "./mongo";
+import { LionBitProfile } from "./profile";
 
-const bitcoin = new CypherpostBitcoinOps();
-const s5crypto = new S5Crypto();
-const profile = new CypherpostProfile();
+
+const profile = new LionBitProfile();
+const keys = new LionBitKeys();
+const store = new MongoProfileStore();
+
 const db = new MongoDatabase();
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
-/*
-ROOT
-{
-  "fingerprint": "fcf5c473",
-  "mnemonic": "want text option cargo region apology elegant easy uniform bird consider wedding sport spy romance scrap produce pluck cement thank country person ecology weird",
-  "xprv": "xprv9s21ZrQH143K2C33LtYYTeVM187n1L1iKq1nyUJMsvxJJQNRxpkZzZfDxAv2iyds3E3Y5r3LeF3MBcasGGgvKfA2KmAqx61TFU46UZY8S9F"
-}
-PARENT e2ee'/cypherpost'
-{
-  "xprv": "[fcf5c473/128'/0']xprv9xH9iSYwh8N2h7QipVnhvE5tfw714grVJZBFuoX1EMqBGsjoCqs7N7Mn6whrJtTTpGyXVX2KSzZ5uWPfCax9J6Lp9oKAteavTp9aA5VGTGW/*",
-  "xpub": "[fcf5c473/128'/0']xpub6BGW7x5qXVvKubVBvXKiHN2dDxwVU9aLfn6riBvcnhNA9g4wkPBMuugFxDtCYLu51gFKabc49y6Ssvv3axE57pDk4hem63LjCa4Qq2eAFpZ/*"
-}
-*/
-let username = "ishi";
-let message = "GET profile/";
-let xpub = "xpub6BGW7x5qXVvKubVBvXKiHN2dDxwVU9aLfn6riBvcnhNA9g4wkPBMuugFxDtCYLu51gFKabc49y6Ssvv3axE57pDk4hem63LjCa4Qq2eAFpZ";
-let xprv = "xprv9xH9iSYwh8N2h7QipVnhvE5tfw714grVJZBFuoX1EMqBGsjoCqs7N7Mn6whrJtTTpGyXVX2KSzZ5uWPfCax9J6Lp9oKAteavTp9aA5VGTGW";
-let encryption_key;
-const derivation_scheme = "m/0'/0'/0'";
-let cypher_json;
-/**
- * 
- * UPdate bitcoin ops to use derivation path string
- * 
- */
-const plain_json_profile={
-  status: "Sound Money, Sound World.",
-  contact: "@i5hi on Telegram"
+const username0 = "ishi";
+const nickname0 = "Bitcoin Watchdog";
+const status0 = "Sound Money, Sound World.";
+const updated_status0 = "Watching Bitcoin.";
+const contact_info0 = "Contact me on telegram @i5hi_ or Signal: +97283782733";
+let cipher_info0 =  "";
+const decryption_key00 = "for1";
+const derivation_scheme0 = "m/0'/0'";
+const recipient_xpub0 = "xpubasd9o3k2s";
+const decryption_key01 = "for2";
+
+const decryption_key_revoked_01 = "for1only";
+const derivation_scheme_after_revoke = "m/0'/1'";
+
+const new_key_set = [{
+  key: "for1only",
+  id: "ravi"
+}]
+
+const profile_update0 = {
+  username: username0,
+  status: updated_status0
 };
 
-let user_profile: UserProfile = {
-  derivation_scheme
-};
+const username1 = "ravi";
+const nickname1 = "RPH";
+const status1 = "Sound Money, Sound World.";
+const contact_info1 = "Contact me on telegram @ravi or Signal: +938274982374";
+let cipher_info1 =  "";
+const derivation_scheme1 = "m/0'/0'";
+const recipient_xpub1 = "xpubasd9o3k2s12ed2wesax";
+
+const username2 = "mj";
+const nickname2 = "mocodescmo";
+const status2 = "Testing";
+const contact_info2 = "Contact me on telegram @mj or Signal: +91230921834";
+let cipher_info2 =  "";
+const derivation_scheme2 = "m/0'/0'";
+const recipient_xpub2 = "xpubasd9o3k2s122344324ed2wesax";
+
+const signature = "TestSignaturueInMain.Spec.ts";
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
-describe("Initalizing Test: Profile Service", function () {
+async function cleanUp(){
+  await profile.remove(username0);
+  await profile.remove(username1);
+  await profile.remove(username2);
+  await keys.remove(username0);
+  await keys.remove(username1);
+  await keys.remove(username2);
+  return true;
+};
+
+describe("Initalizing Test: Profile Controller", function () {
   before(async function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
@@ -60,48 +79,140 @@ describe("Initalizing Test: Profile Service", function () {
       name: process.env.DB_NAME,
       auth: process.env.DB_AUTH,
     };
-    await db.connect(connection);
-    encryption_key = bitcoin.derive_hardened(xprv,0,0,0);
-    if (encryption_key instanceof Error) throw encryption_key;
-    encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
-    cypher_json = s5crypto.encryptAESMessageWithIV(JSON.stringify(plain_json_profile),encryption_key);
-    if (cypher_json instanceof Error) throw cypher_json;
-    user_profile['cypher_json'] = cypher_json;
 
+    await db.connect(connection);
   });
 
-  describe("PROFILE SERVICE OPERATIONS:", async function () {
-    it("INITIALIZE a profile with an owner", async function () {
-      const response = await profile.initialize(xpub);
-      expect(response).to.equal(true);
-    });
-    it("409 on INITIALIZE DUPLICATE", async function () {
-      const response = await profile.initialize(xpub);
-      expect(response['name']).to.equal("409");
-    });
-    it("FIND initialized profile", async function () {
-      const response = await profile.findOne(xpub);
-      expect(response).has.property("genesis");
-      expect(response).has.property("owner");
-    });
-    it("UPDATE initialized profile", async function () {
-      const response = await profile.update(xpub,derivation_scheme,cypher_json);
-      expect(response).to.equal(true);
-    });
-    it("FIND SINGLE UPDATED profile with findMany", async function () {
-      const response = await profile.findMany([xpub,xprv]);
+  after(async function () {
+    await cleanUp();
+  });
+  describe("PROFILE CONTROLLER OPERATIONS:", async function () {
+    it("should CREATE a NEW PROFILE for USER 0 collection", async function () {
+      const response = await profile.genesis(username0,derivation_scheme0,recipient_xpub0);
       if (response instanceof Error) throw response;
-      expect(response.length === 1).to.equal(true);
-      expect(response[0]).has.property("derivation_scheme");
-      expect(response[0]['cypher_json']).to.equal(user_profile.cypher_json);
+      expect(response).to.equal(true);
+
     });
-    it("REMOVE profile", async function () {
-      const response = await profile.remove(xpub);
+
+    it("should CREATE a NEW PROFILE for USER 1 collection", async function () {
+      const response = await profile.genesis(username1,derivation_scheme1,recipient_xpub1);
+      if (response instanceof Error) throw response;
       expect(response).to.equal(true);
     });
-    it("404 on FIND DELETED profile", async function () {
-      const response = await profile.findOne(xpub);
-      expect(response['name']).to.equal("404");
+
+    it("should CREATE a NEW PROFILE for USER 2 collection", async function () {
+      const response = await profile.genesis(username2,derivation_scheme2,recipient_xpub2);
+      if (response instanceof Error) throw response;
+      expect(response).to.equal(true);
     });
+
+    it("should FIND a PROFILE collection", async function () {
+      const response = await profile.find(username0);
+      if (response instanceof Error) throw response;
+      expect(response['username']).to.equal(username0);
+    });
+
+    it("should FIND MANY PROFILE collections", async function () {
+      const response = await profile.findMany([username0,username1]);
+      if (response instanceof Error) throw response;
+      expect(response.length).to.equal(2);
+    });
+
+    it("should UPDATE a PROFILE collection", async function () {
+      const response = await profile.update(username0,profile_update0);
+      if (response instanceof Error) throw response;
+      expect(response['status']).to.equal(updated_status0);
+    });
+
+    it("should MAKE USER 0 TRUST USER 1", async function () {
+      let response: boolean | UserProfile | Error = await profile.trust(username0,username1,decryption_key00, signature);
+      if (response instanceof Error) throw response;
+
+      expect(response).to.equal(true);
+      response = await profile.find(username0);
+      if (response instanceof Error) throw response;
+
+      expect(response['trusting'].some(element=>element.username === username1)).to.equal(true);
+      response = await profile.find(username1);
+      if (response instanceof Error) throw response;
+      console.log({response})
+
+      expect(response['trusted_by'].some(element=>element.username === username0)).to.equal(true);
+
+      let key_response = await keys.find(username0);
+      if (key_response instanceof Error) throw key_response;
+      expect(key_response['recipient_keys'].some(element=>element.id === username1)).to.equal(true);
+      expect(key_response['recipient_keys'].some(element=>element.signature === signature)).to.equal(true);
+      expect(key_response['recipient_keys'].some(element=>element.key === recipient_xpub1)).to.equal(true);
+
+      
+    });
+    it("should MAKE USER 0 TRUST USER 2", async function () {
+      let response: boolean | UserProfile | Error = await profile.trust(username0,username2,decryption_key01,signature);
+      if (response instanceof Error) throw response;
+      expect(response).to.equal(true);
+      response = await profile.find(username0);
+      if (response instanceof Error) throw response;
+      expect(response['trusting'].some(element=>element.username === username2)).to.equal(true);
+      response = await profile.find(username2);
+      if (response instanceof Error) throw response;
+      expect(response['trusted_by'].some(element=>element.username === username0)).to.equal(true);
+      
+    });
+
+    it("should MAKE USER 1 MUTE USER 0", async function () {
+      let response: boolean | UserProfile | Error = await profile.mute(username1,username0,true);
+      if (response instanceof Error) throw response;
+      response = await profile.find(username1);
+      if (response instanceof Error) throw response;
+      expect(response['trusted_by'][0].username).to.equal(username0);
+      expect(response['trusted_by'][0].mute).to.equal(true);
+    });
+    
+    it("should MAKE USER 1 UNMUTE USER 0", async function () {
+      let response: boolean | UserProfile | Error = await profile.mute(username1,username0,false);
+      if (response instanceof Error) throw response;
+      response = await profile.find(username1);
+      if (response instanceof Error) throw response;
+      expect(response['trusted_by'][0].username).to.equal(username0);
+      expect(response['trusted_by'][0].mute).to.equal(false);
+    });
+
+    it("should MAKE USER 0 REVOKE TRUST IN USER 2", async function () {
+      let key_response = await keys.find(username2);
+      if (key_response instanceof Error) throw key_response;
+      expect(key_response['profile_keys'].length).to.equal(1);
+      
+      key_response = await keys.find(username1);
+      if (key_response instanceof Error) throw key_response;
+      expect(key_response['profile_keys'].length).to.equal(1);
+
+      let response: boolean | UserProfile | Error = await profile.revoke(username0,username2,new_key_set,derivation_scheme_after_revoke, cipher_info2);
+      if (response instanceof Error) throw response;
+      expect(response.username).to.equal(username0);
+
+      expect(response['trusting'].length).to.equal(1);
+      expect(response['trusting'].some(element=>element.username === username1)).to.equal(true);
+      expect(response['trusting'].some(element=>element.username === username2)).to.equal(false);
+
+      response = await profile.find(username2);
+      if (response instanceof Error) throw response;
+      expect(response['trusted_by'].some(element=>element.username === username0)).to.equal(false);
+
+      response = await profile.find(username1);
+      if (response instanceof Error) throw response;
+      expect(response['trusted_by'].some(element=>element.username === username0)).to.equal(true);
+
+      key_response = await keys.find(username2);
+      if (key_response instanceof Error) throw key_response;
+      expect(key_response['profile_keys'].length).to.equal(0);
+
+      key_response = await keys.find(username1);
+      if (key_response instanceof Error) throw key_response;
+      expect(key_response['profile_keys'].length).to.equal(1);
+      expect(key_response['profile_keys'].some(element=>element.id === new_key_set[0].id)).to.equal(true);
+
+    });
+
   });
 });
