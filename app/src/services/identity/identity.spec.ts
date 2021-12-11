@@ -18,6 +18,7 @@ const identity = new CypherpostIdentity();
 const db = new MongoDatabase();
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 let username = "ishi";
+const username2 = "r21";
 let message = "POST identity/registration";
 let xpub = "xpub6CAEPnbkCHtuM1BR5iVQsXEkPBzDoEYF3gyHcZSzJW23CEJm55tmVxwVcdSX6FJFTrwccY8YG4ur3Wjyg2SoxVjGhpJpwUcMd3eBrC4wHdH";
 let xprv = "xprv9yAszH4rMvLc8X6wygxQWPJ1qA9jPmpPgU3gpB3NkAV4KRycXYaWxAd1mPo9yzybuhANVb7WmnjjLWyWjt5tq772RKPpcRF2FAN2nRTBMMC";
@@ -55,13 +56,13 @@ describe("Initalizing Test: Identity Service", function () {
       const response = await identity.register(username, xpub);
       expect(response).to.equal(true);
     });
+    it("should NOT ALLOW REGISTER of DUPLICATE User", async function () {
+      const response = await identity.register(username2, xpub);
+      expect(response["name"]).to.equal("409");
+    });
     it("should VERIFY a user signature", async function () {
       const response = await identity.verify(xpub,message,signature);
       expect(response).to.equal(true);
-    });
-    it("should NOT ALLOW REGISTER of DUPLICATE User", async function () {
-      const response = await identity.register(username, xpub);
-      expect(response["name"]).to.equal("409");
     });
     it("should GET ALL identities", async function () {
       const response = await identity.all();
