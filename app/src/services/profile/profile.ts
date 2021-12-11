@@ -23,8 +23,12 @@ export class CypherpostProfile implements ProfileInterface{
   async findMany(owners: string[]): Promise<Error | UserProfile[]> {
     return store.readMany(owners);
   }
-  async update(owner: string, profile: UserProfile): Promise<boolean | Error> {
-    return store.updateOne(owner,profile)
+  async update(owner: string, derivation_scheme: string, cypher_json: string): Promise<boolean | Error> {
+    const profile_update = {
+      derivation_scheme,
+      cypher_json
+    }
+    return store.updateOne(owner,profile_update)
   }
   async remove(owner: string): Promise<boolean | Error> {
     return store.removeOne(owner)

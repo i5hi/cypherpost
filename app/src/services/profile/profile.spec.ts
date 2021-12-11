@@ -37,6 +37,7 @@ let xpub = "xpub6BGW7x5qXVvKubVBvXKiHN2dDxwVU9aLfn6riBvcnhNA9g4wkPBMuugFxDtCYLu5
 let xprv = "xprv9xH9iSYwh8N2h7QipVnhvE5tfw714grVJZBFuoX1EMqBGsjoCqs7N7Mn6whrJtTTpGyXVX2KSzZ5uWPfCax9J6Lp9oKAteavTp9aA5VGTGW";
 let encryption_key;
 const derivation_scheme = "m/0'/0'/0'";
+let cypher_json;
 /**
  * 
  * UPdate bitcoin ops to use derivation path string
@@ -63,7 +64,7 @@ describe("Initalizing Test: Profile Service", function () {
     encryption_key = bitcoin.derive_hardened(xprv,0,0,0);
     if (encryption_key instanceof Error) throw encryption_key;
     encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
-    const cypher_json = s5crypto.encryptAESMessageWithIV(JSON.stringify(plain_json_profile),encryption_key);
+    cypher_json = s5crypto.encryptAESMessageWithIV(JSON.stringify(plain_json_profile),encryption_key);
     if (cypher_json instanceof Error) throw cypher_json;
     user_profile['cypher_json'] = cypher_json;
 
@@ -84,7 +85,7 @@ describe("Initalizing Test: Profile Service", function () {
       expect(response).has.property("owner");
     });
     it("UPDATE initialized profile", async function () {
-      const response = await profile.update(xpub,user_profile);
+      const response = await profile.update(xpub,derivation_scheme,cypher_json);
       expect(response).to.equal(true);
     });
     it("FIND SINGLE UPDATED profile with findMany", async function () {

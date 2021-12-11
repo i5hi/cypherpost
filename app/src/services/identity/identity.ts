@@ -44,8 +44,8 @@ export class CypherpostIdentity implements IdentityInterface {
     return status;
   };
 
-  async remove(username: string): Promise<boolean | Error> {
-    const status = await store.removeOne(username);
+  async remove(xpub: string): Promise<boolean | Error> {
+    const status = await store.removeOne(xpub);
     return status;
   }
 

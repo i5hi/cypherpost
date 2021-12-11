@@ -34,36 +34,10 @@ export async function handleRegistration(req, res) {
       }
     }
 
-    let status = await identity.register(request.body.username, request.body.xpub);
+    let status = await identity.register(request.body.username, request.headers['x-client-xpub']);
     if (status instanceof Error) throw status;
 
     status = await profile.initialize(request.body.xpub);
-    if (status instanceof Error) throw status;
-
-    const response = {
-      status
-    };
-
-    respond(200, response, res, request);
-  }
-  catch (e) {
-    const result = filterError(e, r_500, request);
-    respond(result.code, result.message, res, request);
-  }
-}
-
-export async function handleDelete(req, res) {
-  const request = parseRequest(req);
-  try {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      throw {
-        code: 400,
-        message: errors.array()
-      }
-    }
-
-    const status = await identity.remove(request.body.username);
     if (status instanceof Error) throw status;
 
     const response = {

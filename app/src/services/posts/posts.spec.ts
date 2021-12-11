@@ -1,132 +1,135 @@
-// /*
-// cypherpost.io
-// Developed @ Stackmate India
-// */
+/*
+cypherpost.io
+Developed @ Stackmate India
+*/
 
-// import { expect } from "chai";
-// import "mocha";
-// import { DbConnection } from "../../lib/storage/interface";
-// import { MongoDatabase } from "../../lib/storage/mongo";
-// import { S5UID } from "../../lib/uid/uid";
-// import { LionBitKeys } from "../keys/keys";
-// import { LionBitPosts } from "./posts";
-// const sinon = require("sinon");
+import { expect } from "chai";
+import crypto from "crypto";
+import "mocha";
+import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
+import { S5Crypto } from "../../lib/crypto/crypto";
+import { DbConnection } from "../../lib/storage/interface";
+import { MongoDatabase } from "../../lib/storage/mongo";
+import { UserPost } from "./interface";
+import { CypherpostPosts } from "./posts";
+const sinon = require("sinon");
 
-// const posts = new LionBitPosts();
-// const keys = new LionBitKeys();
+// ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
+const bitcoin = new CypherpostBitcoinOps();
+const posts = new CypherpostPosts();
+const s5crypto = new S5Crypto();
+const db = new MongoDatabase();
+// ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
+/*
+ROOT
+{
+  "fingerprint": "fcf5c473",
+  "mnemonic": "want text option cargo region apology elegant easy uniform bird consider wedding sport spy romance scrap produce pluck cement thank country person ecology weird",
+  "xprv": "xprv9s21ZrQH143K2C33LtYYTeVM187n1L1iKq1nyUJMsvxJJQNRxpkZzZfDxAv2iyds3E3Y5r3LeF3MBcasGGgvKfA2KmAqx61TFU46UZY8S9F"
+}
+PARENT e2ee'/cypherpost'
+{
+  "xprv": "[fcf5c473/128'/0']xprv9xH9iSYwh8N2h7QipVnhvE5tfw714grVJZBFuoX1EMqBGsjoCqs7N7Mn6whrJtTTpGyXVX2KSzZ5uWPfCax9J6Lp9oKAteavTp9aA5VGTGW/*",
+  "xpub": "[fcf5c473/128'/0']xpub6BGW7x5qXVvKubVBvXKiHN2dDxwVU9aLfn6riBvcnhNA9g4wkPBMuugFxDtCYLu51gFKabc49y6Ssvv3axE57pDk4hem63LjCa4Qq2eAFpZ/*"
+}
+*/
+let message = "GET /posts";
+let xpub = "xpub6BGW7x5qXVvKubVBvXKiHN2dDxwVU9aLfn6riBvcnhNA9g4wkPBMuugFxDtCYLu51gFKabc49y6Ssvv3axE57pDk4hem63LjCa4Qq2eAFpZ";
+let xprv = "xprv9xH9iSYwh8N2h7QipVnhvE5tfw714grVJZBFuoX1EMqBGsjoCqs7N7Mn6whrJtTTpGyXVX2KSzZ5uWPfCax9J6Lp9oKAteavTp9aA5VGTGW";
+let encryption_key;
+const derivation_scheme = "m/0'/0'/0'";
+let cypher_json;
+let post1_id;
+let post2_id;
+let post3_id;
 
-// const db = new MongoDatabase();
-// // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
-// const username = "ishi";
-// let id0 = "someid0";
-// let id1 = "someid1";
-// let id2 = "someid2";
+/**
+ * 
+ * UPdate bitcoin ops to use derivation path string
+ * 
+ */
+const plain_json_post = {
+  message: "**URGENT**",
+  network: "OnChain",
+  type: "Sell",
+  minimum: 1000,
+  maximum: 10000,
+  fiat_currency: "INR",
+  payment_method: "UPI",
+  rate_type: "Variable",
+  reference_exchange: "LocalBitcoins",
+  reference_percent: "-2.0"
+};
 
-// let ds0 = "2h/0h/0h";
-// let ds1 = "2h/1h/0h";
-// let ds2 = "2h/2h/0h";
+let user_post: UserPost = {
+  expiry: Date.now() + 100,
+  derivation_scheme,
+  cypher_json
+};
+// ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
+describe("Initalizing Test: Profile Service", function () {
+  before(async function () {
+    const connection: DbConnection = {
+      port: process.env.DB_PORT,
+      ip: process.env.DB_IP,
+      name: process.env.DB_NAME,
+      auth: process.env.DB_AUTH,
+    };
+    await db.connect(connection);
+    encryption_key = bitcoin.derive_hardened(xprv,0,0,0);
+    if (encryption_key instanceof Error) throw encryption_key;
+    encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
+    cypher_json = s5crypto.encryptAESMessageWithIV(JSON.stringify(plain_json_post),encryption_key);
+    if (cypher_json instanceof Error) throw cypher_json;
+    user_post['cypher_json'] = cypher_json;
 
-// const cipher_json_0 = "oid2j3oid3kjwqfoilj:1093eijd2o9k34q0odik";
-// const cipher_json_1 = "oid2j3fid3kjwqfoilj:199893eijd2o9k34q0os";
-// const cipher_json_2 = "oid2j786yuyuqfoilj:1093eijd2o9k34q0o999";
+  });
 
-// const user1 = "ravi";
-// const user2 = "mj";
-// // assuming trusting 2
-// // client sends username as id
-// // server replaces id with post id
-// const decryption_keys_for_ishi = [{
-//   id: user1,
-//   key: "ivencrypted:decryptionkeyusingrecipientxpubsharedsecret"
-// },
-// {
-//   id: user2,
-//   key: "ivencrypted:decryptionkeyusingrecipientxpubsharedsecret"
-// }];
+  describe("POST SERVICE OPERATIONS:", async function () {
+    it("CREATE a new post (expired)", async function () {
+      const response = await posts.create(xpub,user_post.expiry,cypher_json,derivation_scheme);
+      expect(response).to.be.a("string");
+      post1_id = response;
+    });
+    it("CREATE a new post (expired)", async function () {
+      const response = await posts.create(xpub,user_post.expiry,cypher_json,derivation_scheme);
+      expect(response).to.be.a("string");
+      post2_id = response;
 
-// const decryption_keys_for_ravi = [{
-//   id: username,
-//   key: "ivencrypted:decryptionkeyusingrecipientxpubsharedsecret"
-// },
-// {
-//   id: user2,
-//   key: "ivencrypted:decryptionkeyusingrecipientxpubsharedsecret"
-// }];
-
-// // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
-// describe("Initalizing Test: Posts Controller", function () {
-//   const sandbox = sinon.createSandbox();
-
-//   before(async function () {
-//     const connection: DbConnection = {
-//       port: process.env.DB_PORT,
-//       ip: process.env.DB_IP,
-//       name: process.env.DB_NAME,
-//       auth: process.env.DB_AUTH,
-//     };
-
-//     await db.connect(connection);
-
-//     const stub0 = sinon.stub(S5UID.prototype, "createPostCode");
-//     stub0.onCall(0).returns(id0);
-//     stub0.onCall(1).returns(id1);
-
-//     await keys.init(username, "recipient_xpub0");
-//     await keys.init(user1, "recipient_xpub1");
-//     await keys.init(user2, "recipient_xpub2");
-
-//   });
-
-//   after(async function () {
-//     await keys.remove(user1);
-//     await keys.remove(user2);
-//     await posts.removeByUser(user1);
-//   });
-
-//   describe("PROFILE CONTROLLER OPERATIONS:", async function () {
-//     it("should CREATE a NEW POST (to be removedById)", async function () {
-//       const response = await posts.create(username, Date.now() + 10000, cipher_json_0, ds0, decryption_keys_for_ishi);
-//       if (response instanceof Error) throw response;
-//       expect(response.username).to.equal(username);
-//       const key_response = await keys.findMany([user1, user2]);
-//       if (key_response instanceof Error) throw key_response;
-//       expect(key_response.length).to.equal(2);
-//       expect(key_response[0].post_keys.length).to.equal(1);
-//     });
-//     it("should CREATE a NEW POST for different user(to be removedByUser)", async function () {
-//       let response = await posts.create(user1, Date.now() + 10000, cipher_json_0, ds0, decryption_keys_for_ravi);
-//       if (response instanceof Error) throw response;
-//       expect(response.username).to.equal(user1);
-//     });
-//     it("should FIND a POST", async function () {
-//       const response = await posts.find(username);
-//       if (response instanceof Error) throw response;
-//       expect(response.length).to.equal(1);
-//     });
-//     it("should FIND MANY POSTS", async function () {
-//       const response = await posts.findMany([id0, id1, id2]);
-//       if (response instanceof Error) throw response;
-//       expect(response.length).to.equal(2);
-//     });
-
-
-//     it("should delete By ID", async function () {
-//       let response: any = await posts.removeById(id0, username);
-//       if (response instanceof Error) throw response;
-//       expect(response).to.equal(true);
-//       response = await posts.find(username);
-//       if (response instanceof Error) throw response;
-//       expect(response.length).to.equal(0);
-//     });
-
-//     it("should delete By USER", async function () {
-//       let response: any = await posts.removeByUser(user1);
-//       if (response instanceof Error) throw response;
-//       expect(response).to.equal(true);
-//       response = await posts.find(user1);
-//       if (response instanceof Error) throw response;
-//       expect(response.length).to.equal(0);
-//     });
-//   });
-
-// });
+    });
+    it("CREATE a new post (not-expired)", async function () {
+      const response = await posts.create(xpub,user_post.expiry + 100000,cypher_json,derivation_scheme);
+      expect(response).to.be.a("string");
+      post3_id = response;
+    });
+    it("FIND new posts BY ID", async function () {
+      const response = await posts.findManyById([post1_id,post2_id,post3_id]);
+      if(response instanceof Error) throw response;
+      expect(response.length ===3).to.equal(true);
+    });
+    it("FIND new posts BY OWNER", async function () {
+      const response = await posts.findAllByOwner(xpub);
+      if(response instanceof Error) throw response;
+      expect(response.length ===3).to.equal(true);
+    });
+    it("REMOVE posts by ID", async function () {
+      const response = await posts.removeOneById(post1_id, xpub);
+      expect(response).to.equal(true);
+    });
+    it("REMOVE EXPIRED posts", async function () {
+      const response = await posts.removeAllExpired(xpub);
+      if(response instanceof Error) throw response;
+      expect(response[0]).to.equal(post2_id);
+    });
+    it("REMOVE posts BY OWNER", async function () {
+      const response = await posts.removeAllByOwner(xpub);
+      if(response instanceof Error) throw response;
+      expect(response[0]).to.equal(post3_id);
+    });
+    it("FIND 0 posts BY OWNER", async function () {
+      const response = await posts.findAllByOwner(xpub);
+      if(response instanceof Error) throw response;
+      expect(response.length === 0).to.equal(true);
+    });
+  });
+});

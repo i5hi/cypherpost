@@ -7,7 +7,7 @@ export interface ProfileInterface {
   initialize(owner: string): Promise<boolean | Error>;
   findOne(owner: string): Promise<UserProfile | Error>;
   findMany(owners:  Array<string>): Promise<Array<UserProfile> | Error>;
-  update(owner: string, profile: UserProfile): Promise<boolean | Error>;
+  update(owner: string, derivation_scheme: string, cypher_json: string): Promise<boolean | Error>;
   remove(owner: string): Promise<boolean | Error>;
 };
 
