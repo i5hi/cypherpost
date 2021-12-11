@@ -62,14 +62,12 @@ map ProfileKeyStore {
   owner_id => String
   profile_reference => String
   decryption_key => String
-  mute => Boolean
 }
 map PostKeyStore {
   genesis => UInt
   owner_id => String
   post_reference => String
   decryption_key => String
-  mute => Boolean
 }
 '
 '
