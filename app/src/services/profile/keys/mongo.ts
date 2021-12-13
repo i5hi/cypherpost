@@ -13,7 +13,7 @@ const profile_key_schema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    owner: {
+    giver: {
       type: String,
       required: true,
       index: true
@@ -57,9 +57,9 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async readByOwner(owner: string): Promise<ProfileDecryptionKey[] | Error> {
+  async readByGiver(giver: string): Promise<ProfileDecryptionKey[] | Error> {
     try {
-      const query = { owner: { $in: owner } };
+      const query = { giver: { $in: giver } };
 
       const docs = await profileKeyStore.find(query).sort({ "genesis": -1 }).exec();
       if (docs.length>0) {
@@ -70,7 +70,7 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
           return {
             genesis: doc["genesis"],
             expiry: doc["expiry"],
-            owner: doc["owner"],
+            giver: doc["giver"],
             reciever: doc["reciever"],
             post_id: doc["post_id"],
             decryption_key: doc["decryption_key"],
@@ -100,7 +100,7 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
           return {
             genesis: doc["genesis"],
             expiry: doc["expiry"],
-            owner: doc["owner"],
+            giver: doc["giver"],
             reciever: doc["reciever"],
             post_id: doc["post_id"],
             decryption_key: doc["decryption_key"],
@@ -119,9 +119,9 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
   }
   // might not be needed
 
-  async removeManyByReciever(owner: string, reciever: string): Promise<boolean | Error> {
+  async removeManyByReciever(giver: string, reciever: string): Promise<boolean | Error> {
     try {
-      const query = { owner, reciever };
+      const query = { giver, reciever };
 
       const status = await profileKeyStore.deleteMany(query)
       if (status instanceof mongoose.Error) {
@@ -133,9 +133,9 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async removeAll(owner: string): Promise<boolean | Error> {
+  async removeAll(giver: string): Promise<boolean | Error> {
     try {
-      const query = { owner };
+      const query = { giver };
 
       const status = await profileKeyStore.deleteMany(query)
       if (status instanceof mongoose.Error) {
@@ -147,10 +147,10 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async updateOne(owner: string, reciever: string, decryption_key: string): Promise<boolean | Error> {
+  async updateOne(giver: string, reciever: string, decryption_key: string): Promise<boolean | Error> {
     try {
       const query = {
-        owner,
+        giver,
         reciever,
       };
 

@@ -61,7 +61,7 @@ let cypher_json;
 
 let profile_key: ProfileDecryptionKey = {
   genesis: 0,
-  owner: xpub,
+  giver: xpub,
   reciever: xpub1,
   decryption_key: ""
 };
@@ -115,25 +115,25 @@ describe("Initalizing Test: Profile Key Service", function () {
       ]);
       expect(response).to.equal(true);
     });
-    it("FIND profile decryption key BY OWNER", async function () {
-      const response = await profileKeys.findProfileDecryptionKeyByOwner(xpub);
+    it("FIND profile decryption key BY GIVER", async function () {
+      const response = await profileKeys.findProfileDecryptionKeyByGiver(xpub);
       if (response instanceof Error) throw response;
       
       expect(response.length===1).to.equal(true);
-      expect(response[0]['owner']).to.equal(xpub);
+      expect(response[0]['giver']).to.equal(xpub);
       expect(response[0]['reciever']).to.equal(xpub1);
     });
     it("FIND profile decryption key BY RECIEVER", async function () {
       const response = await profileKeys.findProfileDecryptionKeyByReciever(xpub1);
       expect(response[0]['reciever']).to.equal(xpub1);
-      expect(response[0]['owner']).to.equal(xpub);
+      expect(response[0]['giver']).to.equal(xpub);
     });
     it("DELETE profile decryption key BY RECIEVER", async function () {
       const response = await profileKeys.removeProfileDecryptionKeyByReciever(xpub, xpub1);
       expect(response).to.equal(true);
     });
-    it("DELETE profile decryption key BY OWNER SHOULD be false since no keys exist", async function () {
-      const response = await profileKeys.removeProfileDecryptionKeyByOwner(xpub);
+    it("DELETE profile decryption key BY giver SHOULD be false since no keys exist", async function () {
+      const response = await profileKeys.removeProfileDecryptionKeyByGiver(xpub);
       console.log({response})
       expect(response).to.equal(false);
     });
@@ -149,21 +149,21 @@ describe("Initalizing Test: Profile Key Service", function () {
     // });
 
 
-    it("FIND profile decryption key BY OWNER", async function () {
-      const response = await profileKeys.findProfileDecryptionKeyByOwner(xpub);
+    it("FIND profile decryption key BY GIVER", async function () {
+      const response = await profileKeys.findProfileDecryptionKeyByGiver(xpub);
       expect(response['name']).to.equal("404");
     });
-    it("FIND profile decryption key BY OWNER", async function () {
-      const response = await profileKeys.findProfileDecryptionKeyByOwner(xpub1);
-      expect(response[0]['owner']).to.equal(xpub1);
+    it("FIND profile decryption key BY GIVER", async function () {
+      const response = await profileKeys.findProfileDecryptionKeyByGiver(xpub1);
+      expect(response[0]['giver']).to.equal(xpub1);
       expect(response[0]['reciever']).to.equal(xpub);
     });
-    it("DELETE profile decryption key BY OWNER", async function () {
-      const response = await profileKeys.removeProfileDecryptionKeyByOwner(xpub1);
+    it("DELETE profile decryption key BY GIVER", async function () {
+      const response = await profileKeys.removeProfileDecryptionKeyByGiver(xpub1);
       expect(response).to.equal(true);
     });
-    it("DELETE profile decryption key BY OWNER SHOULD be false since no keys exist", async function () {
-      const response = await profileKeys.removeProfileDecryptionKeyByOwner(xpub1);
+    it("DELETE profile decryption key BY giver SHOULD be false since no keys exist", async function () {
+      const response = await profileKeys.removeProfileDecryptionKeyByGiver(xpub1);
       expect(response).to.equal(false);
     });
 

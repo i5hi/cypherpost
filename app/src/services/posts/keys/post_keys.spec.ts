@@ -69,7 +69,7 @@ const post_id_3 = "somePostId3";
 
 let post_key: PostDecryptionKey = {
   genesis: 0,
-  owner: xpub,
+  giver: xpub,
   reciever: xpub1,
   post_id: "5omePostID",
   decryption_key: ""
@@ -124,16 +124,16 @@ describe("Initalizing Test: Post Key Service", function () {
       ]);
       expect(response).to.equal(true);
     });
-    it("FIND post decryption key BY OWNER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByOwner(xpub);
-      expect(response[0]['owner']).to.equal(xpub);
+    it("FIND post decryption key BY GIVER", async function () {
+      const response = await postKeys.findPostDecryptionKeyByGiver(xpub);
+      expect(response[0]['giver']).to.equal(xpub);
       expect(response[0]['reciever']).to.equal(xpub1);
       expect(response[0]['post_id']).to.equal(post_id);
     });
     it("FIND post decryption key BY RECIEVER", async function () {
       const response = await postKeys.findPostDecryptionKeyByReciever(xpub1);
       expect(response[0]['reciever']).to.equal(xpub1);
-      expect(response[0]['owner']).to.equal(xpub);
+      expect(response[0]['giver']).to.equal(xpub);
       expect(response[0]['post_id']).to.equal(post_id);
     });
     it("DELETE post decryption key BY RECIEVER", async function () {
@@ -150,22 +150,22 @@ describe("Initalizing Test: Post Key Service", function () {
       const response = await postKeys.removePostDecryptionKeyById(xpub, post_id);
       expect(response).to.equal(true);
     });
-    it("DELETE post decryption key BY OWNER SHOULD be false since no keys exist", async function () {
-      const response = await postKeys.removePostDecryptionKeyByOwner(xpub);
+    it("DELETE post decryption key BY giver SHOULD be false since no keys exist", async function () {
+      const response = await postKeys.removePostDecryptionKeyByGiver(xpub);
       expect(response).to.equal(false);
     });
-    it("FIND post decryption key BY OWNER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByOwner(xpub);
+    it("FIND post decryption key BY GIVER", async function () {
+      const response = await postKeys.findPostDecryptionKeyByGiver(xpub);
       expect(response['name']).to.equal("404");
     });
-    it("FIND post decryption key BY OWNER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByOwner(xpub1);
-      expect(response[0]['owner']).to.equal(xpub1);
+    it("FIND post decryption key BY GIVER", async function () {
+      const response = await postKeys.findPostDecryptionKeyByGiver(xpub1);
+      expect(response[0]['giver']).to.equal(xpub1);
       expect(response[0]['reciever']).to.equal(xpub);
       expect(response[0]['post_id']).to.equal(post_id_2);
     });
-    it("DELETE post decryption key BY OWNER SHOULD be false since no keys exist", async function () {
-      const response = await postKeys.removePostDecryptionKeyByOwner(xpub1);
+    it("DELETE post decryption key BY giver SHOULD be false since no keys exist", async function () {
+      const response = await postKeys.removePostDecryptionKeyByGiver(xpub1);
       expect(response).to.equal(true);
     });
 

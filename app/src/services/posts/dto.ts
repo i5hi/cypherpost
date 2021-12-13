@@ -80,7 +80,7 @@ export async function handleGetMyPosts(req, res) {
     const my_posts = await posts.findAllByOwner(req.headers['x-client-xpub']);
     if (my_posts instanceof Error) throw my_posts;
 
-    const my_posts_keys = await postKeys.findPostDecryptionKeyByOwner(req.headers['x-client-xpub']);
+    const my_posts_keys = await postKeys.findPostDecryptionKeyByGiver(req.headers['x-client-xpub']);
     if (my_posts_keys instanceof Error) throw my_posts_keys;
 
     const response = {

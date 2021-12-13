@@ -13,13 +13,13 @@ const uuid = new S5UID();
 
 export class CypherpostProfileKeys implements ProfileKeyInterface {
 
-  async addProfileDecryptionKeys(owner: string, key_update: ProfileKeyStoreUpdate[]): Promise<boolean | Error> {
+  async addProfileDecryptionKeys(giver: string, key_update: ProfileKeyStoreUpdate[]): Promise<boolean | Error> {
     try {
       let keys = [];
       key_update.map(key => {
         keys.push({
           genesis: Date.now(),
-          owner: owner,
+          giver: giver,
           reciever: key.reciever,
           decryption_key: key.decryption_key
         })
@@ -30,11 +30,11 @@ export class CypherpostProfileKeys implements ProfileKeyInterface {
       handleError(e);
     }
   }
-  async updateProfileDecryptionKeys(owner: string, key_update: ProfileKeyStoreUpdate[]): Promise<boolean | Error> {
+  async updateProfileDecryptionKeys(giver: string, key_update: ProfileKeyStoreUpdate[]): Promise<boolean | Error> {
     try {
       let keys = [];
       let updates = await key_update.map(async key => {
-        const status = await store.updateOne(owner, key.reciever, key.decryption_key);
+        const status = await store.updateOne(giver, key.reciever, key.decryption_key);
         if (status instanceof Error) throw status;
       });
 
@@ -48,14 +48,14 @@ export class CypherpostProfileKeys implements ProfileKeyInterface {
   async findProfileDecryptionKeyByReciever(receiver: string): Promise<Error | ProfileDecryptionKey[]> {
     return store.readByReciever(receiver);
   }
-  async findProfileDecryptionKeyByOwner(owner: string): Promise<Error | ProfileDecryptionKey[]> {
-    return store.readByOwner(owner);
+  async findProfileDecryptionKeyByGiver(giver: string): Promise<Error | ProfileDecryptionKey[]> {
+    return store.readByGiver(giver);
   }
-  async removeProfileDecryptionKeyByReciever(owner: string, reciever: string): Promise<boolean | Error> {
-    return store.removeManyByReciever(owner, reciever);
+  async removeProfileDecryptionKeyByReciever(giver: string, reciever: string): Promise<boolean | Error> {
+    return store.removeManyByReciever(giver, reciever);
   }
-  async removeProfileDecryptionKeyByOwner(owner: string): Promise<boolean | Error> {
-    return store.removeAll(owner);
+  async removeProfileDecryptionKeyByGiver(giver: string): Promise<boolean | Error> {
+    return store.removeAll(giver);
   }
 
 }

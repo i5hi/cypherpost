@@ -107,7 +107,7 @@ export async function handleGetSelfProfile(req, res) {
     const result = await profile.findOne(request.headers['x-client-xpub']);
     if (result instanceof Error) throw result;
 
-    const keys = await profileKeys.findProfileDecryptionKeyByOwner(request.headers['x-client-xpub']);
+    const keys = await profileKeys.findProfileDecryptionKeyByGiver(request.headers['x-client-xpub']);
     if (keys instanceof Error) throw keys;
 
     const response = {
@@ -138,7 +138,7 @@ export async function handleGetOthersProfile(req, res) {
     const keys = await profileKeys.findProfileDecryptionKeyByReciever(request.headers['x-client-xpub']);
     if (keys instanceof Error) throw keys;
 
-    const result = await profile.findMany(keys.map(key => key.owner));
+    const result = await profile.findMany(keys.map(key => key.giver));
     if (result instanceof Error) throw result;
 
     const response = {
