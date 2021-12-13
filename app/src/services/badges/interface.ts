@@ -5,6 +5,14 @@ export interface TrustBadgeInterface{
   revoke(from: string, to: string): Promise<boolean | Error>;
 }
 
+export interface TrustBadgeStore{
+  create(badge: Badge): Promise<boolean | Error>;
+  readByGiver(giver: string): Promise<Badge[] | Error>;
+  readByReciever(reciever: string): Promise<Badge[] | Error>;
+  removeByGiver(giver: string): Promise<boolean | Error>;
+  removeByReciever(reciever: string): Promise<boolean | Error>;
+}
+
 export interface Badge {
   genesis: string;
   giver: string;
