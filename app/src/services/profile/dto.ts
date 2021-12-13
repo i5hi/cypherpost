@@ -92,9 +92,8 @@ export async function handleDeleteProfile(req, res) {
   }
 }
 
-export async function handleGetProfile(req, res) {
+export async function handleGetSelfProfile(req, res) {
   const request = parseRequest(req);
-
   try {
 
     const errors = validationResult(req)
@@ -105,11 +104,46 @@ export async function handleGetProfile(req, res) {
       }
     }
 
-    const result = await profile.findOne(request.params.xpub);
+    const result = await profile.findOne(request.headers['x-client-xpub']);
+    if (result instanceof Error) throw result;
+
+    const keys = await profileKeys.findProfileDecryptionKeyByOwner(request.headers['x-client-xpub']);
+    if (keys instanceof Error) throw keys;
+
+    const response = {
+      profile: result,
+      keys: keys
+    };
+
+    respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+
+}
+export async function handleGetOthersProfile(req, res) {
+  const request = parseRequest(req);
+  try {
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        code: 400,
+        message: errors.array()
+      }
+    }
+
+    const keys = await profileKeys.findProfileDecryptionKeyByReciever(request.headers['x-client-xpub']);
+    if (keys instanceof Error) throw keys;
+
+    const result = await profile.findMany(keys.map(key => key.owner));
     if (result instanceof Error) throw result;
 
     const response = {
-      profile: result
+      profiles: result,
+      keys: keys
     };
 
     respond(200, response, res, request);
