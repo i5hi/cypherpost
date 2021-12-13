@@ -100,7 +100,7 @@ export class MongoProfileStore implements ProfileStore {
     try {;
       const docs =  await profileStore.find({owner:{$in: owners}}).exec();
       
-      if (docs) {
+      if (docs.length>0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);
         }

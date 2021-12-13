@@ -6,14 +6,14 @@ import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostIdentity } from "../identity/identity";
-// import { CypherpostProfile } from "../profile/profile";
+import { CypherpostPostKeys } from "./keys/post_keys";
 import { CypherpostPosts } from "./posts";
 const { validationResult } = require('express-validator');
 
 const s5crypto = new S5Crypto();
 const posts = new CypherpostPosts();
 const identity = new CypherpostIdentity();
-// const profile = new LionBitProfile();
+const postKeys = new CypherpostPostKeys();
 
 export async function postMiddleware(req, res, next) {
   const request = parseRequest(req);
@@ -48,11 +48,13 @@ export async function handleCreatePost(req, res) {
       }
     }
 
-    const post = await posts.create(req.headers['x-client-xpub'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
-    if (post instanceof Error) throw post;
-    
+    const post_id = await posts.create(req.headers['x-client-xpub'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
+    if (post_id instanceof Error) throw post_id;
+    const key_status = await postKeys.addPostDecryptionKeys(req.headers['x-client-xpub'], post_id, req.body.decryption_keys);
+    if (key_status instanceof Error) throw key_status;
+
     const response = {
-      post
+      post_id
     };
     respond(200, response, res, request);
   }
@@ -79,8 +81,12 @@ export async function handleGetMyPosts(req, res) {
     const my_posts = await posts.findAllByOwner(req.headers['x-client-xpub']);
     if (my_posts instanceof Error) throw my_posts;
 
+    const my_posts_keys = await postKeys.findPostDecryptionKeyByOwner(req.headers['x-client-xpub']);
+    if (my_posts_keys instanceof Error) throw my_posts_keys;
+
     const response = {
-      posts: my_posts
+      posts: my_posts,
+      keys: my_posts_keys
     };
     respond(200, response, res, request);
 
@@ -103,9 +109,18 @@ export async function handleGetOthersPosts(req, res) {
     }
     // find my trusted_by list of xpubs
     // find their posts
+
+    const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-xpub']);
+    if (reciever_keys instanceof Error) throw reciever_keys;
+
+    const posts_recieved = await posts.findManyById(reciever_keys.map(key=>key.post_id));
+    if(posts_recieved instanceof Error) throw posts_recieved;
+
     const response = {
-      posts: []
+      posts: posts_recieved,
+      keys: reciever_keys
     };
+    
     respond(200, response, res, request);
   }
   catch (e) {
@@ -125,7 +140,10 @@ export async function handleDeletePost(req, res) {
       }
     }
 
-    const status = await posts.removeOneById(req.params.id, request.headers['x-client-xpub']);
+    let status = await posts.removeOneById(req.params.id, request.headers['x-client-xpub']);
+    if (status instanceof Error) throw status;
+
+    status = await postKeys.removePostDecryptionKeyById(request.headers['x-client-xpub'], req.params.id);
     if (status instanceof Error) throw status;
 
     const response = {

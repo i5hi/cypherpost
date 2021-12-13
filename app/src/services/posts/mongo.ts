@@ -72,6 +72,7 @@ export class MongoPostStore implements PostStore {
         return handleError(status);
       }
       if (status.deletedCount >= 1) return true;
+      else false;
     } catch (e) {
       return handleError(e);
     }
@@ -93,7 +94,7 @@ export class MongoPostStore implements PostStore {
       const query = (index_type == PostStoreIndex.Owner) ? { owner: { $in: indexes } } : { id: { $in: indexes } } ;
 
       const docs = await postStore.find(query).sort({"genesis": -1}).exec();
-      if (docs) {
+      if (docs.length>0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);
         }
@@ -111,7 +112,7 @@ export class MongoPostStore implements PostStore {
       } else {
         return handleError({
           code: 404,
-          message: `No Post Found`
+          message: `No Posts Found`
         });
       }
     } catch (e) {
