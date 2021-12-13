@@ -6,6 +6,7 @@ import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostIdentity } from "../identity/identity";
+import { PostKeyStoreUpdate } from "./keys/interface";
 import { CypherpostPostKeys } from "./keys/post_keys";
 import { CypherpostPosts } from "./posts";
 const { validationResult } = require('express-validator');
@@ -50,8 +51,6 @@ export async function handleCreatePost(req, res) {
 
     const post_id = await posts.create(req.headers['x-client-xpub'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
     if (post_id instanceof Error) throw post_id;
-    const key_status = await postKeys.addPostDecryptionKeys(req.headers['x-client-xpub'], post_id, req.body.decryption_keys);
-    if (key_status instanceof Error) throw key_status;
 
     const response = {
       post_id
@@ -144,6 +143,38 @@ export async function handleDeletePost(req, res) {
     if (status instanceof Error) throw status;
 
     status = await postKeys.removePostDecryptionKeyById(request.headers['x-client-xpub'], req.params.id);
+    if (status instanceof Error) throw status;
+
+    const response = {
+      status
+    };
+    respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+}
+
+export async function handleUpdatePostKeys(req, res) {
+  const request = parseRequest(req);
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        code: 400,
+        message: errors.array()
+      }
+    }
+
+    const decryption_keys: PostKeyStoreUpdate[] = request.body.decryption_keys.map((key) => {
+      return {
+        decryption_key: key['decryption_key'],
+        reciever: key['reciever']
+      }
+    });
+
+    const status = await postKeys.addPostDecryptionKeys(request.headers['x-client-xpub'], req.params.id, decryption_keys);
     if (status instanceof Error) throw status;
 
     const response = {

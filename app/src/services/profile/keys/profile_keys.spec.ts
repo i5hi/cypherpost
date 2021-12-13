@@ -10,13 +10,13 @@ import { CypherpostBitcoinOps } from "../../../lib/bitcoin/bitcoin";
 import { S5Crypto } from "../../../lib/crypto/crypto";
 import { DbConnection } from "../../../lib/storage/interface";
 import { MongoDatabase } from "../../../lib/storage/mongo";
-import { PostDecryptionKey } from "./interface";
-import { CypherpostPostKeys } from "./post_keys";
+import { ProfileDecryptionKey } from "./interface";
+import { CypherpostProfileKeys } from "./profile_keys";
 const sinon = require("sinon");
 
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 const bitcoin = new CypherpostBitcoinOps();
-const postKeys = new CypherpostPostKeys();
+const profileKeys = new CypherpostProfileKeys();
 const s5crypto = new S5Crypto();
 const db = new MongoDatabase();
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
@@ -46,7 +46,7 @@ PARENT e2ee/cypherpost/identity
 }
 
 */
-let message = "GET /posts/keys";
+let message = "GET /profile/keys";
 
 let xpub = "xpub6DAo87N8pGxhyNo8uWWVwsTRHwozpSp2Scy1BiCjM2rN9R3vRnysqXr2ymokbVYGPzih9Ze1iW4GiKjnL7Eqdec4Gj2fcpvoScN1rfdVKjK";
 let xprv = "xprv9zBSibqEyuQQktifoUyVajWgjuyWQz6B5Q3QPKo7nhKPGcimtFfdHjXZ8UBYi7Ycz6V7R1QrSk9uExx2xTb9mW6SprakREwVuC91233nJaD";
@@ -57,25 +57,16 @@ let encryption_key;
 let decryption_key;
 const derivation_scheme = "m/0'/0'/0'";
 let cypher_json;
-let post1_id;
-let post2_id;
-let post3_id;
-
-const post_id = "somePostId";
-const post_id_1 = "somePostId1";
-const post_id_2 = "somePostId2";
-const post_id_3 = "somePostId3";
 
 
-let post_key: PostDecryptionKey = {
+let profile_key: ProfileDecryptionKey = {
   genesis: 0,
   owner: xpub,
   reciever: xpub1,
-  post_id: "5omePostID",
   decryption_key: ""
 };
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
-describe("Initalizing Test: Post Key Service", function () {
+describe("Initalizing Test: Profile Key Service", function () {
   before(async function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
@@ -96,20 +87,20 @@ describe("Initalizing Test: Post Key Service", function () {
 
   });
 
-  describe("POST KEY SERVICE OPERATIONS:", async function () {
+  describe("PROFILE KEY SERVICE OPERATIONS:", async function () {
     it("CREATE new post decryption key from xpub to xpub1", async function () {
-      const response = await postKeys.addPostDecryptionKeys(xpub, post_id,[
+      const response = await profileKeys.addProfileDecryptionKeys(xpub,[
         {reciever: xpub1, decryption_key: decryption_key }
       ]);
       expect(response).to.equal(true);
     });
-    it("CREATE new post decryption key from xpub1 to xpub", async function () {
-      const response = await postKeys.addPostDecryptionKeys(xpub1, post_id_2,[
+    it("CREATE new profile decryption key from xpub1 to xpub", async function () {
+      const response = await profileKeys.addProfileDecryptionKeys(xpub1,[
         {reciever: xpub, decryption_key: decryption_key }
       ]);
       expect(response).to.equal(true);
     });
-    it("UPDATE post key", async function () {
+    it("UPDATE profile key", async function () {
       encryption_key = bitcoin.derive_hardened(xprv,2,0,1);
       if (encryption_key instanceof Error) throw encryption_key;
       encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
@@ -119,55 +110,63 @@ describe("Initalizing Test: Post Key Service", function () {
       decryption_key = s5crypto.encryptAESMessageWithIV(encryption_key as string,shared_secret as string);
       if (decryption_key instanceof Error) throw decryption_key;
 
-      const response = await postKeys.updatePostDecryptionKeys(xpub, post_id,[
+      const response = await profileKeys.updateProfileDecryptionKeys(xpub,[
         {reciever: xpub1, decryption_key: decryption_key }
       ]);
       expect(response).to.equal(true);
     });
-    it("FIND post decryption key BY OWNER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByOwner(xpub);
+    it("FIND profile decryption key BY OWNER", async function () {
+      const response = await profileKeys.findProfileDecryptionKeyByOwner(xpub);
+      if (response instanceof Error) throw response;
+      
+      expect(response.length===1).to.equal(true);
       expect(response[0]['owner']).to.equal(xpub);
       expect(response[0]['reciever']).to.equal(xpub1);
-      expect(response[0]['post_id']).to.equal(post_id);
     });
-    it("FIND post decryption key BY RECIEVER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByReciever(xpub1);
+    it("FIND profile decryption key BY RECIEVER", async function () {
+      const response = await profileKeys.findProfileDecryptionKeyByReciever(xpub1);
       expect(response[0]['reciever']).to.equal(xpub1);
       expect(response[0]['owner']).to.equal(xpub);
-      expect(response[0]['post_id']).to.equal(post_id);
     });
-    it("DELETE post decryption key BY RECIEVER", async function () {
-      const response = await postKeys.removePostDecryptionKeyByReciever(xpub, xpub1);
+    it("DELETE profile decryption key BY RECIEVER", async function () {
+      const response = await profileKeys.removeProfileDecryptionKeyByReciever(xpub, xpub1);
       expect(response).to.equal(true);
     });
-    it("CREATE new post decryption key from xpub to xpub1", async function () {
-      const response = await postKeys.addPostDecryptionKeys(xpub, post_id,[
-        {reciever: xpub1, decryption_key: decryption_key }
-      ]);
-      expect(response).to.equal(true);
-    });
-    it("DELETE post decryption key BY ID", async function () {
-      const response = await postKeys.removePostDecryptionKeyById(xpub, post_id);
-      expect(response).to.equal(true);
-    });
-    it("DELETE post decryption key BY OWNER SHOULD be false since no keys exist", async function () {
-      const response = await postKeys.removePostDecryptionKeyByOwner(xpub);
+    it("DELETE profile decryption key BY OWNER SHOULD be false since no keys exist", async function () {
+      const response = await profileKeys.removeProfileDecryptionKeyByOwner(xpub);
+      console.log({response})
       expect(response).to.equal(false);
     });
-    it("FIND post decryption key BY OWNER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByOwner(xpub);
+
+
+    // it("CREATE new profile decryption key from xpub to xpub1", async function () {
+    //   decryption_key = s5crypto.encryptAESMessageWithIV("new_encryption_key" as string,shared_secret as string);
+    //   if (decryption_key instanceof Error) throw decryption_key;
+    //   const response = await profileKeys.addProfileDecryptionKeys(xpub,[
+    //     {reciever: xpub1, decryption_key: decryption_key }
+    //   ]);
+    //   expect(response).to.equal(true);
+    // });
+
+
+    it("FIND profile decryption key BY OWNER", async function () {
+      const response = await profileKeys.findProfileDecryptionKeyByOwner(xpub);
       expect(response['name']).to.equal("404");
     });
-    it("FIND post decryption key BY OWNER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByOwner(xpub1);
+    it("FIND profile decryption key BY OWNER", async function () {
+      const response = await profileKeys.findProfileDecryptionKeyByOwner(xpub1);
       expect(response[0]['owner']).to.equal(xpub1);
       expect(response[0]['reciever']).to.equal(xpub);
-      expect(response[0]['post_id']).to.equal(post_id_2);
     });
-    it("DELETE post decryption key BY OWNER SHOULD be false since no keys exist", async function () {
-      const response = await postKeys.removePostDecryptionKeyByOwner(xpub1);
+    it("DELETE profile decryption key BY OWNER", async function () {
+      const response = await profileKeys.removeProfileDecryptionKeyByOwner(xpub1);
       expect(response).to.equal(true);
     });
+    it("DELETE profile decryption key BY OWNER SHOULD be false since no keys exist", async function () {
+      const response = await profileKeys.removeProfileDecryptionKeyByOwner(xpub1);
+      expect(response).to.equal(false);
+    });
+
 
   });
 });
