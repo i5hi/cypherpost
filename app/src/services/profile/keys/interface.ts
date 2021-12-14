@@ -12,7 +12,6 @@ export interface ProfileKeyInterface {
   removeProfileDecryptionKeyByGiver(giver: string): Promise<boolean | Error>;
 };
 
-
 export interface ProfileDecryptionKeyStore {
   createMany(keys: ProfileDecryptionKey[]): Promise<boolean | Error>;
   readByGiver(giver: string): Promise<ProfileDecryptionKey[] | Error>;
