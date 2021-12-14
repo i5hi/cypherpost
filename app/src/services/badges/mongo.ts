@@ -85,16 +85,23 @@ export class MongoBadgeStore implements BadgeStore {
       return handleError(e);
     }
   }
-  async removeAllByGiver(giver: string): Promise<boolean | Error> {
+  async removeAll(xpub: string): Promise<boolean | Error> {
     try {
-      const query = { giver };
+      const giver_query = { giver : xpub };
 
-      const status = await badgeStore.deleteMany(query)
+      let status = await badgeStore.deleteMany(giver_query)
       if (status instanceof mongoose.Error) {
         return handleError(status);
       }
-      if (status.deletedCount >= 1) return true;
-      else return false;
+
+      const reciever_query = { reciever : xpub };
+
+      status = await badgeStore.deleteMany(reciever_query)
+      if (status instanceof mongoose.Error) {
+        return handleError(status);
+      }
+      return true;
+      
     } catch (e) {
       return handleError(e);
     }
@@ -105,6 +112,36 @@ export class MongoBadgeStore implements BadgeStore {
       const query = { giver: { $in: giver } };
 
       const docs = await badgeStore.find(query).sort({ "genesis": -1 }).exec();
+      if (docs.length > 0) {
+        if (docs instanceof mongoose.Error) {
+          return handleError(docs);
+        }
+        const badges = docs.map(doc => {
+          return {
+            genesis: doc["genesis"],
+            hash: doc["hash"],
+            giver: doc["giver"],
+            reciever: doc["reciever"],
+            signature: doc["signature"],
+            type: doc["type"],
+            nonce: doc["nonce"],
+
+          }
+        });
+        return badges;
+      } else {
+        return handleError({
+          code: 404,
+          message: `No Badges Found`
+        });
+      }
+    } catch (e) {
+      return handleError(e);
+    }
+  }
+  async readAll(): Promise<Badge[] | Error> {
+    try {
+      const docs = await badgeStore.find().sort({ "genesis": -1 }).exec();
       if (docs.length > 0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);

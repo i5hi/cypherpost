@@ -14,11 +14,15 @@ const store = new MongoBadgeStore();
 const uuid = new S5UID();
 const bitcoin = new CypherpostBitcoinOps();
 
-
 export class CypherpostBadges implements BadgeInterface {
+  getAll(): Promise<Badge[] | Error> {
+    return store.readAll();
+  }
+  removeAllOfUser(xpub: string): Promise<boolean | Error> {
+    return store.removeAll(xpub);
+  }
   async create(from: string, to: string, type: BadgeType, nonce: string, signature: string): Promise<boolean | Error> {
     try{
-
       const pubkey = bitcoin.extract_ecdsa_pub(from);
       if(pubkey instanceof Error) return pubkey;
       const message = `${from}${to}${type}${nonce}`;

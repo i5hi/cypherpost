@@ -96,6 +96,17 @@ describe("Initalizing Test: Badge Service", function () {
       const response = await badges.findByReciever(xpub1);
       expect(response['name']).to.equal("404");
     });
-
+    it("CREATE new TRUST from xpub to xpub1", async function () {
+      const response = await badges.create(xpub, xpub1, BadgeType.Trusted,nonce, signature);
+      expect(response).to.equal(true);
+    });
+    it("REMOVE ALL by xpub", async function () {
+      const response = await badges.removeAllOfUser(xpub);
+      expect(response).to.equal(true);
+    });
+    it("FIND 0 badges post revoke", async function () {
+      const response = await badges.getAll();
+      expect(response['name']).to.equal("404");
+    });
   });
 });
