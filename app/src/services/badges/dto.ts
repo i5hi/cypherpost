@@ -47,7 +47,7 @@ export async function handleGetMyBadges(req, res) {
 
     const given = await badges.findByGiver(request.headers['x-client-xpub']);
     if (given instanceof Error) throw given;
-    const recieved = await badges.findByGiver(request.headers['x-client-xpub']);
+    const recieved = await badges.findByReciever(request.headers['x-client-xpub']);
     if (recieved instanceof Error) throw recieved;
 
     const response = {

@@ -12,12 +12,11 @@ export const router = Router();
 // ------------------ '(◣ ◢)' ---------------------
 const registrationCheck = [
   val.check('username').exists().matches(/^(?=.{1,15}$)(?![_.])(?!.*[_.]{2})[a-z][a-z0-9_.]+$/), 
-  val.check('xpub').exists(),
 ];
 
 // ------------------ '(◣ ◢)' ---------------------
 router.use(identityMiddleware);
-router.post("/register",registrationCheck, handleRegistration);
+router.post("/",registrationCheck, handleRegistration);
 router.get("/all",handleGetAll);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------
 

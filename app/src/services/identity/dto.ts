@@ -2,6 +2,7 @@
 cypherpost.io
 Developed @ Stackmate India
 */
+import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostProfile } from "../profile/profile";
@@ -11,11 +12,26 @@ const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
 const profile =  new CypherpostProfile();
+const bitcoin = new CypherpostBitcoinOps();
 
 export async function identityMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
-    next();
+    const signature = request.headers['x-client-signature'];
+    const xpub = request.headers['x-client-xpub'];
+    const nonce = request.headers['x-nonce'];
+    const method = request.method;
+    const resource = request.resource;
+    const params = JSON.stringify(request.body);
+    const message = `${method} ${resource} ${params} ${nonce}`;
+
+    console.log({message});
+    const pubkey = bitcoin.extract_ecdsa_pub(xpub);
+    if(pubkey instanceof Error) return pubkey;
+    
+    let verified = bitcoin.verify(message, signature, pubkey);
+    if (verified instanceof Error) throw verified;
+    else next();
   }
   catch (e) {
     const result = filterError(e, r_500, request);
@@ -37,7 +53,7 @@ export async function handleRegistration(req, res) {
     let status = await identity.register(request.body.username, request.headers['x-client-xpub']);
     if (status instanceof Error) throw status;
 
-    status = await profile.initialize(request.body.xpub);
+    status = await profile.initialize(request.headers['x-client-xpub']);
     if (status instanceof Error) throw status;
 
     const response = {

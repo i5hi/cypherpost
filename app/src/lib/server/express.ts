@@ -35,15 +35,15 @@ export async function start(port: string) {
       });
       
       // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-      server.use("/api/v1/identity", identity);
-      server.use("/api/v1/profile", profile);
-      server.use("/api/v1/posts", posts);
-      server.use("/api/v1/badges", posts);
+      server.use("/api/v2/identity", identity);
+      server.use("/api/v2/profile", profile);
+      server.use("/api/v2/posts", posts);
+      server.use("/api/v2/badges", posts);
       server.use("/", client);
       // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
       server.use(express.static(base_path));
-
+      
       const app = server.listen(port, async () => {
         logger.verbose("Server listening...")
         resolve(app)

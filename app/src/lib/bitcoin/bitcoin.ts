@@ -43,6 +43,34 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
       return handleError(error);
     }
   }
+  derive_hardened_str(parent: string, derivation_scheme: string): ExtendedKeys | Error{
+    try {
+      if (!derivation_scheme.endsWith("/"))
+      derivation_scheme+="/";
+      derivation_scheme = derivation_scheme.replace("'",  "h").replace("'",  "h").replace("'",  "h");
+      derivation_scheme = derivation_scheme.replace("m/",  "");
+      
+      // console.log(derivation_scheme);
+      const parent_key = bip32.fromBase58(parent);
+      if ( derivation_scheme.split("h/").length < 3 ) return handleError({
+        code: 400,
+        message: "Derivation scheme must contain 3 sub paths."
+      });
+      
+      // console.log(derivation_scheme.split("h/"),derivation_scheme.split("h/").length);
+      const use_case = parseInt(derivation_scheme.split("h/")[0]);
+      const index = parseInt(derivation_scheme.split("h/")[1]);
+      const revoke = parseInt(derivation_scheme.split("h/")[2]);
+      const child_key = parent_key.deriveHardened(use_case).deriveHardened(index).deriveHardened(revoke);
+      const extended_keys: ExtendedKeys = {
+        xpub: child_key.neutered().toBase58(),
+        xprv: child_key.toBase58(),
+      };
+      return extended_keys;
+    } catch (error) {
+      return handleError(error);
+    }
+  }
   derive_hardened(parent: string, use_case: number, index: number, revoke: number): Error | ExtendedKeys {
     try {
       const parent_key = bip32.fromBase58(parent);

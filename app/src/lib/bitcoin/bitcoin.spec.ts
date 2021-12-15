@@ -101,20 +101,27 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
 
 
 
-    it("should derive_hardened pair at m/0h/0h for hardened recipient/index/revoke", async function () {
+    it("should derive_hardened pair at m/0h/0h/0h for hardened recipient/index/revoke", async function () {
       let key_pair = bitcoin.derive_hardened(expected_hardened_master.xprv,0,0,0);
       if (key_pair instanceof Error) throw key_pair;
       expect(key_pair.xprv).to.equal(expected_hardened_recipient.xprv);
       expect(key_pair.xpub).to.equal(expected_hardened_recipient.xpub);
     });
-    it("should derive_hardened pair at m/1h/0h for hardened contact/index/revoke", async function () {
+    it("should derive_hardened pair at m/1h/0h/0h for hardened contact/index/revoke", async function () {
       let key_pair = bitcoin.derive_hardened(expected_hardened_master.xprv,1,0,0);
       if (key_pair instanceof Error) throw key_pair;
       expect(key_pair.xprv).to.equal(expected_hardened_profile_sender.xprv);
       expect(key_pair.xpub).to.equal(expected_hardened_profile_sender.xpub);
     });
-    it("should derive_hardened pair at m/1h/1h for hardened posts/index/revoke", async function () {
+    it("should derive_hardened pair at m/2h/1h/0h for hardened posts/index/revoke", async function () {
       let key_pair = bitcoin.derive_hardened(expected_hardened_master.xprv,2,1,0);
+      if (key_pair instanceof Error) throw key_pair;
+      expect(key_pair.xprv).to.equal(expected_hardened_posts_sender.xprv);
+      expect(key_pair.xpub).to.equal(expected_hardened_posts_sender.xpub);
+    });
+
+    it("should derive_hardened pair at m/2h/1h/0h AS_STR for hardened posts/index/revoke", async function () {
+      let key_pair = bitcoin.derive_hardened_str(expected_hardened_master.xprv,"m/2'/1'/0'");
       if (key_pair instanceof Error) throw key_pair;
       expect(key_pair.xprv).to.equal(expected_hardened_posts_sender.xprv);
       expect(key_pair.xpub).to.equal(expected_hardened_posts_sender.xpub);

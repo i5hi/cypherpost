@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "node dist/main.js",
-    "test": "mocha -r ts-node/register src/main.spec.ts --exit"
+    "test": "mocha -r ts-node/register src/main.spec.ts --timeout 12000 --exit"
   },
   "repository": {
     "type": "git",
