@@ -5,6 +5,7 @@ Developed @ Stackmate India
 
 import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
 import { S5Crypto } from "../../lib/crypto/crypto";
+import { handleError } from "../../lib/errors/e";
 import * as jwt from "../../lib/jwt/jwt";
 import { S5UID } from "../../lib/uid/uid";
 import { IdentityIndex, IdentityInterface, UserIdentity } from "./interface";
@@ -30,7 +31,11 @@ export class CypherpostIdentity implements IdentityInterface {
     if(pubkey instanceof Error) return pubkey;
     
     let verified = bitcoin.verify(message, signature, pubkey);
-    return verified;
+    if (!verified) return handleError({
+      code: 401,
+      message: "Invalid Request Signature."
+    });
+    else return verified;
   }
 
   async register(username: string, xpub: string): Promise<boolean | Error> {

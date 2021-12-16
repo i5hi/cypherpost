@@ -187,11 +187,9 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     });
     it("GETS ALL IDENTITIES as C", function (done) {
       endpoint = "/api/v2/identity/all";
-      body = {
-        "username": "carol"
-      };
+      body = {};
       nonce = Date.now();
-      signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_set.identity_signer);
+      signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_set.identity_signer);
       chai
         .request(server)
         .get("/api/v2/identity/all")

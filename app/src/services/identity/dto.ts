@@ -31,6 +31,11 @@ export async function identityMiddleware(req, res, next) {
     
     let verified = bitcoin.verify(message, signature, pubkey);
     if (verified instanceof Error) throw verified;
+    if (!verified) throw{
+      code: 401,
+      message: "Invalid Request Signature."
+    };
+    
     else next();
   }
   catch (e) {
