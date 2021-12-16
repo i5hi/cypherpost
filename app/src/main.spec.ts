@@ -58,11 +58,15 @@ let a_set;
 let b_set;
 let c_set;
 
-const nonce = Date.now();
 
 const init_identity_ds = "m/0h/0h/0h";
 const init_profile_ds = "m/1h/0h/0h";
 const init_posts_ds = "m/2h/0h/0h";
+
+let endpoint;
+let body;
+let nonce = Date.now();
+let signature;
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 
 async function createTestKeySet(): Promise<TestKeySet | Error> {
@@ -82,7 +86,7 @@ async function createTestKeySet(): Promise<TestKeySet | Error> {
     const posts_parent = bitcoin.derive_hardened_str(cypherpost_parent.xprv, init_posts_ds);
     if (posts_parent instanceof Error) throw posts_parent;
 
-    const set : TestKeySet =  {
+    const set: TestKeySet = {
       mnemonic,
       root_xprv,
       cypherpost_parent,
@@ -124,67 +128,83 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
 
   describe("CREATE IDENTITIES for A B C", function () {
     it("REGISTERS IDENTITIES", function (done) {
+      endpoint = "/api/v2/identity";
+      body = {
+        username: "alice",
+      };
+      nonce = Date.now();
+      signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_set.identity_signer);
       chai
         .request(server)
-        .post("/api/v2/identity")
+        .post(endpoint)
         .set({
           "x-client-xpub": a_set.identity_parent.xpub,
           "x-nonce": nonce,
-          "x-client-signature": bitcoin.sign(`POST /api/v2/identity ${JSON.stringify({username:"alice"})} ${nonce}`,a_set.identity_signer),
+          "x-client-signature": signature,
         })
-        .send({
-          username: "alice",
-        })
+        .send(body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
         });
+      body = {
+        "username": "bob"
+      };
+      nonce =  Date.now();
+      signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_set.identity_signer);
       chai
         .request(server)
-        .post("/api/v2/identity")
+        .post(endpoint)
         .set({
           "x-client-xpub": b_set.identity_parent.xpub,
           "x-nonce": nonce,
-          "x-client-signature": bitcoin.sign(`POST /api/v2/identity ${JSON.stringify({username:"bob"})} ${nonce}`,b_set.identity_signer),
+          "x-client-signature": signature,
         })
-        .send({
-          username: "bob",
-        })
+        .send(body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
         });
+      body = {
+        "username": "carol"
+      };
+      nonce = Date.now();
+      signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_set.identity_signer);
       chai
         .request(server)
-        .post("/api/v2/identity")
+        .post(endpoint)
         .set({
           "x-client-xpub": c_set.identity_parent.xpub,
           "x-nonce": nonce,
-          "x-client-signature": bitcoin.sign(`POST /api/v2/identity ${JSON.stringify({username:"carol"})} ${nonce}`,c_set.identity_signer),
+          "x-client-signature": signature
         })
-        .send({
-          username: "carol",
-        })
+        .send(body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
           done();
         });
     });
-    it("GETS ALL IDENTITIES as C", function(done){
+    it("GETS ALL IDENTITIES as C", function (done) {
+      endpoint = "/api/v2/identity/all";
+      body = {
+        "username": "carol"
+      };
+      nonce = Date.now();
+      signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_set.identity_signer);
       chai
-      .request(server)
-      .get("/api/v2/identity/all")
-      .set({
-        "x-client-xpub": c_set.identity_parent.xpub,
-        "x-nonce": nonce,
-        "x-client-signature": bitcoin.sign(`POST /api/v2/identity/all ${JSON.stringify({username:"carol"})} ${nonce}`,c_set.identity_signer),
-      })
-      .end((err,res)=>{
-        res.should.have.status(200);
-        expect(res.body['identities'].length).to.equal(3);
-        done();
-      })
+        .request(server)
+        .get("/api/v2/identity/all")
+        .set({
+          "x-client-xpub": c_set.identity_parent.xpub,
+          "x-nonce": nonce,
+          "x-client-signature": signature,
+        })
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['identities'].length).to.equal(3);
+          done();
+        })
     })
 
   })
