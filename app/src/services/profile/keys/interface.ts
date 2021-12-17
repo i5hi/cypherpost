@@ -30,5 +30,6 @@ export interface ProfileDecryptionKey {
   genesis: number;
   giver: string;
   reciever: string;
-  decryption_key?: string;
+  hash?: string;
+  decryption_key: string;
 }

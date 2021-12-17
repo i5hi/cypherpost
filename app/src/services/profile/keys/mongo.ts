@@ -23,6 +23,13 @@ const profile_key_schema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    hash: {
+      type: String,
+      required: true,
+      index: true,
+      unique: true,
+      dropDups: true
+    },
     decryption_key: {
       type: String,
       unique: true,
@@ -40,7 +47,7 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
 
   async createMany(keys: ProfileDecryptionKey[]): Promise<boolean | Error> {
     try {
-      // await profileKeyStore.syncIndexes();
+      await profileKeyStore.syncIndexes();
       const doc = await profileKeyStore.create(keys);
       if (doc instanceof mongoose.Error) {
         return handleError(doc);

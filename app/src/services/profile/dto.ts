@@ -108,7 +108,7 @@ export async function handleGetSelfProfile(req, res) {
     if (result instanceof Error) throw result;
 
     const keys = await profileKeys.findProfileDecryptionKeyByGiver(request.headers['x-client-xpub']);
-    if (keys instanceof Error) throw keys;
+    if (keys instanceof Error && keys['name']!="404") throw keys;
 
     const response = {
       profile: result,
@@ -136,7 +136,9 @@ export async function handleGetOthersProfile(req, res) {
     }
 
     const keys = await profileKeys.findProfileDecryptionKeyByReciever(request.headers['x-client-xpub']);
-    if (keys instanceof Error) throw keys;
+    if (keys instanceof Error) {
+      throw keys
+    };
 
     const result = await profile.findMany(keys.map(key => key.giver));
     if (result instanceof Error) throw result;

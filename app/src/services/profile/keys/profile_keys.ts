@@ -3,6 +3,7 @@ cypherpost.io
 Developed @ Stackmate India
 */
 
+import * as crypto from "crypto";
 import { handleError } from "../../../lib/errors/e";
 import { S5UID } from "../../../lib/uid/uid";
 import { ProfileDecryptionKey, ProfileKeyInterface, ProfileKeyStoreUpdate } from "./interface";
@@ -21,6 +22,7 @@ export class CypherpostProfileKeys implements ProfileKeyInterface {
           genesis: Date.now(),
           giver: giver,
           reciever: key.reciever,
+          hash: crypto.createHash("sha256").update(`${giver}:${key.reciever}`).digest('hex'),
           decryption_key: key.decryption_key
         })
       });
