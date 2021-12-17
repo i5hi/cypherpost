@@ -41,7 +41,7 @@
       <hr>
       
       <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> is an end-to-end encrypted social network protocol to share posts among trusted peers.</p>
-      <p>It was developed to allow inviduals to post advertisements to trade Bitcoin without the need for an escrow in a pure peer-to-peer fasion.</p>
+      <p>It was developed to allow inviduals to post advertisements to trade Bitcoin in a pure peer-to-peer fashion.</p>
       <p>The protocol developed to fulfil this need, and serves as a basis for a portable and private end-to-end encryption model for any social network.</p>
       <p>It seeks to recreate the organic way in which we meet and trust people; through others we trust, without a middle man listening in on our conversations.</p>
 
@@ -52,16 +52,20 @@
       <h3>Portable E2EE</h3>
       
       <p>Currently, all e2ee applications use RSA keys. The problem with RSA keys are primarily the lack of portability and the need to maintain a master device to recover your account.</p>
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> to achieve a more portable form of e2ee.</p>
+      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee.</p>
+      <p>In addition to e2ee, these keys are also used for authentication and signing the occurence of important actions - such as making a post or giving a badge.</p>
       <br/>
 
-      <h3>Trust Model</h3>
-      <p>The way a user expands their network on <a href="https://github.com/i5hi/cypherpost">cypherpost</a> is through the 'Trust' action. </p>
-      <p>Trusting another user, gives them access to view your posts and contact information. This give you privacy via the ability to selectively reveal yourself.</p>
+      <h3>Badges</h3>
+      <p>The way a user expands their network on <a href="https://github.com/i5hi/cypherpost">cypherpost</a> is through building reputation via badges. </p>
+      <p>Badges also allow you to more easily set visibility of your profile and your posts.</p>
+      <p>Giving someone a 'Trusted' badge, not only adds to their overall reputation but also specifically gives the reciever the ability to view your profile and posts.</p>
+      <p>The value of a badge is subjective. If a user has 100 Trusted badges and only 10 of them are from users that you have given a badge to, then these 10 badges are more meaningful than the remaining 90.</p>
+      <p>Cypherpost currently supports 3 badges: Trusted, Scammer & MetInPerson.</p>
       <br/>
 
       <h3>Muting Users</h3>
-      <p>If many users trust you, you will have a lot of posts on your feed. You have the ability to 'Mute' users that are flooding your feed with unwanted and unproductive posts.</p>
+      <p>If many users have 'Trusted' you, you will have a lot of posts on your feed. You have the ability to 'Mute' users that are flooding your feed with unwanted and unproductive posts.</p>
       <br/>
 <hr>
       <h2>Mechanism</h2>

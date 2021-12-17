@@ -5,7 +5,7 @@ Developed @ Stackmate India
 // ------------------ '(◣ ◢)' ---------------------
 import { Router } from "express";
 import * as val from "express-validator";
-import { handleGetAll, handleRegistration, identityMiddleware } from "./dto";
+import { handleGetAllIdentities, handleRegistration, identityMiddleware } from "./dto";
 
 // ------------------ '(◣ ◢)' ---------------------
 export const router = Router();
@@ -17,6 +17,6 @@ const registrationCheck = [
 // ------------------ '(◣ ◢)' ---------------------
 router.use(identityMiddleware);
 router.post("/",registrationCheck, handleRegistration);
-router.get("/all",handleGetAll);
+router.get("/all",handleGetAllIdentities);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------
 

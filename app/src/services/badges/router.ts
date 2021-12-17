@@ -5,8 +5,7 @@ Developed @ Stackmate India
 // ------------------ '(◣ ◢)' ---------------------
 import { Router } from "express";
 import * as val from "express-validator";
-import { handleGetAll } from "../identity/dto";
-import { badgesMiddleware, handleGetMyBadges, handleRevokeTrust, handleTrust } from "./dto";
+import { badgesMiddleware, handleGetAllBadges, handleGetMyBadges, handleRevokeTrust, handleTrust } from "./dto";
 
 // ------------------ '(◣ ◢)' ---------------------
 export const router = Router();
@@ -24,7 +23,7 @@ const revokeTrustBadgeCheck = [
 // ------------------ '(◣ ◢)' ---------------------
 router.use(badgesMiddleware);
 router.post("/trust",createTrustedBadgeCheck, handleTrust);
-router.get("/all",handleGetAll);
+router.get("/all",handleGetAllBadges);
 router.get("/self",handleGetMyBadges);
 router.post("/trust/revoke",revokeTrustBadgeCheck, handleRevokeTrust);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------

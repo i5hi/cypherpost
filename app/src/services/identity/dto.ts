@@ -22,10 +22,10 @@ export async function identityMiddleware(req, res, next) {
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
-    const params = JSON.stringify(request.body);
-    const message = `${method} ${resource} ${params} ${nonce}`;
+    const body = JSON.stringify(request.body);
+    const message = `${method} ${resource} ${body} ${nonce}`;
 
-    console.log({message});
+    // console.log({message});
     const pubkey = bitcoin.extract_ecdsa_pub(xpub);
     if(pubkey instanceof Error) return pubkey;
     
@@ -73,7 +73,7 @@ export async function handleRegistration(req, res) {
   }
 }
 
-export async function handleGetAll(req, res) {
+export async function handleGetAllIdentities(req, res) {
   const request = parseRequest(req);
 
   try {

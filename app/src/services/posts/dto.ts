@@ -24,8 +24,8 @@ export async function postMiddleware(req, res, next) {
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
-    const params = JSON.stringify(request.params);
-    const message = `${method} ${resource} ${params} ${nonce}`;
+    const body = JSON.stringify(request.body);
+    const message = `${method} ${resource} ${body} ${nonce}`;
 
     const status = await identity.verify(xpub, message, signature);
     if (status instanceof Error) throw status;

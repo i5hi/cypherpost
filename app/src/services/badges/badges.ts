@@ -25,19 +25,19 @@ export class CypherpostBadges implements BadgeInterface {
     try{
       const pubkey = bitcoin.extract_ecdsa_pub(from);
       if(pubkey instanceof Error) return pubkey;
-      const message = `${from}${to}${type}${nonce}`;
-      const verify = bitcoin.verify(message, signature,pubkey);
+      const trust_message = `${from}:${to}:${type.toString()}:${nonce}`;
+      // console.log({trust_message});
+      const verify = bitcoin.verify(trust_message, signature,pubkey);
       if (verify instanceof Error) return verify;
       if (!verify) return handleError({
         code: 401,
         message: "Invalid badge signature"
       });
-      
       const badge: Badge = {
         genesis: Date.now(),
         giver: from,
         reciever: to,
-        type,
+        type: type,
         hash:crypto.createHash("sha256").update(`${from}:${to}:${type}`).digest("hex"),
         nonce,
         signature,

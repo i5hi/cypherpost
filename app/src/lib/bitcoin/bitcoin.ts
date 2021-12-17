@@ -160,7 +160,7 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
   verify(message: string, signature: string, public_key: string): boolean | Error {
     const pubkey = Buffer.from( public_key, 'hex' );
     const {address}  = bitcoin.payments.p2wpkh({ pubkey });
-    console.log({sig_address: address})
+    // console.log({sig_address: address})
     return bitcoinMessage.verify(message, address, signature);
   }
 }
