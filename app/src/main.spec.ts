@@ -86,6 +86,10 @@ let request_signature;
 
 let all_identities;
 let all_badges;
+
+let a_trust = [];
+let b_trust = [];
+let c_trust = [];
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 // ------------------ INITIALIZERS ------------------
 async function createTestKeySet(): Promise<TestKeySet | Error> {
@@ -366,12 +370,15 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
           done();
         })
     });
-    it("VERIFIES ALL BADGES ISSUED", function (done) {
+    it("VERIFIES ALL BADGES ISSUED and POPULATES EACH USER's TRUSTED", function (done) {
       all_badges.map((badge) => {
         const pubkey = bitcoin.extract_ecdsa_pub(badge.giver);
         const message = `${badge.giver}:${badge.reciever}:${badge.type}:${badge.nonce}`;
         const verify = bitcoin.verify(message, badge.signature, pubkey as string);
         if (!verify) throw "Badge Signature failed.";
+        if (badge.giver === a_key_set.identity_xpub) a_trust.push(badge.reciever);
+        if (badge.giver === b_key_set.identity_xpub) b_trust.push(badge.reciever);
+        if (badge.giver === c_key_set.identity_xpub) c_trust.push(badge.reciever);
       });
       done();
     });
@@ -490,18 +497,27 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
 
   describe("UPDATE PROFILE KEYS based on Trust Badges and VERIFY via GET OTHERS", function () {
     it("UPDATES PROFILE DECRYPTION KEYS of TRUSTED", function (done) {
-      endpoint = "/api/v2/profile/keys";
-      // client must first parse through all_badges and find who trusts them
-      // here we assume knowledge of trust givers
-      let shared_sercret = bitcoin.calculate_shared_secret({
-        private_key: a_key_set.identity_private,
-        public_key: b_key_set.identity_public
-      }) as string;
 
-      const b_decryption_key = s5crypto.encryptAESMessageWithIV(a_profile_set.encryption_key, shared_sercret);
+      endpoint = "/api/v2/profile/keys";
       body = {
-        decryption_keys: [{ decryption_key: b_decryption_key, reciever: b_key_set.identity_xpub }],
+        decryption_keys: [],
       };
+      a_trust.map((recipient_xpub) => {
+        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
+        if (recipient_public instanceof Error) throw recipient_public;
+
+        const shared_sercret = bitcoin.calculate_shared_secret({
+          private_key: a_key_set.identity_private,
+          public_key: recipient_public
+        }) as string;
+
+        const decryption_key = s5crypto.encryptAESMessageWithIV(a_profile_set.encryption_key, shared_sercret);
+        const dk_entry = {
+          decryption_key,
+          reciever: recipient_xpub
+        };
+        body.decryption_keys.push(dk_entry);
+      });
       nonce = Date.now();
       request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
       chai
@@ -518,15 +534,25 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
           expect(res.body['status']).to.equal(true);
         });
 
-      shared_sercret = bitcoin.calculate_shared_secret({
-        private_key: b_key_set.identity_private,
-        public_key: c_key_set.identity_public
-      }) as string;
-
-      const c_decryption_key = s5crypto.encryptAESMessageWithIV(b_profile_set.encryption_key, shared_sercret);
       body = {
-        decryption_keys: [{ decryption_key: c_decryption_key, reciever: c_key_set.identity_xpub }],
+        decryption_keys: [],
       };
+      b_trust.map((recipient_xpub) => {
+        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
+        if (recipient_public instanceof Error) throw recipient_public;
+
+        const shared_sercret = bitcoin.calculate_shared_secret({
+          private_key: b_key_set.identity_private,
+          public_key: recipient_public
+        }) as string;
+
+        const decryption_key = s5crypto.encryptAESMessageWithIV(b_profile_set.encryption_key, shared_sercret);
+        const dk_entry = {
+          decryption_key,
+          reciever: recipient_xpub
+        };
+        body.decryption_keys.push(dk_entry);
+      });
       nonce = Date.now();
       request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
       chai
@@ -542,15 +568,26 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
         });
-      shared_sercret = bitcoin.calculate_shared_secret({
-        private_key: c_key_set.identity_private,
-        public_key: a_key_set.identity_public
-      }) as string;
 
-      const a_decryption_key = s5crypto.encryptAESMessageWithIV(c_profile_set.encryption_key, shared_sercret);
       body = {
-        decryption_keys: [{ decryption_key: a_decryption_key, reciever: a_key_set.identity_xpub }],
+        decryption_keys: [],
       };
+      c_trust.map((recipient_xpub) => {
+        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
+        if (recipient_public instanceof Error) throw recipient_public;
+
+        const shared_sercret = bitcoin.calculate_shared_secret({
+          private_key: c_key_set.identity_private,
+          public_key: recipient_public
+        }) as string;
+
+        const decryption_key = s5crypto.encryptAESMessageWithIV(c_profile_set.encryption_key, shared_sercret);
+        const dk_entry = {
+          decryption_key,
+          reciever: recipient_xpub
+        };
+        body.decryption_keys.push(dk_entry);
+      });
       nonce = Date.now();
       request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
       chai
@@ -648,24 +685,24 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     })
   })
 
-  describe.skip("CREATES POSTS for A, B & C and VERIFY via GET SELF", function(){
-    it("CREATES POSTS", function(done){
+  describe.skip("CREATES POSTS for A, B & C and VERIFY via GET SELF", function () {
+    it("CREATES POSTS", function (done) {
 
     });
-    it("GETS EACH SELF POSTS", function(done){
-      
+    it("GETS EACH SELF POSTS", function (done) {
+
     });
   });
 
-  describe.skip("UPDATE POST KEYS based on Trust Badges and VERIFY via GET OTHERS", function(){
-    it("UPDATES POST DECRYPTION KEYS of TRUSTED", function(done){
+  describe.skip("UPDATE POST KEYS based on Trust Badges and VERIFY via GET OTHERS", function () {
+    it("UPDATES POST DECRYPTION KEYS of TRUSTED", function (done) {
 
     });
-    it("GETS OTHERS POSTS and VERIFY via ABILITY TO DECRYPT", function(done){
-      
+    it("GETS OTHERS POSTS and VERIFY via ABILITY TO DECRYPT", function (done) {
+
     });
   });
-  
+
   describe("E: 409's", function () {
     it("PREVENTS DUPLICATE IDENTITY", function (done) {
       endpoint = "/api/v2/identity";
@@ -728,7 +765,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
           done();
         });
     });
-    it("PREVENTS DUPLICATE PROFILE DECRYPTION KEY ENTRY", function(done){
+    it("PREVENTS DUPLICATE PROFILE DECRYPTION KEY ENTRY", function (done) {
       endpoint = "/api/v2/profile/keys";
       // client must first parse through all_badges and find who trusts them
       // here we assume knowledge of trust givers
