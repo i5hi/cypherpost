@@ -154,13 +154,13 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
       nickname: "Bobby Breeds",
       status: "Making Babies.",
       contact: "@bob3us on Telegram"
-    }, a_key_set.cypherpost_parent, init_profile_ds);
+    }, b_key_set.cypherpost_parent, init_profile_ds);
 
     c_profile_set = createProfileSet({
       nickname: "Carol Cares",
       status: "Trying Hard Not To Cry.",
       contact: "@carol3us on Telegram"
-    }, a_key_set.cypherpost_parent, init_profile_ds);
+    }, c_key_set.cypherpost_parent, init_profile_ds);
     // ------------------ (◣_◢) ------------------
   });
 
