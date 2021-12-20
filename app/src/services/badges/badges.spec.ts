@@ -67,7 +67,7 @@ describe("Initalizing Test: Badge Service", function () {
 
     const key_pair = bitcoin.extract_ecdsa_pair({xpub,xprv});
     if(key_pair instanceof Error) return key_pair;
-    const message = `${xpub}${xpub1}${BadgeType.Trusted}${nonce}`;
+    const message = `${xpub}:${xpub1}:${BadgeType.Trusted.toString()}:${nonce}`;
     signature = bitcoin.sign(message,key_pair.private_key);
   });
 
