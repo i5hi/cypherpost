@@ -2,14 +2,16 @@
 
 ## Note: This project is in extreme BETA and actively looking for community support. We see this project forming a basis for privacy respecting social networks; if this is something you are interested in, please reach out.
 
+### REFERENCE CLIENT UNDER CONSTRUCTION.
+
 A private, end-to-end encrypted social network to selectively post ads and messages to members of a trusted network.
 
-- Each post is encrypted with new private key.
-- Server can't decrypt these posts.
-- Posts can be decrypted by people you are trusting.
-- Conatct info under profile page is encrypted. Only people you trust can decrypt it.
-- Ability to trust/untrust.
-- List of people you are trusting is not encrypted. Anyone can see who is trusting whome.
+- Your identity on the platform is a username:xpub
+- Your profile and posts are encrypted.
+- Posts can be decrypted only those you select.
+- You can give individuals badges to help you classify and decide who to share keys with.
+- Badges include: Trusted, VerifiedInPerson & Scammer
+- Your identity, badges given & recieved and number of live posts are public.
 
 BIP39 key generation & BIP32 key derivation is used for portable end-to-end encryption; to allow users to recover their accounts on any device without the need to maintain a master device holding a non-human readable master key.
 
@@ -18,8 +20,8 @@ BIP39 key generation & BIP32 key derivation is used for portable end-to-end encr
 The aim of this project is to facilitate such a scenario:
 
 - You wish to buy/sell bitcoin (or anything else?).
-- You cypherpost an ad.
-- Someone from your trusted network contacts you within minutes ready to fulfil your order.
+- Find someone in your network who has posted an ad OR You post an ad.
+- Moments later, the two of you get in touch and fulfil each other's request.
 
 ![cypherpost](design/assets/owl.png)
 
