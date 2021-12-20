@@ -1,0 +1,38 @@
+@startuml
+title Initialization
+
+participant Client
+participant Cypherpost
+database identity
+
+'Register Identity
+
+Client->Client: Generate 12 word Mnemonic Seed + Derive cypherpost_parent m/128h/0h + Chose local storage encryption password
+Client->Client: Confirm password via local storage decrypt + Derive m/0h/0h/0h identity_child from cypherpost_parent (unencrypted session storage)  + ReEncrypt cypherpost_parent
+Client->Cypherpost: Sign request with identity_child to get all existing identities.
+Cypherpost->Client: All Idenities (username:xpub)
+Client->Cypherpost: Sign request with new identity creation request (username:xpub)
+Client->Client: Exit (clear all keys from unencrypted session storage)
+
+'Enter
+
+Client->Client: Check if encrypted cypherpost_parent exists in local storage.
+
+alt NotFound
+  Client->Client: Import 12 word Mnemonic Seed + Derive cypherpost_parent m/128h/0h + Choose local storage encryption password
+  Client->Client: Confirm password via local storage decrypt + Derive m/0h/0h/0h identity_child from cypherpost_parent (unencrypted session storage)  + ReEncrypt cypherpost_parent
+
+else Exists
+  alt ForgotPassword
+    Client->Client: Import 12 word Mnemonic Seed + Derive cypherpost_parent m/128h/0h + Choose local storage encryption password
+    Client->Client: Confirm password via local storage decrypt + Derive m/0h/0h/0h identity_child from cypherpost_parent (unencrypted session storage)  + ReEncrypt cypherpost_parent
+  else PasswordKnown
+    Client->Client: Local storage decrypt + Derive m/0h/0h/0h identity_child from cypherpost_parent (unencrypted session storage)  + ReEncrypt cypherpost_parent
+  end
+end
+
+Client->Cypherpost: Sign request with identity_child to get ALL badges + OWN profile&posts + OTHERS profile&posts.
+Cypherpost->Client: ALL badges + OWN Profile&Posts + OTHER Profile&Posts
+
+@enduml
+
