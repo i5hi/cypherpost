@@ -5,18 +5,16 @@ Developed @ Stackmate India
 // ------------------ '(◣ ◢)' ---------------------
 import { Router } from "express";
 import * as val from "express-validator";
-import { handleGetAllIdentities, handleRegistration, identityMiddleware } from "./dto";
-
+import { handleReadPreference, handleSetPreference, preferenceMiddleware } from "./dto";
 // ------------------ '(◣ ◢)' ---------------------
 export const router = Router();
 // ------------------ '(◣ ◢)' ---------------------
-const registrationCheck = [
-  val.check('username').exists().matches(/^(?=.{1,15}$)(?![_.])(?!.*[_.]{2})[a-z][a-z0-9_.]+$/), 
+const setPreferenceCheck = [
+  val.check('cypher_json').exists(),
 ];
-
 // ------------------ '(◣ ◢)' ---------------------
-router.use(identityMiddleware);
-router.post("/",registrationCheck, handleRegistration);
-router.get("/all",handleGetAllIdentities);
+router.use(preferenceMiddleware);
+router.post("/",setPreferenceCheck, handleSetPreference);
+router.get("/",handleReadPreference);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------
 

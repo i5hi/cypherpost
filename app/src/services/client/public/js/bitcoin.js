@@ -48,7 +48,34 @@ function derive_child_indexes(use_case_parent, index, revoke) {
   };
   return extended_keys;
 }
-
+function derive_hardened_str(parent, derivation_scheme){
+  try {
+    if (!derivation_scheme.endsWith("/"))
+    derivation_scheme+="/";
+    derivation_scheme = derivation_scheme.replace("'",  "h").replace("'",  "h").replace("'",  "h");
+    derivation_scheme = derivation_scheme.replace("m/",  "");
+    
+    // console.log(derivation_scheme);
+    const parent_key = bip32.fromBase58(parent);
+    if ( derivation_scheme.split("h/").length < 3 ) return handleError({
+      code: 400,
+      message: "Derivation scheme must contain 3 sub paths."
+    });
+    
+    // console.log(derivation_scheme.split("h/"),derivation_scheme.split("h/").length);
+    const use_case = parseInt(derivation_scheme.split("h/")[0]);
+    const index = parseInt(derivation_scheme.split("h/")[1]);
+    const revoke = parseInt(derivation_scheme.split("h/")[2]);
+    const child_key = parent_key.deriveHardened(use_case).deriveHardened(index).deriveHardened(revoke);
+    const extended_keys = {
+      xpub: child_key.neutered().toBase58(),
+      xprv: child_key.toBase58(),
+    };
+    return extended_keys;
+  } catch (error) {
+    return handleError(error);
+  }
+}
 function derive_child(parent, index) {
 
   const parent_key = bip32.fromBase58(parent);
@@ -77,7 +104,15 @@ function extract_ecdsa_pair(extended_keys) {
   };
   // return ecdsa_keys;
 }
-
+function extract_ecdsa_pub(xpub){
+  try {
+    const parent_key = bip32.fromBase58(xpub);
+    return parent_key.publicKey.toString('hex');
+    
+  } catch (error) {
+    return handleError(error);
+  }
+}
 function calculate_shared_secret(local_private_key, remote_public_key) {
 
   const type = "secp256k1";
@@ -124,16 +159,6 @@ function deriveSecretKey(privateKey, publicKey) {
   return shared_secret.toString("hex");
 }
 
-const hex2Arr = str => {
-  if (!str) {
-    return new Uint8Array()
-  }
-  const arr = []
-  for (let i = 0, len = str.length; i < len; i += 2) {
-    arr.push(parseInt(str.substr(i, 2), 16))
-  }
-  return new Uint8Array(arr)
-}
 
 const buf2Hex = buf => {
   return Array.from(new Uint8Array(buf))

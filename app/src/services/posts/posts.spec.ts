@@ -117,7 +117,7 @@ describe("Initalizing Test: Profile Service", function () {
       expect(response).to.equal(true);
     });
     it("REMOVE EXPIRED posts", async function () {
-      const response = await posts.removeAllExpired(xpub);
+      const response = await posts.removeAllExpired();
       if(response instanceof Error) throw response;
       expect(response[0]).to.equal(post2_id);
     });

@@ -2,21 +2,17 @@
 cypherpost.io
 Developed @ Stackmate India
 */
-import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
-import { CypherpostPreference } from "../preference/preference";
-import { CypherpostProfile } from "../profile/profile";
-import { CypherpostIdentity } from "./identity";
+import { CypherpostIdentity } from "../identity/identity";
+import { CypherpostPreference } from "./preference";
 
 const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
-const profile =  new CypherpostProfile();
 const preference = new CypherpostPreference();
-const bitcoin = new CypherpostBitcoinOps();
 
-export async function identityMiddleware(req, res, next) {
+export async function preferenceMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
     const signature = request.headers['x-client-signature'];
@@ -27,17 +23,8 @@ export async function identityMiddleware(req, res, next) {
     const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
-    // console.log({message});
-    const pubkey = bitcoin.extract_ecdsa_pub(xpub);
-    if(pubkey instanceof Error) return pubkey;
-    
-    let verified = bitcoin.verify(message, signature, pubkey);
-    if (verified instanceof Error) throw verified;
-    if (!verified) throw{
-      code: 401,
-      message: "Invalid Request Signature."
-    };
-    
+    const status = await identity.verify(xpub, message, signature);
+    if (status instanceof Error) throw status;
     else next();
   }
   catch (e) {
@@ -46,8 +33,9 @@ export async function identityMiddleware(req, res, next) {
   }
 }
 
-export async function handleRegistration(req, res) {
+export async function handleSetPreference(req,res){
   const request = parseRequest(req);
+
   try {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -57,19 +45,12 @@ export async function handleRegistration(req, res) {
       }
     }
 
-    let status = await identity.register(request.body.username, request.headers['x-client-xpub']);
+    const status = await preference.update(req.headers['x-client-xpub'], request.body.cypher_json);
     if (status instanceof Error) throw status;
-
-    status = await profile.initialize(request.headers['x-client-xpub']);
-    if (status instanceof Error) throw status;
-
-    status = await preference.initialize(request.headers['x-client-xpub']);
-    if (status instanceof Error ) throw status;
 
     const response = {
       status
     };
-
     respond(200, response, res, request);
   }
   catch (e) {
@@ -78,11 +59,10 @@ export async function handleRegistration(req, res) {
   }
 }
 
-export async function handleGetAllIdentities(req, res) {
+export async function handleReadPreference(req,res){
   const request = parseRequest(req);
 
   try {
-
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       throw {
@@ -91,13 +71,12 @@ export async function handleGetAllIdentities(req, res) {
       }
     }
 
-    const identities = await identity.all();
-    if (identities instanceof Error) throw identities;
+    const result = await preference.find(req.headers['x-client-xpub']);
+    if (result instanceof Error) throw result;
 
     const response = {
-      identities
+      preference: result
     };
-
     respond(200, response, res, request);
   }
   catch (e) {

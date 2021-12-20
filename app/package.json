@@ -1,11 +1,11 @@
 {
   "name": "cypherpost",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "a private social network; by bitcoiners for bitcoiners.",
   "main": "dist/main.js",
   "scripts": {
     "start": "node dist/main.js",
-    "test": "mocha -r ts-node/register src/main.spec.ts --exit"
+    "test": "mocha -r ts-node/register src/main.spec.ts --timeout 12000 --exit"
   },
   "repository": {
     "type": "git",
