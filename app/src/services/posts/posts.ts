@@ -49,9 +49,32 @@ export class CypherpostPosts implements PostInterface {
 
     return user_posts.map(post=>post.id);
   }
-  async removeAllExpired(owner: string): Promise<Array<string> | Error> {
+  // async removeAllExpiredByOwner(owner: string): Promise<Array<string> | Error> {
+  //   try {
+  //     const user_posts = await store.readMany([owner],PostStoreIndex.Owner);
+  //     if (user_posts instanceof Error) return user_posts;
+  //     let expired_ids=[]; 
+      
+  //     user_posts.filter((post) => {
+  //       if (post.expiry < Date.now() && post.expiry != 0)
+  //         expired_ids.push(post.id);
+  //     });
+
+  //     if (expired_ids.length === 0) return [];
+  //     else {
+  //       const status = await store.removeMany([...expired_ids], PostStoreIndex.PostId);
+  //       if (status instanceof Error) return status;
+  //       else return expired_ids;
+  //     }
+  //   }
+  //   catch (e) {
+  //     console.error({ e });
+  //     return handleError(e)
+  //   }
+  // }
+  async removeAllExpired():Promise<Array<string> | Error>{
     try {
-      const user_posts = await store.readMany([owner],PostStoreIndex.Owner);
+      const user_posts = await store.readAll();
       if (user_posts instanceof Error) return user_posts;
       let expired_ids=[]; 
       

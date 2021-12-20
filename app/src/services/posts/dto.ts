@@ -74,8 +74,16 @@ export async function handleGetMyPosts(req, res) {
       }
     }
 
-    const status = await posts.removeAllExpired(req.headers['x-client-xpub']);
-    if (status instanceof Error) throw status;
+    const expired_ids = await posts.removeAllExpired();
+    if (expired_ids instanceof Error) throw expired_ids;
+
+    if(expired_ids.length>0)
+    expired_ids.map((post_id)=>{
+      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],post_id);
+      if (status instanceof Error){ 
+        console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", {status});
+        throw status};
+    });
 
     const my_posts = await posts.findAllByOwner(req.headers['x-client-xpub']);
     if (my_posts instanceof Error) throw my_posts;

@@ -17,7 +17,7 @@ const createTrustedBadgeCheck = [
 ];
 
 const revokeTrustBadgeCheck = [
-  val.check('revoke').exists()
+  val.check('revoking').exists()
 ];
 
 // ------------------ '(◣ ◢)' ---------------------

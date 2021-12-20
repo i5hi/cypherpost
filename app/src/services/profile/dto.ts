@@ -157,7 +157,7 @@ export async function handleGetOthersProfile(req, res) {
 
 }
 
-export async function handleUpdateProfileKeys(req, res) {
+export async function handleAddProfileKeys(req, res) {
   const request = parseRequest(req);
   try {
     const errors = validationResult(req)
@@ -176,6 +176,40 @@ export async function handleUpdateProfileKeys(req, res) {
     });
 
     const status = await profileKeys.addProfileDecryptionKeys(request.headers['x-client-xpub'], decryption_keys);
+    if (status instanceof Error) throw status;
+
+    const response = {
+      status
+    };
+
+    respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+}
+
+
+export async function handleUpdateProfileKeys(req, res) {
+  const request = parseRequest(req);
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        code: 400,
+        message: errors.array()
+      }
+    }
+
+    const decryption_keys: ProfileKeyStoreUpdate[] = request.body.decryption_keys.map((key) => {
+      return {
+        decryption_key: key['decryption_key'],
+        reciever: key['reciever']
+      }
+    });
+
+    const status = await profileKeys.updateProfileDecryptionKeys(request.headers['x-client-xpub'], decryption_keys);
     if (status instanceof Error) throw status;
 
     const response = {

@@ -27,7 +27,6 @@ const post_schema = new mongoose.Schema(
       required: true,
       unique: true,
       index: true,
-      dropDups: true
     },
     cypher_json: {
       type: String,
@@ -94,6 +93,31 @@ export class MongoPostStore implements PostStore {
       const query = (index_type == PostStoreIndex.Owner) ? { owner: { $in: indexes } } : { id: { $in: indexes } } ;
 
       const docs = await postStore.find(query).sort({"genesis": -1}).exec();
+      if (docs.length>0) {
+        if (docs instanceof mongoose.Error) {
+          return handleError(docs);
+        }
+        const posts = docs.map(doc => {
+          return {
+            owner: doc["owner"],
+            id: doc["id"],
+            genesis: doc["genesis"],
+            expiry: doc["expiry"],
+            cypher_json: doc["cypher_json"],
+            derivation_scheme: doc["derivation_scheme"],
+          }
+        });
+        return posts;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return handleError(e);
+    }
+  }
+  async readAll(): Promise<Array<UserPost> | Error> {
+    try {
+      const docs = await postStore.find({}).sort({"genesis": -1}).exec();
       if (docs.length>0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);

@@ -16,14 +16,12 @@ const identity_schema = new mongoose.Schema(
       unique: true,
       required: true,
       index: true,
-      dropDups: true,
     },
     xpub: {
       type: String,
       unique: true,
       required: true,
       index: true,
-      dropDups: true,
     },
     genesis: {
       type: Number,

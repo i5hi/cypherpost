@@ -38,7 +38,6 @@ const post_key_schema = new mongoose.Schema(
       required: true,
       index: true,
       unique: true,
-      dropDups: true
     },
   },
   {

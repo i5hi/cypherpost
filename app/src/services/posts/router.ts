@@ -27,6 +27,6 @@ router.put("/", createPostCheck, handleCreatePost);
 router.get("/self", handleGetMyPosts); 
 router.get("/others", handleGetOthersPosts);
 router.delete("/:id", handleDeletePost);
-router.post("/keys",updatePostKeysCheck, handleUpdatePostKeys);
+router.put("/keys",updatePostKeysCheck, handleUpdatePostKeys);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------
 
