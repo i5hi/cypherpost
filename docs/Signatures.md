@@ -15,6 +15,13 @@ Example:
 
 The nonce used can be any random string just to create enough entropy to prevent reusing signatures.
 
+The following headers must be included in every request:
+
+```
+x-client-xpub: string
+x-nonce
+x-client-signature: string
+```
 ## Badges
 
 Assigning badges requires the client to provide a different signature as part of the request body along with the nonce used.

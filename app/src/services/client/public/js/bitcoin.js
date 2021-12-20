@@ -1,6 +1,10 @@
 const bip32 = require("bip32");
 const bip39 = require("bip39");
-const { createECDH, ECDH } = require("crypto");
+const  wif = require("wif");
+var bitcoin = require('bitcoinjs-lib') // v4.x.x
+var bitcoinMessage = require('bitcoinjs-message')
+
+const { createECDH, ECDH, randomBytes } = require("crypto");
 
 function generate_mnemonic() {
   return bip39.generateMnemonic();
@@ -31,6 +35,25 @@ function derive_parent_128(root_xprv) {
 function derive_parent_usecase(parent_128_xprv, use_case) {
   const parent_key = bip32.fromBase58(parent_128_xprv);
   const child_key = parent_key.deriveHardened(use_case);
+  const extended_keys = {
+    xpub: child_key.neutered().toBase58(),
+    xprv: child_key.toBase58(),
+  };
+  return extended_keys;
+}
+function derive_identity_parent(parent_128_xprv) {
+  const parent_key = bip32.fromBase58(parent_128_xprv);
+  const child_key = parent_key.deriveHardened(0);
+  const extended_keys = {
+    xpub: child_key.neutered().toBase58(),
+    xprv: child_key.toBase58(),
+  };
+  return extended_keys;
+}
+
+function derive_preference_parent(parent_128_xprv) {
+  const parent_key = bip32.fromBase58(parent_128_xprv);
+  const child_key = parent_key.deriveHardened(2);
   const extended_keys = {
     xpub: child_key.neutered().toBase58(),
     xprv: child_key.toBase58(),
@@ -159,6 +182,24 @@ function deriveSecretKey(privateKey, publicKey) {
   return shared_secret.toString("hex");
 }
 
+function sign(message, private_key) {
+  let privateKey = Buffer.from(private_key, "hex");
+  let wif_key = wif.encode(128, privateKey, true);
+  let keyPair = bitcoin.ECPair.fromWIF(wif_key);
+  privateKey = keyPair.privateKey
+  let options = { extraEntropy: randomBytes(32), segwitType: 'p2wpkh'  };
+  let signature = bitcoinMessage.sign(message, privateKey, keyPair.compressed, options);
+  return signature.toString('base64');
+
+
+}
+
+function verify(message, signature, public_key) {
+  const pubkey = Buffer.from( public_key, 'hex' );
+  const {address}  = bitcoin.payments.p2wpkh({ pubkey });
+  // console.log({sig_address: address})
+  return bitcoinMessage.verify(message, address, signature);
+}
 
 const buf2Hex = buf => {
   return Array.from(new Uint8Array(buf))
@@ -169,9 +210,14 @@ module.exports = {
   generate_mnemonic,
   seed_root,
   derive_parent_128,
+  derive_identity_parent,
+  derive_preference_parent,
+  derive_hardened_str,
   derive_parent_usecase,
   derive_child_indexes,
   extract_ecdsa_pair,
   calculate_shared_secret,
-  deriveSecretKey
+  deriveSecretKey,
+  sign,
+  verify
 }

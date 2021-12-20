@@ -4,10 +4,66 @@
  */
 const crypto = require("crypto");
 const store = require('./store');
+const bitcoin = require("./bitcoin");
 const { request } = require('./request');
 
+const RESOURCE_PREFIX = "/api/v2";
+var document = {
+  domain: "https://cypherpost.io/api/v2"
+};
 const api_url = (document.domain === 'localhost') ? "http://localhost/api/v2" : `https://cypherpost.io/api/v2`;
 const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
+
+function createRequestSignature(method,resource,body,identity_parent,nonce){
+  const message = `${method} ${RESOURCE_PREFIX}${resource} ${JSON.stringify(body)} ${nonce}`;
+  const ecdsa_keys = bitcoin.extract_ecdsa_pair(identity_parent);
+  console.log({message})
+  return bitcoin.sign(message,ecdsa_keys.private_key);
+};
+
+function createRequestHeaders(xpub,nonce,signature){
+  return {
+    "x-client-xpub": xpub,
+    "x-nonce": nonce,
+    "x-client-signature": signature,
+  };
+}
+
+async function apiIdentityRegistration(identity_parent,username){
+  const nonce = Date.now();
+  const resource = "/identity/registration";
+  const url = api_url + resource;
+  const method = "POST";
+  const body = {
+    username
+  };
+
+  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
+  const headers = createRequestHeaders(identity_parent['xpub'],nonce,signature);
+
+  console.log({headers,body,signature});
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response;
+}
+
+async function apiIdentityAll(identity_parent){
+  const nonce = Date.now();
+  const resource = "/identity/all";
+  const url = api_url + resource;
+  const method = "GET";
+  const body = {};
+
+  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
+  const headers = createRequestHeaders(identity_parent,nonce,signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response;
+
+}
 
 async function apiRegister(username, password, confirm) {
 
@@ -33,8 +89,8 @@ async function apiRegister(username, password, confirm) {
   const seed256 = store.getSeed256();
   const invitation = store.getInvitation();
 
-  const end_point = "/auth/register";
-  const url = api_url + end_point;
+  const resource = "/auth/register";
+  const url = api_url + resource;
   const method = "POST";
   const body = {
     username,
@@ -64,8 +120,8 @@ async function apiLogin(username, password) {
     .update(password)
     .digest('hex');
 
-  const end_point = "/auth/login/";
-  const url = api_url + end_point;
+  const resource = "/auth/login/";
+  const url = api_url + resource;
   const method = "POST";
   const body = {
     username,
@@ -95,8 +151,8 @@ async function apiReset(seed, password, confirm) {
     .digest('hex');
 
 
-  const end_point = "/auth/reset/";
-  let url = api_url + end_point;
+  const resource = "/auth/reset/";
+  let url = api_url + resource;
   const method = "POST";
 
   const body = {
@@ -112,9 +168,9 @@ async function apiReset(seed, password, confirm) {
 
 async function apiCheckSeed256(token, seed) {
 
-  const end_point = "/auth/check/seed256";
+  const resource = "/auth/check/seed256";
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
   const method = "POST";
 
   const body = {
@@ -137,8 +193,8 @@ async function apiCheckSeed256(token, seed) {
 }
 async function apiInvite(username, token) {
 
-  const end_point = "/auth/invite/";
-  const url = api_url + end_point;
+  const resource = "/auth/invite/";
+  const url = api_url + resource;
   const method = "GET";
 
 
@@ -153,9 +209,9 @@ async function apiInvite(username, token) {
 
 // if not registered use invite_code as token
 async function apiGetUsernames(is_registered, token, invited_by) {
-  const end_point = (is_registered) ? `/profile/usernames` : `/profile/usernames?invited_by=${invited_by}&invite_code=${token}`;
+  const resource = (is_registered) ? `/profile/usernames` : `/profile/usernames?invited_by=${invited_by}&invite_code=${token}`;
   token = (is_registered) ? token : null;
-  const url = api_url + end_point;
+  const url = api_url + resource;
   const method = "GET";
   const response = await request(method, url, {}, token);
   if (response instanceof Error) {
@@ -170,8 +226,8 @@ async function apiGetUsernames(is_registered, token, invited_by) {
 
 }
 async function apiGetMyProfile(token) {
-  const end_point = "/profile/";
-  const url = api_url + end_point;
+  const resource = "/profile/";
+  const url = api_url + resource;
   const method = "GET";
 
 
@@ -188,8 +244,8 @@ async function apiGetMyProfile(token) {
 
 }
 async function apiDeleteMyProfile(token) {
-  const end_point = "/profile/";
-  const url = api_url + end_point;
+  const resource = "/profile/";
+  const url = api_url + resource;
   const method = "DELETE";
 
   const response = await request(method, url, {}, token);
@@ -205,9 +261,9 @@ async function apiDeleteMyProfile(token) {
 
 }
 async function apiGetUserProfile(token, username) {
-  const end_point = `/profile?username=${username}`;
+  const resource = `/profile?username=${username}`;
   const method = "GET";
-  const url = api_url + end_point;
+  const url = api_url + resource;
 
   console.log(url);
   const response = await request(method, url, {}, token);
@@ -224,8 +280,8 @@ async function apiGetUserProfile(token, username) {
 
 }
 async function apiGetManyProfiles(token, usernames) {
-  const end_point = `/profile/find_many`;
-  const url = api_url + end_point;
+  const resource = `/profile/find_many`;
+  const url = api_url + resource;
   const method = "POST";
   const body = {
     usernames
@@ -242,10 +298,10 @@ async function apiGetManyProfiles(token, usernames) {
 }
 async function apiEditProfile(nickname, cipher_info, status, token) {
 
-  const end_point = "/profile/";
+  const resource = "/profile/";
   const method = "POST";
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
 
   const body = {
     nickname,
@@ -273,9 +329,9 @@ async function apiEditProfile(nickname, cipher_info, status, token) {
 async function apiProfileGenesis(recipient_xpub, token) {
 
   const method = "POST";
-  const end_point = "/profile/genesis";
+  const resource = "/profile/genesis";
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
 
   const body = {
     recipient_xpub,
@@ -297,9 +353,9 @@ async function apiProfileGenesis(recipient_xpub, token) {
 async function apiMuteUser(token, trusted_by, toggle_mute) {
 
   const method = "POST";
-  const end_point = "/profile/mute";
+  const resource = "/profile/mute";
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
 
   const body = {
     trusted_by,
@@ -323,10 +379,10 @@ async function apiCreatePost(token, expiry, decryption_keys, derivation_scheme, 
   //   const message = document.getElementById("post_message_input").value;
   //   const expiry_string = document.getElementById("post_expiry_input").value;
 
-  const end_point = "/posts";
+  const resource = "/posts";
 
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
   const method = "PUT";
 
   const body = {
@@ -353,9 +409,9 @@ async function apiDeletePost(token, post_id) {
   //   const message = document.getElementById("post_message_input").value;
   //   const expiry_string = document.getElementById("post_expiry_input").value;
 
-  const end_point = `/posts/${post_id}`;
+  const resource = `/posts/${post_id}`;
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
   const method = "DELETE";
 
   const response = await request(method, url, {}, token);
@@ -371,8 +427,8 @@ async function apiDeletePost(token, post_id) {
 
 }
 async function apiGetMyPosts(token) {
-  const end_point = "/posts/self";
-  const url = api_url + end_point;
+  const resource = "/posts/self";
+  const url = api_url + resource;
   const method = "GET";
 
   const response = await request(method, url, {}, token);
@@ -387,8 +443,8 @@ async function apiGetMyPosts(token) {
   return response.posts;
 }
 async function apiGetOthersPosts(token) {
-  const end_point = "/posts/others";
-  const url = api_url + end_point;
+  const resource = "/posts/others";
+  const url = api_url + resource;
   const method = "GET";
 
   const response = await request(method, url, {}, token);
@@ -405,9 +461,9 @@ async function apiGetOthersPosts(token) {
 
 async function apiTrust(token, trusting, decryption_key, signature) {
 
-  const end_point = "/profile/trust";
+  const resource = "/profile/trust";
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
 
   const method = "POST";
 
@@ -425,9 +481,9 @@ async function apiTrust(token, trusting, decryption_key, signature) {
 };
 async function apiRevoke(token, revoking, decryption_keys, derivation_scheme, cipher_info) {
 
-  const end_point = "/profile/revoke";
+  const resource = "/profile/revoke";
 
-  const url = api_url + end_point;
+  const url = api_url + resource;
 
   const method = "POST";
 
@@ -444,6 +500,8 @@ async function apiRevoke(token, revoking, decryption_keys, derivation_scheme, ci
   return response.profile;
 };
 module.exports = {
+  apiIdentityRegistration,
+  apiIdentityAll,
   apiRegister,
   apiLogin,
   apiReset,

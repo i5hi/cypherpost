@@ -27,7 +27,7 @@ export async function identityMiddleware(req, res, next) {
     const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
-    // console.log({message});
+    console.log({message});
     const pubkey = bitcoin.extract_ecdsa_pub(xpub);
     if(pubkey instanceof Error) return pubkey;
     
