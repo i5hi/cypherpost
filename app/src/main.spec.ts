@@ -130,6 +130,12 @@ interface TestPostSet {
   post_id: string;
 }
 
+const init_identity_ds = "m/0h/0h/0h";
+const init_profile_ds = "m/1h/0h/0h";
+const init_preferences_ds = "m/2h/0h/0h"
+const init_posts_ds = "m/3h/0h/0h";
+const trusted_badge = BadgeType.Trusted;
+
 let a_key_set: TestKeySet;
 let b_key_set: TestKeySet;
 let c_key_set: TestKeySet;
@@ -142,11 +148,6 @@ let a_post_set: TestPostSet;
 let b_post_set: TestPostSet;
 let c_post_set: TestPostSet;
 
-const init_identity_ds = "m/0h/0h/0h";
-const init_profile_ds = "m/1h/0h/0h";
-const init_preferences_ds = "m/2h/0h/0h"
-const init_posts_ds = "m/3h/0h/0h";
-
 let endpoint;
 let body;
 let nonce = Date.now();
@@ -158,6 +159,11 @@ let all_badges;
 let a_trust = [];
 let b_trust = [];
 let c_trust = [];
+
+let a_preferences = {
+  muted: [],
+};
+let cypher_preference;
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 // ------------------ INITIALIZERS ------------------
 async function createTestKeySet(): Promise<TestKeySet | Error> {
@@ -265,8 +271,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     b_post_set = createPostSet(createDefaultTestPost(OrderType.Buy, "Stacking", false), b_key_set.cypherpost_parent, init_posts_ds);
 
     c_post_set = createPostSet(createDefaultTestPost(OrderType.Sell, "GM", false), c_key_set.cypherpost_parent, init_posts_ds);
-
-    // ------------------ (◣_◢) ------------------
+    // ------------------ (◣_◢) ------------------    
   });
 
   after(async function () {
@@ -371,7 +376,6 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     })
   });
 
-  const trusted_badge = BadgeType.Trusted;
   describe("ISSUE TRUST BADGE A->B->C and VERIFY via GET ALL", function () {
     it("ISSUES TRUST BADGES A->B->C", function (done) {
       nonce = Date.now();
@@ -1123,8 +1127,8 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     });
   });
 
-  describe("REVOKE A->B TRUST",function(){
-    it("REVOKES TRUST FROM A->B",function(){
+  describe("REVOKE A->B TRUST", function () {
+    it("REVOKES TRUST FROM A->B", function () {
       endpoint = "/api/v2/badges/trust/revoke";
       body = {
         revoking: b_key_set.identity_xpub,
@@ -1147,10 +1151,10 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     });
     // A must update their profile and decryption keys 
     // ALTHOUGH B will no longer recieve A's keys in GET profile/others
-    it("UPDATES PROFILE w/ new cypher_json",async function(){
+    it("UPDATES PROFILE w/ new cypher_json", async function () {
       const new_derivation_scheme = "m/1h/1h/0h";
-      a_profile_set.encryption_key = crypto.createHash("sha256").update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv,new_derivation_scheme) as ExtendedKeys).xprv).digest('hex');
-      a_profile_set.cypher = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_profile_set.plain),a_profile_set.encryption_key) as string;
+      a_profile_set.encryption_key = crypto.createHash("sha256").update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, new_derivation_scheme) as ExtendedKeys).xprv).digest('hex');
+      a_profile_set.cypher = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_profile_set.plain), a_profile_set.encryption_key) as string;
       endpoint = "/api/v2/profile";
       body = {
         cypher_json: a_profile_set.cypher,
@@ -1173,6 +1177,59 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         });
     });
   });
+
+  describe("UPDATE PREFERENCES for A & VERIFY via GET", function () {
+    it("UPDATES PREFERENCES", function (done) {
+      const preference_key = crypto.createHash("sha256")
+      .update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, init_preferences_ds) as ExtendedKeys)['xprv'])
+      .digest("hex");
+      cypher_preference = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_preferences), preference_key);
+      endpoint = "/api/v2/preference";
+      body = {
+        cypher_json: cypher_preference,
+      };
+      nonce = Date.now();
+      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      chai
+        .request(server)
+        .post(endpoint)
+        .set({
+          "x-client-xpub": a_key_set.identity_xpub,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['status']).to.equal(true);
+          done();
+        });
+    });
+    it("GETS PREFERENCE & VERIFIES via ability to decrypt", function (done) {
+      body = {};
+      nonce = Date.now();
+      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      chai
+        .request(server)
+        .get(endpoint)
+        .set({
+          "x-client-xpub": a_key_set.identity_xpub,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['preference']['cypher_json']).to.equal(cypher_preference);
+          const preference_key = crypto.createHash("sha256")
+          .update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, init_preferences_ds) as ExtendedKeys)['xprv'])
+          .digest("hex");
+          expect(s5crypto.decryptAESMessageWithIV(res.body['preference']['cypher_json'], preference_key)).to.equal(JSON.stringify(a_preferences));
+          done();
+        });
+    });
+  });
+
   describe("E: 409's", function () {
     it("PREVENTS DUPLICATE IDENTITY", function (done) {
       endpoint = "/api/v2/identity";
@@ -1296,8 +1353,9 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         });
     })
   });
-  describe.skip("GLOBAL", function(){
-    it("DELETES AN IDENTITY AND ALL ASSOCIATIONS", function(){
+
+  describe.skip("GLOBAL", function () {
+    it("DELETES AN IDENTITY AND ALL ASSOCIATIONS", function () {
 
     });
   });
