@@ -8,9 +8,9 @@ const bitcoin = require("./bitcoin");
 const { request } = require('./request');
 
 const RESOURCE_PREFIX = "/api/v2";
-var document = {
-  domain: "https://cypherpost.io/api/v2"
-};
+// var document = {
+//   domain: "https://cypherpost.io/api/v2"
+// };
 const api_url = (document.domain === 'localhost') ? "http://localhost/api/v2" : `https://cypherpost.io/api/v2`;
 const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
 
