@@ -17,6 +17,22 @@ map Profile {
   derivation_scheme => String
   profile_detail* => String
 }
+map ProfileDetails {
+  nickname => String
+  status => String
+  contact => String
+}
+
+map Preference {
+  last_updated => UInt
+  owner_id => String
+  preference_detail* => String
+}
+map ProfileDetails {
+  muted_ids => Array<String>
+  last_post_derivation => String
+}
+
 map Post {
   genesis => UInt
   post_id => String
@@ -24,13 +40,6 @@ map Post {
   expiry => DateTime
   derivation_scheme => String
   post_detail* => String
-}
-
-
-map ProfileDetails {
-  nickname => String
-  status => String
-  contact => String
 }
 
 map PostDetail {

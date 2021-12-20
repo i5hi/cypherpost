@@ -1,10 +1,10 @@
-### Key Management
+# Key Management
 
 Cypherpost uses a standard similar to BIP32 for client side key management.
 
-```
-m/purpose'/service'/usecase'/index'/revoke'
-``` 
+
+### m/purpose'/service'/service'/index'/revoke'
+
 
 ## Overview
 
@@ -21,28 +21,24 @@ In case the user wishes to revoke a previously trusted users visibility of the m
 - update all encrypted primary keys shared with the remaining trusted users so they can view the new message
 
 
-## Use-Cases
+## Service Path ()
 
-### Identity Keys: m/128'/0'/0' (Secondary)
+### Identity Keys: m/128'/0'/0'
 
-*Name of this key is up for change. Maybe unlocking keys? or shared secret keys? Something to imply that these keys are used to generate the shared_secret keys*
+The service 0 is to maintain a single identity key pair which is used to compute a shared_secret that will encrypt a specific message encrypting secret i.e. the secondary encryption key.
 
-The usecase 0' is to maintain a single identity key pair which is used to compute a shared_secret that will encrypt a specific message encrypting secret i.e. the secondary encryption key.
+The xpub is shared with the server for all users to have access to while the xprv is never shared and only used on the client side to compute the shared_secret and sign messages.
 
-We use index 0' and revoke 0' as a fixed default and avoid rotation/revocation for convenience.
-
-The xpub is shared with the server for all users to have access too and the xprv is used by each user on the client side to compute the shared_secret. 
+Since no rotation is required here, we do not use index and revoke.
 
 ```
-m/128'/0'/0'/0'/0' will create a keypair used to generate shared_secrets
+m/128'/0'/0' will create a keypair which the xpub will be used as identity and xprv used to locally to generate shared_secrets and sign
 
-xpubs will be shared with the server, and xprvs will be used on the client side to compute the shared_secret.
-```
+`
 
+### Profile Keys: m/128'/0'/1'
 
-### Profile Keys: m/128'/0'/1' (Primary)
-
-The usercase 1' is used to encrypt profile data. 
+The usercase 1 is used to encrypt profile data. 
 
 The xprv (primary) is used to encrypt profile data and the xprv is then encrypted with a shared_secret computed per trustee by using the trustee's identity_xpub and the trusters identity_xprv.
 
@@ -57,16 +53,27 @@ m/128'/0'/1'/0'/1' will lock the users contact info if during its lifetime, the 
 
 ```
 
-### Post Keys: m/128'/0'/2' (Primary)
+### Preference Keys: m/128'/0'/2'
 
-The usecase 2' is used to encrypt post data.
+The service 2 is used to encrypt preference data.
+
+This is only for the owner's visibility and is not shared and therefore does not require and index and revoke derivation.
+
+```
+m/128'/0'/2' will lock the users preference
+
+```
+
+### Post Keys: m/128'/0'/3'
+
+The service 3 is used to encrypt post data.
 
 Similar to profile data we encrypt each post with a new xprv generated at new indexes starting at 0' and reencrypt at new revokation paths if we decide to revoke trust in a user. 
 
 ```
-m/128'/0'/2'/0'/0' will lock the users first post
+m/128'/0'/3'/0'/0' will lock the users first post
 
-m/128'/0'/2'/1'/0' will lock the users second post
+m/128'/0'/3'/1'/0' will lock the users second post
 
-m/128'/0'/2'/1'/1' will lock the users second post if during its lifetime, the user chose to revoke visibility for a certain recipient.
+m/128'/0'/3'/1'/1' will lock the users second post if during its lifetime, the user chose to revoke visibility for a certain recipient.
 ```

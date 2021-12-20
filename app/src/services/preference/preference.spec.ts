@@ -43,7 +43,7 @@ describe("Initalizing Test: Profile Key Service", function () {
     });
     it("FIND preferences", async function () {
       const response = await preferences.find(xpub);
-      expect(response['cypher_json']).to.equal(cypher_json);
+      expect(response['owner']).to.equal(xpub);
     });
     it("UPDATE preferences", async function () {
       const response = await preferences.update(xpub,cypher_json_update);      
