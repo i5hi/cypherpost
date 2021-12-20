@@ -14,9 +14,6 @@ import { router as profile } from "../../services/profile/router";
 import { logger } from "../logger/winston";
 import { respond } from "./handler";
 
-
-
-
 const base_path = `/home/node/cypherpost/app/src/services/client/public`
 // ------------------ '(◣ ◢)' ---------------------
 export async function start(port: string) {

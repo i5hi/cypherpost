@@ -385,7 +385,9 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         nonce,
         signature: bitcoin.sign(`${a_key_set.identity_xpub}:${b_key_set.identity_xpub}:${trusted_badge.toString()}:${nonce}`, a_key_set.identity_private)
       };
+      console.log({badge_sig_message: `${a_key_set.identity_xpub}:${b_key_set.identity_xpub}:${trusted_badge.toString()}:${nonce}`})
       request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      console.log({badge_request_sig_message:`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`})
       chai
         .request(server)
         .post(endpoint)
@@ -504,6 +506,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
       };
       nonce = Date.now();
       request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      console.log({request_message: `POST ${endpoint} ${JSON.stringify(body)} ${nonce}` })
       chai
         .request(server)
         .post(endpoint)
