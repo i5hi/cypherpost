@@ -74,11 +74,11 @@ export async function handleGetMyPosts(req, res) {
       }
     }
 
-    const expired_ids = await posts.removeAllExpired();
-    if (expired_ids instanceof Error) throw expired_ids;
+    const ids_removed = await posts.removeAllExpiredByOwner(req.headers['x-client-xpub']);
+    if (ids_removed instanceof Error) throw ids_removed;
 
-    if(expired_ids.length>0)
-    expired_ids.map((post_id)=>{
+    if(ids_removed.length>0)
+    ids_removed.map((post_id)=>{
       let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],post_id);
       if (status instanceof Error){ 
         console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", {status});
@@ -122,7 +122,24 @@ export async function handleGetOthersPosts(req, res) {
 
     const posts_recieved = await posts.findManyById(reciever_keys.map(key=>key.post_id));
     if(posts_recieved instanceof Error) throw posts_recieved;
+    let expired_ids=[]; 
 
+    posts_recieved.map(post=>{
+      if (post.expiry < Date.now() && post.expiry != 0)
+      expired_ids.push(post.id);
+    });
+
+    const ids_removed = await posts.removeManyById(expired_ids);
+    if (ids_removed instanceof Error) throw ids_removed;
+
+    if(expired_ids.length>0)
+    expired_ids.map((post_id)=>{
+      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],post_id);
+      if (status instanceof Error){ 
+        console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", {status});
+        throw status};
+    });
+    
     const response = {
       posts: posts_recieved,
       keys: reciever_keys

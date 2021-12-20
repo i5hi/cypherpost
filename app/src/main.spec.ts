@@ -1146,7 +1146,32 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     });
     // A must update their profile and decryption keys 
     // ALTHOUGH B will no longer recieve A's keys in GET profile/others
-  })
+    it("UPDATES PROFILE w/ new cypher_json",async function(){
+      const new_derivation_scheme = "m/1h/1h/0h";
+      a_profile_set.encryption_key = crypto.createHash("sha256").update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv,new_derivation_scheme) as ExtendedKeys).xprv).digest('hex');
+      a_profile_set.cypher = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_profile_set.plain),a_profile_set.encryption_key) as string;
+      endpoint = "/api/v2/profile";
+      body = {
+        cypher_json: a_profile_set.cypher,
+        derivation_scheme: new_derivation_scheme
+      };
+      nonce = Date.now();
+      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      chai
+        .request(server)
+        .post(endpoint)
+        .set({
+          "x-client-xpub": a_key_set.identity_xpub,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['status']).to.equal(true);
+        });
+    });
+  });
   describe("E: 409's", function () {
     it("PREVENTS DUPLICATE IDENTITY", function (done) {
       endpoint = "/api/v2/identity";

@@ -8,8 +8,10 @@ export interface PostInterface{
   findManyById(ids: Array<string>): Promise<Array<UserPost> | Error>;
   findAllByOwner(owner: string): Promise<Array<UserPost> | Error>; 
   removeOneById(id: string, owner: string): Promise<boolean | Error>;
+  removeManyById(ids: string[]): Promise<boolean | Error>
   removeAllByOwner(owner:string): Promise<Array<string> | Error>;
   removeAllExpired(owner:string): Promise<Array<string> | Error>;
+  removeAllExpiredByOwner(owner:string): Promise<Array<string> | Error>;
 }
 
 export interface PostStore{
