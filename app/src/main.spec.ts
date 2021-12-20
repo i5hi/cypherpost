@@ -144,7 +144,8 @@ let c_post_set: TestPostSet;
 
 const init_identity_ds = "m/0h/0h/0h";
 const init_profile_ds = "m/1h/0h/0h";
-const init_posts_ds = "m/2h/0h/0h";
+const init_preferences_ds = "m/2h/0h/0h"
+const init_posts_ds = "m/3h/0h/0h";
 
 let endpoint;
 let body;

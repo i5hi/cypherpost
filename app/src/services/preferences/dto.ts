@@ -45,7 +45,7 @@ export async function handleSetPreferences(req,res){
       }
     }
 
-    const status = await preferences.create(req.headers['x-client-xpub'], request.body.cypher_json);
+    const status = await preferences.update(req.headers['x-client-xpub'], request.body.cypher_json);
     if (status instanceof Error) throw status;
 
     const response = {

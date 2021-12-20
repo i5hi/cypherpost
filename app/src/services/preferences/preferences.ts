@@ -5,11 +5,11 @@ import { MongoPreferenceStore } from "./mongo";
 const store = new MongoPreferenceStore();
 
 export class CypherpostPreferences implements PreferenceInterface {
-  async create(owner: string, cypher_json: string): Promise<boolean | Error> {
+  async initialize(owner: string): Promise<boolean | Error> {
     try {
       const preference = {
         owner,
-        cypher_json,
+        cypher_json: "NotYetSet",
         last_updated: Date.now()
       };
       return store.createOne(preference);

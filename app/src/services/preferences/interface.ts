@@ -4,7 +4,7 @@ Developed @ Stackmate India
 */
 
 export interface PreferenceInterface{
-  create(owner: string, cypher_json: string): Promise< boolean | Error>;
+  initialize(owner: string): Promise< boolean | Error>;
   find(owner: string): Promise<Preference | Error>;
   update(owner: string, cypher_json: string):Promise<boolean | Error>;
   remove(owner:string): Promise<boolean | Error>; 

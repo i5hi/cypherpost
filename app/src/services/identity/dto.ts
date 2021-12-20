@@ -5,6 +5,7 @@ Developed @ Stackmate India
 import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
+import { CypherpostPreferences } from "../preferences/preferences";
 import { CypherpostProfile } from "../profile/profile";
 import { CypherpostIdentity } from "./identity";
 
@@ -12,6 +13,7 @@ const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
 const profile =  new CypherpostProfile();
+const preferences = new CypherpostPreferences();
 const bitcoin = new CypherpostBitcoinOps();
 
 export async function identityMiddleware(req, res, next) {
@@ -60,6 +62,9 @@ export async function handleRegistration(req, res) {
 
     status = await profile.initialize(request.headers['x-client-xpub']);
     if (status instanceof Error) throw status;
+
+    status = await preferences.initialize(request.headers['x-client-xpub']);
+    if (status instanceof Error ) throw status;
 
     const response = {
       status

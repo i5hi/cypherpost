@@ -38,7 +38,7 @@ describe("Initalizing Test: Profile Key Service", function () {
 
   describe("PREFERENCES KEY SERVICE OPERATIONS:", async function () {
     it("SET new preferences", async function () {
-      const response = await preferences.create(xpub,cypher_json);
+      const response = await preferences.initialize(xpub);
       expect(response).to.equal(true);
     });
     it("FIND preferences", async function () {
