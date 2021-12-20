@@ -30,7 +30,7 @@ map Post {
 map ProfileDetails {
   nickname => String
   status => String
-  contact_info => String
+  contact => String
 }
 
 map PostDetail {

@@ -33,6 +33,13 @@ const post_key_schema = new mongoose.Schema(
       unique: true,
       required: true,
     },
+    hash: {
+      type: String,
+      required: true,
+      index: true,
+      unique: true,
+      dropDups: true
+    },
   },
   {
     strict: true
@@ -45,7 +52,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
 
   async createMany(keys: PostDecryptionKey[]): Promise<boolean | Error> {
     try {
-      // await postKeyStore.syncIndexes();
+      await postKeyStore.syncIndexes();
       const doc = await postKeyStore.create(keys);
       if (doc instanceof mongoose.Error) {
         return handleError(doc);
@@ -78,15 +85,13 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
             giver: doc["giver"],
             reciever: doc["reciever"],
             post_id: doc["post_id"],
+            hash: doc['hash'],
             decryption_key: doc["decryption_key"],
           }
         });
         return keys;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Post Decryption Key Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);
@@ -108,15 +113,13 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
             giver: doc["giver"],
             reciever: doc["reciever"],
             post_id: doc["post_id"],
+            hash: doc['hash'],
             decryption_key: doc["decryption_key"],
           }
         });
         return keys;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Post Decryption Key Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);
@@ -139,15 +142,13 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
             giver: doc["giver"],
             reciever: doc["reciever"],
             post_id: doc["post_id"],
+            hash: doc['hash'],
             decryption_key: doc["decryption_key"],
           }
         });
         return keys;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Post Decryption Key Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);

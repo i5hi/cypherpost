@@ -79,16 +79,13 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
             expiry: doc["expiry"],
             giver: doc["giver"],
             reciever: doc["reciever"],
-            post_id: doc["post_id"],
+            hash: doc['hash'],
             decryption_key: doc["decryption_key"],
           }
         });
         return keys;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Post Decryption Key Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);
@@ -109,16 +106,13 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
             expiry: doc["expiry"],
             giver: doc["giver"],
             reciever: doc["reciever"],
-            post_id: doc["post_id"],
+            hash: doc['hash'],
             decryption_key: doc["decryption_key"],
           }
         });
         return keys;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Post Decryption Key Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);

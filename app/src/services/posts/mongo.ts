@@ -110,10 +110,7 @@ export class MongoPostStore implements PostStore {
         });
         return posts;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Posts Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);

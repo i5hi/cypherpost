@@ -174,7 +174,7 @@ export async function handleUpdatePostKeys(req, res) {
       }
     });
 
-    const status = await postKeys.addPostDecryptionKeys(request.headers['x-client-xpub'], req.params.id, decryption_keys);
+    const status = await postKeys.addPostDecryptionKeys(request.headers['x-client-xpub'], req.body.id, decryption_keys);
     if (status instanceof Error) throw status;
 
     const response = {

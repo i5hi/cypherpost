@@ -17,7 +17,8 @@ const createPostCheck = [
 ];
 
 const updatePostKeysCheck = [
-  val.check('decryption_keys').exists().isArray()
+  val.check('decryption_keys').exists().isArray(),
+  val.check('id').exists()
 ];
 
 // ------------------ '(◣ ◢)' ---------------------
@@ -26,6 +27,6 @@ router.put("/", createPostCheck, handleCreatePost);
 router.get("/self", handleGetMyPosts); 
 router.get("/others", handleGetOthersPosts);
 router.delete("/:id", handleDeletePost);
-router.post("/keys/:id",updatePostKeysCheck, handleUpdatePostKeys);
+router.post("/keys",updatePostKeysCheck, handleUpdatePostKeys);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------
 

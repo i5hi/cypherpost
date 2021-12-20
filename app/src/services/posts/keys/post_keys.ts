@@ -3,6 +3,7 @@ cypherpost.io
 Developed @ Stackmate India
 */
 
+import * as crypto from "crypto";
 import { handleError } from "../../../lib/errors/e";
 import { S5UID } from "../../../lib/uid/uid";
 import { PostDecryptionKey, PostKeyInterface, PostKeyStoreUpdate } from "./interface";
@@ -21,6 +22,7 @@ export class CypherpostPostKeys implements PostKeyInterface {
           giver: giver,
           post_id: post_id,
           reciever: key.reciever,
+          hash: crypto.createHash("sha256").update(`${giver}:${key.reciever}:${post_id}`).digest('hex'),
           decryption_key: key.decryption_key
         })
       });
