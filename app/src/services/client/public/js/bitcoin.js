@@ -19,7 +19,7 @@ async function seed_root(mnemonic) {
 // Store result encrypted in localStorage with sha256(uname:pass)
 function derive_parent_128(root_xprv) {
   const master_key = bip32.fromBase58(root_xprv);
-  const parent_key = master_key.derivePath("m/128'/0'");
+  const parent_key = master_key.derivePath("m/128'/0'/0'");
   const extended_keys = {
     xpub: parent_key.neutered().toBase58(),
     xprv: parent_key.toBase58(),

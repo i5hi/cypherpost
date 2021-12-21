@@ -30,14 +30,14 @@ function getSeed256() {
   return sessionStorage.getItem("seed256");
 }
 
-function setTriplePass256(passowrd){
+function setTriplePass256(passowrd) {
   const round1 = crypto.createHash("sha256").update(passowrd).digest("hex");
   const round2 = crypto.createHash("sha256").update(round1).digest("hex");
   const round3 = crypto.createHash("sha256").update(round2).digest("hex");
-  sessionStorage.setItem("triple_pass256",round3);
+  sessionStorage.setItem("triple_pass256", round3);
   return true;
 }
-function getTriplePass256(passowrd){
+function getTriplePass256(passowrd) {
   return sessionStorage.getItem("triple_pass256");
 }
 
@@ -79,6 +79,16 @@ function getExistingUsernames() {
   return (existing_usernames) ? JSON.parse(existing_usernames) : null
 }
 
+function setIdentities(identities) {
+  sessionStorage.setItem("identities", JSON.stringify(identities));
+  return true;
+
+}
+function getIdentities() {
+  const identities = sessionStorage.getItem("identities");
+  return (identities) ? JSON.parse(identities) : null
+}
+
 function setParent128(parent_128, username, password) {
   const encryption_key = crypto.createHash("sha256")
     .update(`${username}:${password}`)
@@ -97,6 +107,22 @@ function getParent128(username, password) {
   const cipher_parent_128 = localStorage.getItem(`${username}_parent_128`);
   return cipher_parent_128 ? JSON.parse(decrypt(cipher_parent_128, decryption_key)) : null;
 
+}
+
+function setMnemonic(mnemonic, password) {
+  const encryption_key = crypto.createHash("sha256")
+    .update(password)
+    .digest("hex");
+  localStorage.setItem(`my_mnemonic`, encrypt(mnemonic, encryption_key));
+  return true;
+}
+
+function getMnemonic(password) {
+  const encryption_key = crypto.createHash("sha256")
+    .update(`${password}`)
+    .digest("hex");
+  const mnemonic_crypt = localStorage.getItem(`my_mnemonic`);
+  return mnemonic_crypt ? decrypt(mnemonic_crypt, encryption_key) : null;
 }
 
 function setParentKeys(parent_128_xprv) {
@@ -190,17 +216,14 @@ function getOthersPosts() {
 }
 
 module.exports = {
-  setSeed256,
-  getSeed256,
-  setToken,
-  getToken,
+  setIdentities,
+  getIdentities,
   setUsername,
   getUsername,
   setInvitation,
   getInvitation,
   setExistingUsernames,
   getExistingUsernames,
-
   setParent128,
   getParent128,
   setParentKeys,
@@ -209,19 +232,16 @@ module.exports = {
   getMyProfile,
   setMyKeys,
   getMyKeys,
-
   setUserKeys,
   getUserKeys,
-
   setUserProfile,
   getUserProfile,
   setMyPosts,
   getMyPosts,
   setOthersPosts,
   getOthersPosts,
-
   setTriplePass256,
-  getTriplePass256
-
-
+  getTriplePass256,
+  setMnemonic,
+  getMnemonic
 }

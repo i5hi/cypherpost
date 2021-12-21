@@ -1,10 +1,12 @@
 const axios = require('axios');
 
 async function request(method, url, headers, body) {
+
   const options = {
     url,
     method: method.toUpperCase(),
     headers,
+    data:body,
     json: true
   };
 
@@ -21,9 +23,7 @@ async function request(method, url, headers, body) {
     else {
       return new Error("BAD NEWS!");
     }
-
   }
-
 }
 
 module.exports = {

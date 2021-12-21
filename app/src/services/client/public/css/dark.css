@@ -151,8 +151,9 @@ button {
   border: 1px solid #8900A7;
   border-radius: 0px !important;
   height: 2.3rem;
-  width: 6rem;
-
+  width: 6.9rem;
+  margin: 0 auto;
+  text-align: center;
 }
 .btn-block {
   background-color:transparent !important;

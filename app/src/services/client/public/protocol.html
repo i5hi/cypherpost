@@ -43,7 +43,6 @@
       <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> is an end-to-end encrypted social network protocol to share posts among trusted peers.</p>
       <p>It was developed to allow inviduals to post advertisements to trade Bitcoin in a pure peer-to-peer fashion.</p>
       <p>The protocol developed to fulfil this need, and serves as a basis for a portable and private end-to-end encryption model for any social network.</p>
-      <p>It seeks to recreate the organic way in which we meet and trust people; through others we trust, without a middle man listening in on our conversations.</p>
 
       <hr>
 
@@ -51,15 +50,15 @@
       <br/>
       <h3>Portable E2EE</h3>
       
-      <p>Currently, all e2ee applications use RSA keys. The problem with RSA keys are primarily the lack of portability and the need to maintain a master device to recover your account.</p>
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee.</p>
+      <p>Currently, all e2ee applications use RSA keys. While RSA keys have an extremely high degree of entropy, the problem with these keys are primarily the lack of portability and the need to maintain a master device to recover your account.</p>
+      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> uses ECDSA keys and leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee.</p>
       <p>In addition to e2ee, these keys are also used for authentication and signing the occurence of important actions - such as making a post or giving a badge.</p>
+      
       <br/>
 
       <h3>Badges</h3>
-      <p>The way a user expands their network on <a href="https://github.com/i5hi/cypherpost">cypherpost</a> is through building reputation via badges. </p>
-      <p>Badges also allow you to more easily set visibility of your profile and your posts.</p>
-      <p>Giving someone a 'Trusted' badge, not only adds to their overall reputation but also specifically gives the reciever the ability to view your profile and posts.</p>
+      <p>Reputation and classification of users on <a href="https://github.com/i5hi/cypherpost">cypherpost</a> is achieved through issuance of badges. </p>
+      <p>Giving someone a 'Trusted' badge, not only adds to their overall reputation but also specifically allows users to classify others into groups and more easily set visibility of their data.</p>
       <p>The value of a badge is subjective. If a user has 100 Trusted badges and only 10 of them are from users that you have given a badge to, then these 10 badges are more meaningful than the remaining 90.</p>
       <p>Cypherpost currently supports 3 badges: Trusted, Scammer & MetInPerson.</p>
       <br/>
@@ -82,13 +81,14 @@
       <br/>
       <h3>Bitcoin Keys</h3>
       <p>The BIP32 key derivation model is used to derive an infinite amount of child keys that are used to encrypt/decrypt all data flowing through cypherpost. This is done by deriving a new key from the user's master key which is derived from a BIP39 seed.</p>
-      <p>We use the following path standard:  <span class="" >m/purpose'/service'/usecase'/index'/revoke'</span>; with 3 main use cases:</p>
+      <p>We use the following path standard:  <span class="" >m/purpose'/service'/services'/index'/revoke'</span>; with 4 main services:</p>
       <ul>
-        <li>Recipient: Used to compute shared secrets</li>
-        <li>Profile: Used to encrypt/decrypt profile</li>
-        <li>Posts: Used to encrypt/decrypt posts</li>
+        <li>Identity: Used to authenticate and compute shared secrets</li>
+        <li>Preference: Used to store client side preferences</li>
+        <li>Profile: Used to encrypt/decrypt your profile</li>
+        <li>Posts: Used to encrypt/decrypt your posts</li>
       </ul>
-      <p>More information can be found at <a href="https://github.com/i5hi/cypherpost/blob/main/docs/BIP32InCypherPost.md">BIP32InCypherPost</a></p>
+      <p>More information can be found at <a href="https://github.com/i5hi/cypherpost/blob/main/docs/KeyManagement.md">KeyManagement in cypherpost.</a></p>
     </div>
     </div>
 
