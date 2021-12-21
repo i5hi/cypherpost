@@ -8,7 +8,7 @@ A private, end-to-end encrypted social network to selectively post ads and messa
 
 - Your identity on the platform is a username:xpub
 - Your profile and posts are encrypted.
-- Posts can be decrypted only those you select.
+- Profile and posts can be decrypted only by those you select.
 - You can give individuals badges to help you classify and decide who to share keys with.
 - Badges include: Trusted, VerifiedInPerson & Scammer
 - Your identity, badges given & recieved and number of live posts are public.
