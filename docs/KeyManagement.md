@@ -34,7 +34,7 @@ Since no rotation is required here, we do not use index and revoke.
 ```
 m/128'/0'/0' will create a keypair which the xpub will be used as identity and xprv used to locally to generate shared_secrets and sign
 
-`
+```
 
 ### Profile Keys: m/128'/0'/1'
 
@@ -42,7 +42,7 @@ The usercase 1 is used to encrypt profile data.
 
 The xprv (primary) is used to encrypt profile data and the xprv is then encrypted with a shared_secret computed per trustee by using the trustee's identity_xpub and the trusters identity_xprv.
 
-We use index 0' for contact information and start with revoke 0'. If a user revokes trust in a user, we reencrypt contact data the xprv at m/0'/1' and reencrypt it with only remaining trusted users in the same manner as previously done. 
+We use index 0' for bio which stays fixed and rotate keys at the revoke path starting with 0'. If a user revokes trust in a user, we reencrypt contact data the xprv at revoke 1' and reencrypt it with only remaining trusted users in the same manner as previously done. 
 
 Other indexes can be used for encrypting other bio data such as address etc, if required by the application.
 
@@ -77,3 +77,5 @@ m/128'/0'/3'/1'/0' will lock the users second post
 
 m/128'/0'/3'/1'/1' will lock the users second post if during its lifetime, the user chose to revoke visibility for a certain recipient.
 ```
+
+
