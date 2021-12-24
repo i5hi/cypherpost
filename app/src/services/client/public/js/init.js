@@ -12,46 +12,27 @@
 const store = require("./store");
 const bitcoin = require("./bitcoin");
 const {
-  apiGetUsernames,
-  apiProfileGenesis,
-  apiGetMyProfile,
-  apiGetMyPosts,
-  apiGetOthersPosts
+  apiIdentityAll,
+  apiPostsOthers,
+  apiPostsSelf,
+  apiProfileOthers,
+  apiProfileSelf
 } = require("./api");
 
-async function loadInitialState(token, username, password) {
-  store.setToken(token);
-  store.setUsername(username);
-  store.setTriplePass256(password);
+async function loadInitialState() {
+  const keys = store.getMyKeyChain();
   // MY PROFILE
   try {
-    const my_profile_and_keys = await apiGetMyProfile(token);
+
+    const my_profile_and_keys = await apiProfileSelf(keys.identity);
     if (my_profile_and_keys instanceof Error) {
-      if (my_profile_and_keys.name === "404" && my_profile_and_keys.message.startsWith("No profile")) {
-        // create new profile
-        const my_recipient_xpub = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']["xprv"], 0, 0).xpub;
-        const new_profile_and_keys = await apiProfileGenesis(my_recipient_xpub, token);
-        if (new_profile_and_keys instanceof Error) {
-          console.error("ERROR AT loadInitialState - profile.apiProfileGenesis");
-          console.error({ e });
-          return false;
-        }
-        console.log({ profile: new_profile_and_keys.profile, keys: new_profile_and_keys.keys });
-        store.setMyProfile(new_profile_and_keys.profile);
-        store.setMyKeys(new_profile_and_keys.keys)
-        store.setUsername(new_profile_and_keys.profile.username);
-      }
-      else {
-        console.error("ERROR AT loadInitialState - getProfile");
-        console.error({ e });
-        return false;
-      }
+      console.error("ERROR AT loadInitialState - getProfile");
+      console.error({ e });
+      return false;
     }
     else {
       store.setMyProfile(my_profile_and_keys['profile']);
-      store.setMyKeys(my_profile_and_keys['keys']);
-      store.setUsername(my_profile_and_keys['profile']['username']);
-
+      store.setMyProfileKeys(my_profile_and_keys['keys']);
     }
   }
   catch (e) {
@@ -62,11 +43,11 @@ async function loadInitialState(token, username, password) {
 
   // USER LIST
   try {
-    const usernames = await apiGetUsernames(true, token);
-    store.setExistingUsernames(usernames);
+    const ids = await apiIdentityAll(keys.identity);
+    store.setIdentities(ids);
   }
   catch (e) {
-    console.error("BROKE AT loadInitialState - getUsernames");
+    console.error("BROKE AT loadInitialState - getIdentities");
     console.error({ e });
     return false;
   }
@@ -74,7 +55,7 @@ async function loadInitialState(token, username, password) {
   // OTHERS POSTS
 
   try {
-    const others_posts = await apiGetOthersPosts(token);
+    const others_posts = await apiPostsOthers(keys.identity);
     store.setOthersPosts(others_posts);
   }
   catch (e) {
@@ -84,11 +65,9 @@ async function loadInitialState(token, username, password) {
   }
 
   // MY POSTS
-
   try {
-    const my_posts = await apiGetMyPosts(token);
+    const my_posts = await apiPostsSelf(keys.identity);
     store.setMyPosts(my_posts);
-
   }
   catch (e) {
     console.error("BROKE AT loadInitialState - getMyPosts");
@@ -96,14 +75,6 @@ async function loadInitialState(token, username, password) {
     return false;
   }
 
-  const parent_128 = store.getParent128(store.getUsername(), password);
-  if (parent_128) {
-    store.setParentKeys(parent_128['xprv']);
-  }
-  else {
-    alert("Need to reimport seed");
-    return "import_seed"
-  }
   return true;
 
 }
