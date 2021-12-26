@@ -33,6 +33,15 @@ function getIdentities() {
 }
 
 
+function setAllBadges(all_badges) {
+  sessionStorage.setItem("all_badges", JSON.stringify(all_badges));
+  return true;
+}
+function getAllBadges() {
+  const all_badges = sessionStorage.getItem("all_badges");
+  return (all_badges) ? JSON.parse(all_badges) : null
+}
+
 function setMnemonic(mnemonic, password) {
   const encryption_key = crypto.createHash("sha256")
     .update(password)
@@ -125,6 +134,8 @@ function getOthersPosts() {
 module.exports = {
   setIdentities,
   getIdentities,
+  setAllBadges,
+  getAllBadges,
   setMyProfile,
   getMyProfile,
   setMyKeyChain,

@@ -130,10 +130,7 @@ export class MongoBadgeStore implements BadgeStore {
         });
         return badges;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Badges Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);
@@ -160,10 +157,7 @@ export class MongoBadgeStore implements BadgeStore {
         });
         return badges;
       } else {
-        return handleError({
-          code: 404,
-          message: `No Badges Found`
-        });
+        return [];
       }
     } catch (e) {
       return handleError(e);
@@ -191,10 +185,7 @@ export class MongoBadgeStore implements BadgeStore {
         });
         return badges;
       } else
-        return handleError({
-          code: 404,
-          message: `No Post Decryption Key Found`
-        });
+        return [];
 
     } catch (e) {
       return handleError(e);

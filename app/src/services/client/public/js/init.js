@@ -16,21 +16,32 @@ const {
   apiPostsOthers,
   apiPostsSelf,
   apiProfileOthers,
-  apiProfileSelf
+  apiProfileSelf,
+  apiAllBadges
 } = require("./api");
 
 async function loadInitialState() {
   const keys = store.getMyKeyChain();
-    // IDENTITIES
-    try {
-      const ids = await apiIdentityAll(keys.identity);
-      store.setIdentities(ids);
-    }
-    catch (e) {
-      console.error("BROKE AT loadInitialState - getIdentities");
-      console.error({ e });
-      return false;
-    }
+  // IDENTITIES
+  try {
+    const ids = await apiIdentityAll(keys.identity);
+    store.setIdentities(ids);
+  }
+  catch (e) {
+    console.error("BROKE AT loadInitialState - getIdentities");
+    console.error({ e });
+    return false;
+  }
+  // BADGES
+  try {
+    const badges = await apiAllBadges(keys.identity);
+    store.setAllBadges(badges);
+  }
+  catch (e) {
+    console.error("BROKE AT loadInitialState - AllBadges");
+    console.error({ e });
+    return false;
+  }
 
   // MY PROFILE
   try {
@@ -78,30 +89,31 @@ async function loadInitialState() {
 
 }
 
-async function checkInitialState(){
+async function checkInitialState() {
   const keys = store.getMyKeyChain();
-  const ids =  store.getIdentities();
-
+  const ids = store.getIdentities();
+  const badges = store.getAllBadges();
+  console.log({badges})
   const my_profile = store.getMyProfile();
   const my_posts = store.getMyPosts();
   const others_posts = store.getOthersPosts();
-  
+
   const has_profile = (my_profile.profile.cypher_json);
   const has_profile_keys = (my_profile.keys.length > 0);
   const has_posts = (my_posts.posts.length > 0);
   const has_others_posts = (others_posts.posts.length > 0);
   // const has others_profile = (others_profile.profiles.length);
-  if(!has_posts){
+  if (!has_posts) {
     alert("You have not created any posts.");
   }
-  if(!has_others_posts){
+  if (!has_others_posts) {
     alert("You cannot view anyones posts. Build the trust of other clients to gain visibility of their posts.");
   }
-  if (!has_profile){
+  if (!has_profile) {
     alert("You have not initialized a profile.");
   }
-  if(!has_profile_keys){
-    alert("You cannot view anyones profile. Build the trust of other clients to gain visibility of their posts."); 
+  if (!has_profile_keys) {
+    alert("You cannot view anyones profile. Build the trust of other clients to gain visibility of their posts.");
   }
 
 }

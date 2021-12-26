@@ -62,9 +62,59 @@ async function apiIdentityAll(identity_parent){
 
 }
 
-async function apiProfileSelf(identity_parent){
+async function apiGetProfileSelf(identity_parent){
   const nonce = Date.now();
   const resource = "/profile/self";
+  const url = api_url + resource;
+  const method = "GET";
+  const body = {};
+
+  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
+  const headers = createRequestHeaders(identity_parent,nonce,signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response;
+}
+async function apiUpdateProfile(identity_parent,cypher_json,derivation_scheme){
+  const nonce = Date.now();
+  const resource = "/profile";
+  const url = api_url + resource;
+  const method = "POST";
+  const body = {
+    cypher_json,
+    derivation_scheme,
+  };
+
+  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
+  const headers = createRequestHeaders(identity_parent,nonce,signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response;
+}
+async function apiUpdateProfileKeys(identity_parent,decryption_keys){
+  const nonce = Date.now();
+  const resource = "/profile/keys";
+  const url = api_url + resource;
+  const method = "POST";
+  const body = {
+    decryption_keys
+  };
+
+  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
+  const headers = createRequestHeaders(identity_parent,nonce,signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response;
+}
+async function apiAllBadges(identity_parent){
+  const nonce = Date.now();
+  const resource = "/badges/all";
   const url = api_url + resource;
   const method = "GET";
   const body = {};
@@ -93,7 +143,7 @@ async function apiProfileOthers(identity_parent){
 
   return response;
 }
-async function apiPreferences(identity_parent){
+async function apiGetPreferences(identity_parent){
   const nonce = Date.now();
   const resource = "/preference";
   const url = api_url + resource;
@@ -108,7 +158,7 @@ async function apiPreferences(identity_parent){
 
   return response;
 }
-async function apiPostsSelf(identity_parent){
+async function apiGetPostsSelf(identity_parent){
   const nonce = Date.now();
   const resource = "/posts/self";
   const url = api_url + resource;
@@ -123,7 +173,7 @@ async function apiPostsSelf(identity_parent){
 
   return response;
 }
-async function apiPostsOthers(identity_parent){
+async function apiGetPostsOthers(identity_parent){
   const nonce = Date.now();
   const resource = "/posts/others";
   const url = api_url + resource;
@@ -142,9 +192,11 @@ async function apiPostsOthers(identity_parent){
 module.exports = {
   apiIdentityRegistration,
   apiIdentityAll,
-  apiPreferences,
-  apiProfileSelf,
+  apiUpdateProfile,
+  apiPreferences: apiGetPreferences,
+  apiProfileSelf: apiGetProfileSelf,
   apiProfileOthers,
-  apiPostsSelf,
-  apiPostsOthers
+  apiPostsSelf: apiGetPostsSelf,
+  apiPostsOthers: apiGetPostsOthers,
+  apiAllBadges,
 }
