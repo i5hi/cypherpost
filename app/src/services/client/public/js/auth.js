@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { loadInitialState } = require('./init');
+const { loadInitialState, checkInitialState } = require('./init');
 const store = require("./store");
 const bitcoin = require("./bitcoin");
 const {
@@ -73,11 +73,8 @@ async function registerComposite() {
   }
   else {
     alert("SAUCE! You are now registered!");
-    const status = await loadInitialState();
-    if (!status) alert("Error in loading initial state. App might be buggy!\n Check logs and report to admin.");
-    window.location.href = "posts";
+    return true;
   }
-  return true;
 }
 async function resetComposite() {
   const seed = document.getElementById("reset_seed").value;
@@ -104,37 +101,38 @@ async function resetComposite() {
       return false;
     };
     if (status)
-      store.setMnemonic(mnemonic, password);
+      return store.setMnemonic(mnemonic, password);
     else return status;
   } else {
     alert("Passwords do not match!");
     return false;
   }
-
-  const status = await loadInitialState();
-  if (!status) alert("Error in loading initial state. App might be buggy!\n Check logs and report to admin.");
-  else window.location.href = "posts";
-
 }
 
 async function loginComposite() {
   const password = document.getElementById("login_pass").value;
   document.getElementById("login_pass").value = "";
-  let keys = store.getMyKeyChain();
-  if (!keys) {
-    const mnemonic = store.getMnemonic(password);
+  const mnemonic = store.getMnemonic(password);
+  if(mnemonic instanceof Error){
+    alert("Incorrect password!");
+    return false;
+  }
+  if (mnemonic) {
+    const seed_root = await bitcoin.seed_root(mnemonic);
+    const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
     keys = {
       identity: bitcoin.derive_identity_parent(cypherpost_parent['xprv']),
       profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
       preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
       post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
     };
-    store.setMyKeyChain(keys);
+    alert("SAUCE! Decrypted Mnemonic!");
+    return store.setMyKeyChain(keys);
   }
-  const status = await loadInitialState();
-  if (!status) alert("Error in loading initial state. App might be buggy!\n Check logs and report to admin.");
-  else if (status === "import_seed") window.location.href = "profile";
-  else window.location.href = "posts";
+  else {
+    alert("No encrypted mnemonic found. Import mnemonic through reset.");
+    return false;
+  };
 }
 
 async function getAllIdentities(identity_parent) {
@@ -178,7 +176,10 @@ async function loadAuthEvents() {
 
       document.getElementById("login_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        loginComposite();
+        const status = await loginComposite();
+        if (status) await loadInitialState();
+        else alert("Login Init failed!");
+        await checkInitialState();
       });
       break;
     case "registration":
@@ -199,13 +200,19 @@ async function loadAuthEvents() {
       });
       document.getElementById("register_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        registerComposite()
+        const status = await registerComposite();
+        if (status) await loadInitialState();
+        else alert("Registration init failed!");
+        await checkInitialState();
       });
       break;
     case "reset":
       document.getElementById("reset_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        resetComposite()
+        const status = await resetComposite();
+        if (status) await loadInitialState();
+        else alert("Reset failed!");
+        await checkInitialState();
       });
       break;
     default:

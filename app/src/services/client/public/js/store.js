@@ -46,7 +46,12 @@ function getMnemonic(password) {
     .update(`${password}`)
     .digest("hex");
   const mnemonic_crypt = localStorage.getItem(`my_mnemonic`);
-  return mnemonic_crypt ? decrypt(mnemonic_crypt, encryption_key) : null;
+  try{
+    return mnemonic_crypt ? decrypt(mnemonic_crypt, encryption_key) : null;
+  }
+  catch(e){
+    return new  Error(e);
+  }
 }
 
 function setMyProfile(profile) {
@@ -58,14 +63,14 @@ function getMyProfile() {
   return (profile) ? JSON.parse(profile) : null
 }
 
-function setMyProfileKeys(keys) {
-  sessionStorage.setItem(`profile_keys`, JSON.stringify(keys));
-  return true;
-}
-function getMyProfileKeys() {
-  const keys = sessionStorage.getItem("profile_keys");
-  return (keys) ? JSON.parse(keys) : null
-}
+// function setMyProfileKeys(keys) {
+//   sessionStorage.setItem(`profile_keys`, JSON.stringify(keys));
+//   return true;
+// }
+// function getMyProfileKeys() {
+//   const keys = sessionStorage.getItem("profile_keys");
+//   return (keys) ? JSON.parse(keys) : null
+// }
 
 function setMyKeyChain(keys) {
   sessionStorage.setItem(`my_keys`, JSON.stringify(keys));

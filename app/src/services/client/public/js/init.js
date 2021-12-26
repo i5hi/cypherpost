@@ -21,18 +21,28 @@ const {
 
 async function loadInitialState() {
   const keys = store.getMyKeyChain();
+    // IDENTITIES
+    try {
+      const ids = await apiIdentityAll(keys.identity);
+      store.setIdentities(ids);
+    }
+    catch (e) {
+      console.error("BROKE AT loadInitialState - getIdentities");
+      console.error({ e });
+      return false;
+    }
+
   // MY PROFILE
   try {
 
-    const my_profile_and_keys = await apiProfileSelf(keys.identity);
-    if (my_profile_and_keys instanceof Error) {
+    const my_profile = await apiProfileSelf(keys.identity);
+    if (my_profile instanceof Error) {
       console.error("ERROR AT loadInitialState - getProfile");
       console.error({ e });
       return false;
     }
     else {
-      store.setMyProfile(my_profile_and_keys['profile']);
-      store.setMyProfileKeys(my_profile_and_keys['keys']);
+      store.setMyProfile(my_profile);
     }
   }
   catch (e) {
@@ -41,19 +51,8 @@ async function loadInitialState() {
     return false;
   }
 
-  // USER LIST
-  try {
-    const ids = await apiIdentityAll(keys.identity);
-    store.setIdentities(ids);
-  }
-  catch (e) {
-    console.error("BROKE AT loadInitialState - getIdentities");
-    console.error({ e });
-    return false;
-  }
 
   // OTHERS POSTS
-
   try {
     const others_posts = await apiPostsOthers(keys.identity);
     store.setOthersPosts(others_posts);
@@ -79,6 +78,35 @@ async function loadInitialState() {
 
 }
 
+async function checkInitialState(){
+  const keys = store.getMyKeyChain();
+  const ids =  store.getIdentities();
+
+  const my_profile = store.getMyProfile();
+  const my_posts = store.getMyPosts();
+  const others_posts = store.getOthersPosts();
+  
+  const has_profile = (my_profile.profile.cypher_json);
+  const has_profile_keys = (my_profile.keys.length > 0);
+  const has_posts = (my_posts.posts.length > 0);
+  const has_others_posts = (others_posts.posts.length > 0);
+  // const has others_profile = (others_profile.profiles.length);
+  if(!has_posts){
+    alert("You have not created any posts.");
+  }
+  if(!has_others_posts){
+    alert("You cannot view anyones posts. Build the trust of other clients to gain visibility of their posts.");
+  }
+  if (!has_profile){
+    alert("You have not initialized a profile.");
+  }
+  if(!has_profile_keys){
+    alert("You cannot view anyones profile. Build the trust of other clients to gain visibility of their posts."); 
+  }
+
+}
+
 module.exports = {
-  loadInitialState
+  loadInitialState,
+  checkInitialState
 }
