@@ -257,71 +257,71 @@ const store = require("./store");
 
 
 
-// async function loadPostsEvents() {
+async function loadPostsEvents() {
 
 
-//   document.getElementById("exit").addEventListener("click", (event) => {
-//     event.preventDefault();
-//     exit();
-//   });
+  document.getElementById("exit").addEventListener("click", (event) => {
+    event.preventDefault();
+    exit();
+  });
 
 
-//   document.getElementById(`my_posts_menu`).addEventListener("click", async (event) => {
-//     event.preventDefault();
-//     document.getElementById("my_posts_list").classList.remove("hidden");
-//     document.getElementById("others_posts_list").classList.add("hidden");
-//     const my_posts = await apiGetMyPosts(store.getToken());
-//     store.setMyPosts(my_posts);
-//     await populateMyPosts(my_posts);
-//     if(my_posts.length>0) addDeleteEventListener(my_posts);
+  document.getElementById(`my_posts_menu`).addEventListener("click", async (event) => {
+    // event.preventDefault();
+    // document.getElementById("my_posts_list").classList.remove("hidden");
+    // document.getElementById("others_posts_list").classList.add("hidden");
+    // const my_posts = await apiGetMyPosts(store.getToken());
+    // store.setMyPosts(my_posts);
+    // await populateMyPosts(my_posts);
+    // if(my_posts.length>0) addDeleteEventListener(my_posts);
 
-//   });
+  });
 
-//   document.getElementById(`others_posts_menu`).addEventListener("click", async (event) => {
-//     event.preventDefault();
-//     document.getElementById("others_posts_list").classList.remove("hidden");
-//     document.getElementById("my_posts_list").classList.add("hidden");
-//     const others_posts = await apiGetOthersPosts(store.getToken());
-//     // console.log({ others_posts });
-//     store.setOthersPosts(others_posts);
-//     populateOthersPosts(others_posts);
+  document.getElementById(`others_posts_menu`).addEventListener("click", async (event) => {
+    // event.preventDefault();
+    // document.getElementById("others_posts_list").classList.remove("hidden");
+    // document.getElementById("my_posts_list").classList.add("hidden");
+    // const others_posts = await apiGetOthersPosts(store.getToken());
+    // // console.log({ others_posts });
+    // store.setOthersPosts(others_posts);
+    // populateOthersPosts(others_posts);
 
-//   });
+  });
 
-//   document.getElementById("create_post_execute").addEventListener("click", (event) => {
-//     event.preventDefault();
-//     const message = document.getElementById("post_message_input").value;
-//     const expiry_string = document.getElementById("post_expiry_input").value;
-//     createPost(message, expiry_string);
-//   });
-
-
-//   const my_profile = await apiGetMyProfile(store.getToken());
-//   store.setMyProfile(my_profile.profile);
-//   store.setMyKeys(my_profile.keys);
-
-//   trusted_by_usernames = my_profile.profile.trusted_by.map((item) => item.username);
-//   const many_profiles = await apiGetManyProfiles(store.getToken(), trusted_by_usernames);
-//   if (many_profiles instanceof Error) {
-//     // console.log({ many_profiles })
-//   }
-//   many_profiles.profiles.map((profile) => {
-//     store.setUserProfile(profile);
-//   });
-
-//   many_profiles.keys.map((key) => {
-//     store.setUserKeys(key);
-//   });
-
-//   const others_posts = await apiGetOthersPosts(store.getToken());
-//   // console.log({ others_posts });
-//   store.setOthersPosts(others_posts);
-//   await populateOthersPosts(others_posts);
-
-//   document.getElementById("posts_page_spinner").classList.add("hidden");
-//   document.getElementById("posts_page").classList.remove("hidden");
-
-// }
+  document.getElementById("create_post_execute").addEventListener("click", (event) => {
+    event.preventDefault();
+    // const message = document.getElementById("post_message_input").value;
+    // const expiry_string = document.getElementById("post_expiry_input").value;
+    // createPost(message, expiry_string);
+  });
 
 
-// window.onload = loadPostsEvents();
+  // const my_profile = await apiGetMyProfile(store.getToken());
+  // store.setMyProfile(my_profile.profile);
+  // store.setMyKeys(my_profile.keys);
+
+  // trusted_by_usernames = my_profile.profile.trusted_by.map((item) => item.username);
+  // const many_profiles = await apiGetManyProfiles(store.getToken(), trusted_by_usernames);
+  // if (many_profiles instanceof Error) {
+  //   // console.log({ many_profiles })
+  // }
+  // many_profiles.profiles.map((profile) => {
+  //   store.setUserProfile(profile);
+  // });
+
+  // many_profiles.keys.map((key) => {
+  //   store.setUserKeys(key);
+  // });
+
+  // const others_posts = await apiGetOthersPosts(store.getToken());
+  // // console.log({ others_posts });
+  // store.setOthersPosts(others_posts);
+  // await populateOthersPosts(others_posts);
+
+  // document.getElementById("posts_page_spinner").classList.add("hidden");
+  // document.getElementById("posts_page").classList.remove("hidden");
+
+}
+
+
+window.onload = loadPostsEvents();

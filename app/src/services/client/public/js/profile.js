@@ -5,12 +5,7 @@ const { encrypt, decrypt } = require("./aes");
 const { exit } = require("./auth");
 const store = require("./store");
 const { 
-  apiInvite, 
-  apiCheckSeed256, 
-  apiEditProfile, 
-  apiGetMyProfile, 
-  apiProfileGenesis,
-  apiDeleteMyProfile
+
 } = require("./api");
 
 
@@ -54,88 +49,88 @@ function createContactInfo(cipher_info, derivation_scheme, profile_parent_xprv) 
 
 // COMPOSITES
 async function initProfileState() {
-  const my_profile_and_keys = await apiGetMyProfile(store.getToken());
+//   const my_profile_and_keys = await apiGetMyProfile(store.getToken());
 
-  if (my_profile_and_keys instanceof Error) {
-    if (my_profile_and_keys.name === "404" && my_profile_and_keys.message.startsWith("No profile")) {
-      // create new profile
-      const my_recipient_xpub = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']["xprv"], 0, 0)['xpub'];
-      const new_profile_and_keys = await apiProfileGenesis(my_recipient_xpub, token);
-      if (new_profile_and_keys instanceof Error) {
-        console.error("ERROR AT initProfileState - apiProfileGenesis");
-        console.error({ e });
-      }
-      return new_profile_and_keys;
-    }
-    else {
-      console.error("ERROR at initProfileState");
-      console.error({ my_profile_and_keys });
-    }
-  }
+//   if (my_profile_and_keys instanceof Error) {
+//     if (my_profile_and_keys.name === "404" && my_profile_and_keys.message.startsWith("No profile")) {
+//       // create new profile
+//       const my_recipient_xpub = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']["xprv"], 0, 0)['xpub'];
+//       const new_profile_and_keys = await apiProfileGenesis(my_recipient_xpub, token);
+//       if (new_profile_and_keys instanceof Error) {
+//         console.error("ERROR AT initProfileState - apiProfileGenesis");
+//         console.error({ e });
+//       }
+//       return new_profile_and_keys;
+//     }
+//     else {
+//       console.error("ERROR at initProfileState");
+//       console.error({ my_profile_and_keys });
+//     }
+//   }
 
-  return my_profile_and_keys;
+//   return my_profile_and_keys;
 }
 async function editComposite() {
-  const nickname = document.getElementById("nickname_input").value;
-  const status = document.getElementById("status_input").value;
-  const contact_info = document.getElementById("contact_input").value;
-  const cipher_info = (!contact_info=="") ? createCipherInfo(contact_info, store.getMyProfile()['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : undefined;
-  const new_profile = await apiEditProfile(nickname, cipher_info, status, store.getToken());
-  if (new_profile instanceof Error) {
-    console.error({ e: new_profile })
-  }
-  else {
-    store.setMyProfile(new_profile.profile);
-    const contact_info = (new_profile['profile']['contact_info'])?createContactInfo(new_profile["profile"]["cipher_info"], new_profile["profile"]['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : "No contact info added.";
-    displayProfile(new_profile.profile, contact_info);
-  }
-  window.location.reload()
+  // const nickname = document.getElementById("nickname_input").value;
+  // const status = document.getElementById("status_input").value;
+  // const contact_info = document.getElementById("contact_input").value;
+  // const cipher_info = (!contact_info=="") ? createCipherInfo(contact_info, store.getMyProfile()['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : undefined;
+  // const new_profile = await apiEditProfile(nickname, cipher_info, status, store.getToken());
+  // if (new_profile instanceof Error) {
+  //   console.error({ e: new_profile })
+  // }
+  // else {
+  //   store.setMyProfile(new_profile.profile);
+  //   const contact_info = (new_profile['profile']['contact_info'])?createContactInfo(new_profile["profile"]["cipher_info"], new_profile["profile"]['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : "No contact info added.";
+  //   displayProfile(new_profile.profile, contact_info);
+  // }
+  // window.location.reload()
 }
 async function importKeys() {
-  const seed = document.getElementById("import_keys_input").value;
-  const password = document.getElementById("import_keys_password_input").value;
+  // const seed = document.getElementById("import_keys_input").value;
+  // const password = document.getElementById("import_keys_password_input").value;
 
-  const triple_pass256 =  store.getTriplePass256();
-  // if(!triple_pass256) {
-  //   window.location.href = "/login";
+  // const triple_pass256 =  store.getTriplePass256();
+  // // if(!triple_pass256) {
+  // //   window.location.href = "/login";
+  // // }
+  // const round1 =  crypto.createHash('sha256').update(password).digest('hex');
+  // const round2 =  crypto.createHash('sha256').update(round1).digest('hex');
+  // const round3 =  crypto.createHash('sha256').update(round2).digest('hex');
+
+  // if(triple_pass256 != round3) {
+  //   alert("Incorrect password");
+  //   return false;
   // }
-  const round1 =  crypto.createHash('sha256').update(password).digest('hex');
-  const round2 =  crypto.createHash('sha256').update(round1).digest('hex');
-  const round3 =  crypto.createHash('sha256').update(round2).digest('hex');
 
-  if(triple_pass256 != round3) {
-    alert("Incorrect password");
-    return false;
-  }
+  // const status = await apiCheckSeed256(store.getToken(), seed, store.getUsername(), password);
+  // if (status instanceof Error) {
+  //   console.error({ apiCheckSeed256: status })
+  // }
+  // else if (status) {
+  //   document.getElementById("import_keys_input").value = "";
+  //   document.getElementById("import_keys_password_input").value = "";
 
-  const status = await apiCheckSeed256(store.getToken(), seed, store.getUsername(), password);
-  if (status instanceof Error) {
-    console.error({ apiCheckSeed256: status })
-  }
-  else if (status) {
-    document.getElementById("import_keys_input").value = "";
-    document.getElementById("import_keys_password_input").value = "";
+  //   const root = await bitcoin.seed_root(seed);
+  //   const parent_128 = bitcoin.derive_parent_128(root);
 
-    const root = await bitcoin.seed_root(seed);
-    const parent_128 = bitcoin.derive_parent_128(root);
-
-    if (!store.setParent128(parent_128, store.getUsername(), password)) {
-      console.error("Error setting parent_128 key.")
-      return false;
-    }
-    if (!store.setParentKeys(parent_128['xprv'])) {
-      console.error("Error setting parent usecase keys.")
-      return false;
-    }
-    else {
-      alert("Successfully Imported Keys");
-    }
-  }
-  else {
-    alert("Incorrect Seed!!!");
-  }
-  document.getElementById("close_import_keys_modal").click();
-  // window.location.reload();
+  //   if (!store.setParent128(parent_128, store.getUsername(), password)) {
+  //     console.error("Error setting parent_128 key.")
+  //     return false;
+  //   }
+  //   if (!store.setParentKeys(parent_128['xprv'])) {
+  //     console.error("Error setting parent usecase keys.")
+  //     return false;
+  //   }
+  //   else {
+  //     alert("Successfully Imported Keys");
+  //   }
+  // }
+  // else {
+  //   alert("Incorrect Seed!!!");
+  // }
+  // document.getElementById("close_import_keys_modal").click();
+  // // window.location.reload();
 
 }
 
@@ -150,39 +145,39 @@ async function loadProfileEvents() {
 
   switch (endpoint) {
     case "profile":
-      document.getElementById("profile_username").textContent = store.getUsername();
+      // document.getElementById("profile_username").textContent = store.getUsername();
 
-      if (!localStorage.getItem(`${store.getUsername()}_parent_128`)) {
-        document.getElementById("import_keys_button").click();
-      }
+      // if (!localStorage.getItem(`${store.getUsername()}_parent_128`)) {
+      //   document.getElementById("import_keys_button").click();
+      // }
 
       document.getElementById("exit").addEventListener("click", (event) => {
         event.preventDefault();
         exit();
       });
 
-      const init_profile = await initProfileState();
-      if (init_profile instanceof Error) {
-        alert("Error initializing profile state")
-      }
-      store.setMyProfile(init_profile['profile']);
-      store.setMyKeys(init_profile['keys']);
+      // const init_profile = await initProfileState();
+      // if (init_profile instanceof Error) {
+      //   alert("Error initializing profile state")
+      // }
+      // store.setMyProfile(init_profile['profile']);
+      // store.setMyKeys(init_profile['keys']);
       
-      const contact_info = (store.getParentKeys() && init_profile['profile']['cipher_info']) ? 
-        createContactInfo(init_profile['profile']['cipher_info'], init_profile['profile']['derivation_scheme'], store.getParentKeys()['profile_parent']['xprv']) :
-        (init_profile['profile']['cipher_info']) ? 
-          init_profile['profile']['cipher_info'] : 
-          "No contact info added.";
+      // const contact_info = (store.getParentKeys() && init_profile['profile']['cipher_info']) ? 
+      //   createContactInfo(init_profile['profile']['cipher_info'], init_profile['profile']['derivation_scheme'], store.getParentKeys()['profile_parent']['xprv']) :
+      //   (init_profile['profile']['cipher_info']) ? 
+      //     init_profile['profile']['cipher_info'] : 
+      //     "No contact info added.";
       
-      displayProfile(init_profile['profile'], contact_info);
+      // displayProfile(init_profile['profile'], contact_info);
 
-      if (contact_info === "No contact info added.") {
-        alert("Add come cypher contact info!")
-        document.getElementById("edit_button").click();
-      }
+      // if (contact_info === "No contact info added.") {
+      //   alert("Add come cypher contact info!")
+      //   document.getElementById("edit_button").click();
+      // }
 
-      document.getElementById("profile_page_spinner").classList.add("hidden");
-      document.getElementById("profile_page").classList.remove("hidden");
+      // document.getElementById("profile_page_spinner").classList.add("hidden");
+      // document.getElementById("profile_page").classList.remove("hidden");
     
       /***
        * 

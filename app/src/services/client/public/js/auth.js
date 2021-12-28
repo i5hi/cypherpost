@@ -36,7 +36,7 @@ async function storeMnemonic() {
       post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
     };
     store.setMyKeyChain(keys);
-    const status = await getAllIdentities(keys.identity);
+    const status = await downloadAllIdentities(keys.identity);
     if (status instanceof Error) {
       alert("Error getting identities!")
       return false;
@@ -50,11 +50,6 @@ async function storeMnemonic() {
   }
 }
 
-// GLOBAL
-async function exit() {
-  sessionStorage.clear();
-  window.location.href = web_url;
-}
 // COMPOSITES
 async function registerComposite() {
   const username = document.getElementById("register_username").value.toLowerCase();
@@ -72,12 +67,12 @@ async function registerComposite() {
     return false;
   }
   else {
-    alert("SAUCE! You are now registered!");
+    alert("SUCCESS! You are now registered!");
     return true;
   }
 }
 async function resetComposite() {
-  const seed = document.getElementById("reset_seed").value;
+  const mnemonic = document.getElementById("reset_seed").value;
   const password = document.getElementById("reset_pass").value;
   const confirm = document.getElementById("reset_confirm_pass").value;
 
@@ -95,14 +90,25 @@ async function resetComposite() {
       post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
     };
     store.setMyKeyChain(keys);
-    const status = await getAllIdentities(keys.identity);
-    if (status instanceof Error) {
+
+    const identities = await downloadAllIdentities(keys.identity);
+    if (identities instanceof Error) {
       alert("Error getting identities!")
       return false;
     };
-    if (status)
+    const identity_matches = store.getIdentities().filter(identity=>{
+      if (identity.xpub === keys.identity['xpub']) {
+        return identity;
+      }
+    });
+    // if they are more than 1 something is wrong
+    if (identity_matches.length === 1)
       return store.setMnemonic(mnemonic, password);
-    else return status;
+    else 
+      console.error({identity_matches})
+      alert("No identity matches! Redirecting to Register...");
+      window.location.href = "registration"
+      return false;      
   } else {
     alert("Passwords do not match!");
     return false;
@@ -113,7 +119,7 @@ async function loginComposite() {
   const password = document.getElementById("login_pass").value;
   document.getElementById("login_pass").value = "";
   const mnemonic = store.getMnemonic(password);
-  if(mnemonic instanceof Error){
+  if (mnemonic instanceof Error) {
     alert("Incorrect password!");
     return false;
   }
@@ -126,7 +132,7 @@ async function loginComposite() {
       preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
       post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
     };
-    alert("SAUCE! Decrypted Mnemonic!");
+    alert("SUCCESS! Decrypted Mnemonic!");
     return store.setMyKeyChain(keys);
   }
   else {
@@ -135,7 +141,7 @@ async function loginComposite() {
   };
 }
 
-async function getAllIdentities(identity_parent) {
+async function downloadAllIdentities(identity_parent) {
   const response = await apiIdentityAll(identity_parent);
   if (response instanceof Error) {
     alert(response.message);
@@ -165,7 +171,6 @@ async function loadAuthEvents() {
         event.preventDefault();
         window.location.href = "registration";
       });
-      getAllIdentities();
       break;
     case "login":
       const status = localStorage.getItem("my_mnemonic");
@@ -177,9 +182,12 @@ async function loadAuthEvents() {
       document.getElementById("login_button").addEventListener("click", async (event) => {
         event.preventDefault();
         const status = await loginComposite();
-        if (status) await loadInitialState();
-        else alert("Login Init failed!");
-        await checkInitialState();
+        if (status) {
+          await loadInitialState();
+          await checkInitialState();
+          window.location.href = "posts"
+        }
+        else alert("Login failed!");
       });
       break;
     case "registration":
@@ -201,28 +209,43 @@ async function loadAuthEvents() {
       document.getElementById("register_button").addEventListener("click", async (event) => {
         event.preventDefault();
         const status = await registerComposite();
-        if (status) await loadInitialState();
-        else alert("Registration init failed!");
-        await checkInitialState();
+        if (status) {
+          await loadInitialState();
+          await checkInitialState();
+          window.location.href = "profile"  
+        }
+        else alert("Registration failed!");
+
       });
       break;
     case "reset":
       document.getElementById("reset_button").addEventListener("click", async (event) => {
         event.preventDefault();
         const status = await resetComposite();
-        if (status) await loadInitialState();
+        if (status) 
+        {
+          await loadInitialState();
+          await checkInitialState();
+          window.location.href = "posts"
+        }
         else alert("Reset failed!");
-        await checkInitialState();
       });
       break;
     default:
       break;
   }
 }
+
+// GLOBAL
+async function exit() {
+  sessionStorage.clear();
+  window.location.href = web_url;
+}
+
 window.onload = loadAuthEvents();
 
 module.exports = {
-  exit
+ exit
 }
 /**
  * test user
