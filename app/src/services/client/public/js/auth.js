@@ -30,10 +30,11 @@ async function storeMnemonic() {
     const seed_root = await bitcoin.seed_root(mnemonic);
     const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
     const keys = {
+      cypherpost: cypherpost_parent,
       identity: bitcoin.derive_identity_parent(cypherpost_parent['xprv']),
-      profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
-      preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
-      post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
+      // profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
+      // preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
+      // post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
     };
     store.setMyKeyChain(keys);
     const status = await downloadAllIdentities(keys.identity);
@@ -84,10 +85,8 @@ async function resetComposite() {
     const seed_root = await bitcoin.seed_root(mnemonic);
     const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
     const keys = {
+      cypherpost: cypherpost_parent,
       identity: bitcoin.derive_identity_parent(cypherpost_parent['xprv']),
-      profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
-      preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
-      post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
     };
     store.setMyKeyChain(keys);
 
@@ -127,10 +126,11 @@ async function loginComposite() {
     const seed_root = await bitcoin.seed_root(mnemonic);
     const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
     keys = {
+      cypherpost: cypherpost_parent,
       identity: bitcoin.derive_identity_parent(cypherpost_parent['xprv']),
-      profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
-      preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
-      post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
+      // profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
+      // preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
+      // post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
     };
     alert("SUCCESS! Decrypted Mnemonic!");
     return store.setMyKeyChain(keys);

@@ -118,13 +118,13 @@ async function checkInitialState() {
   // const has others_profile = (others_profile.profiles.length);
   let notifications = {
     profile:{
-      msg: "Profile",
+      msg: "Profile complete.",
     },
     network:{
-      msg: "Network",
+      msg: "Network.",
     },
     posts:{
-      msg: "Posts",
+      msg: "No Post updates.",
     }
   };
 

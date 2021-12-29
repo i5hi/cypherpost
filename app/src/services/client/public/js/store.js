@@ -23,12 +23,12 @@ const bitcoin = require("./bitcoin");
 
 
 function setIdentities(identities) {
-  sessionStorage.setItem("identities", JSON.stringify(identities));
+  sessionStorage.setItem("all_identities", JSON.stringify(identities));
   return true;
 
 }
 function getIdentities() {
-  const identities = sessionStorage.getItem("identities");
+  const identities = sessionStorage.getItem("all_identities");
   return (identities) ? JSON.parse(identities) : null
 }
 

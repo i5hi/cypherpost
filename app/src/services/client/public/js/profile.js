@@ -4,134 +4,121 @@ const bitcoin = require("./bitcoin");
 const { encrypt, decrypt } = require("./aes");
 const { exit } = require("./auth");
 const store = require("./store");
-const { 
-
+const {
+  apiProfileSelf, apiUpdateProfile
 } = require("./api");
+const api = require("./api");
 
+
+const INIT_DERIVATION_PATH = "m/1h/0h/0h";
 
 
 // DISPLAY
-function  displayProfile(profile, contact_info) {
-  document.getElementById("profile_nickname").textContent = profile.nickname;
-  document.getElementById("profile_username").textContent = profile.username;
-  document.getElementById("profile_status").textContent = profile.status;
-  document.getElementById("profile_trusting").textContent = profile.trusting.length;
-  document.getElementById("profile_trusted_by").textContent = profile.trusted_by.length;
-  document.getElementById("profile_contact").textContent = contact_info;
-  // let  = [];
-  // let my_trusted_by =  [];
-  const my_trusting = profile.trusting.map((item)=>(item.username));
-  const my_trusted_by = profile.trusted_by.map((item)=>(item.username));
+function displayProfile(plain_json) {
+  document.getElementById("profile_nickname").textContent = plain_json.nickname;
+  document.getElementById("profile_status").textContent = plain_json.status;
+  document.getElementById("profile_contact").textContent = plain_json.contact;
 
-  (my_trusting.length>0)?
-  document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${my_trusting.toString().replaceAll("," , ", ")}.</span>` :
-  document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>` ;
-  (my_trusted_by.length>0)?
-  document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${my_trusted_by.toString().replaceAll("," , ", ")}.</span>` :
-  document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
+
+  // document.getElementById("profile_trusting").textContent = plain_json.trusting.length;
+  // document.getElementById("profile_trusted_by").textContent = plain_json.trusted_by.length;
+
+  // const my_trusting = profile.trusting.map((item) => (item.username));
+  // const my_trusted_by = profile.trusted_by.map((item) => (item.username));
+
+  // (my_trusting.length > 0) ?
+  //   document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${my_trusting.toString().replaceAll(",", ", ")}.</span>` :
+  //   document.getElementById("profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>`;
+  // (my_trusted_by.length > 0) ?
+  //   document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${my_trusted_by.toString().replaceAll(",", ", ")}.</span>` :
+  //   document.getElementById("profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
 
 }
 
 
 // HELPERS
 
-function createCipherInfo(contact_info, derivation_scheme, profile_parent_xprv) {
-  const revoke = parseInt(derivation_scheme.split("/")[2].replaceAll("'", ""));
-  const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
-  return encrypt(contact_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
-}
-function createContactInfo(cipher_info, derivation_scheme, profile_parent_xprv) {
-  const revoke = (derivation_scheme.includes("'"))?parseInt(derivation_scheme.split("/")[2].replaceAll("'", "")):parseInt(derivation_scheme.split("/")[2].replaceAll("h", ""));
-  const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
-  return decrypt(cipher_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
-}
+// function createCypherJSON(plain_json, encryption_key) {
+//   return encrypt(plain_json, crypto.createHash('sha256').encryption_key).digest('hex'));
+// }
+// function createContactInfo(cipher_info, derivation_scheme, profile_parent_xprv) {
+//   const revoke = (derivation_scheme.includes("'")) ? parseInt(derivation_scheme.split("/")[2].replaceAll("'", "")) : parseInt(derivation_scheme.split("/")[2].replaceAll("h", ""));
+//   const contact_encryption_key = bitcoin.derive_child_indexes(profile_parent_xprv, 0, revoke);
+//   return decrypt(cipher_info, crypto.createHash('sha256').update(contact_encryption_key["xprv"]).digest('hex'));
+// }
 
 
 // COMPOSITES
 async function initProfileState() {
-//   const my_profile_and_keys = await apiGetMyProfile(store.getToken());
+  const keys = store.getMyKeyChain();
+  console.log({keys})
+  const my_profile_and_keys = await apiProfileSelf(keys.identity);
+  if (my_profile_and_keys instanceof Error) return my_profile_and_keys;
 
-//   if (my_profile_and_keys instanceof Error) {
-//     if (my_profile_and_keys.name === "404" && my_profile_and_keys.message.startsWith("No profile")) {
-//       // create new profile
-//       const my_recipient_xpub = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']["xprv"], 0, 0)['xpub'];
-//       const new_profile_and_keys = await apiProfileGenesis(my_recipient_xpub, token);
-//       if (new_profile_and_keys instanceof Error) {
-//         console.error("ERROR AT initProfileState - apiProfileGenesis");
-//         console.error({ e });
-//       }
-//       return new_profile_and_keys;
-//     }
-//     else {
-//       console.error("ERROR at initProfileState");
-//       console.error({ my_profile_and_keys });
-//     }
-//   }
+  store.setMyProfile(my_profile_and_keys);
 
-//   return my_profile_and_keys;
+  console.log({my_profile_and_keys})
+  if (my_profile_and_keys.profile.cypher_json) {
+    const decryption_key = crypto
+    .createHash("sha256")
+    .update(
+      bitcoin.derive_hardened_str(keys.cypherpost.xprv, my_profile_and_keys.profile.derivation_scheme)['xprv']
+    )
+    .digest('hex');
+    const plain_json = JSON.parse(decrypt(my_profile_and_keys.profile.cypher_json, decryption_key));
+    document.getElementById("nickname_input").value = plain_json.nickname || null;
+    document.getElementById("status_input").value = plain_json.status || null;
+    document.getElementById("contact_input").value = plain_json.contact || null;
+    console.log(plain_json);
+    displayProfile(plain_json);
+  }
+  else {
+    alert("Add profile data.")
+  }
+
+  return true;
 }
 async function editComposite() {
-  // const nickname = document.getElementById("nickname_input").value;
-  // const status = document.getElementById("status_input").value;
-  // const contact_info = document.getElementById("contact_input").value;
-  // const cipher_info = (!contact_info=="") ? createCipherInfo(contact_info, store.getMyProfile()['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : undefined;
-  // const new_profile = await apiEditProfile(nickname, cipher_info, status, store.getToken());
-  // if (new_profile instanceof Error) {
-  //   console.error({ e: new_profile })
-  // }
-  // else {
-  //   store.setMyProfile(new_profile.profile);
-  //   const contact_info = (new_profile['profile']['contact_info'])?createContactInfo(new_profile["profile"]["cipher_info"], new_profile["profile"]['derivation_scheme'], store.getParentKeys()["profile_parent"]['xprv']) : "No contact info added.";
-  //   displayProfile(new_profile.profile, contact_info);
-  // }
-  // window.location.reload()
+  const keys = store.getMyKeyChain();
+  const derivation_scheme = store.getMyProfile().profile['derivation_scheme'] || INIT_DERIVATION_PATH;
+
+  console.log({derivation_scheme})
+  const nickname = document.getElementById("nickname_input").value;
+  const status = document.getElementById("status_input").value;
+  const contact = document.getElementById("contact_input").value;
+  const plain_json = {
+    nickname,
+    status,
+    contact
+  };
+
+  const bitcoin_ekey = bitcoin.derive_hardened_str(keys.cypherpost.xprv, derivation_scheme)['xprv'];
+  console.log({bitcoin_ekey})
+
+  const encryption_key = crypto
+    .createHash("sha256")
+    .update(
+      bitcoin_ekey
+    )
+    .digest('hex');
+
+  const cypher_json = encrypt(JSON.stringify(plain_json), encryption_key);
+  
+  const new_profile = await apiUpdateProfile(keys.identity, cypher_json, derivation_scheme);
+  if (new_profile instanceof Error) {
+    console.error({ e: new_profile })
+  }
+  else { 
+    window.location.reload()
+
+  }
 }
-async function importKeys() {
-  // const seed = document.getElementById("import_keys_input").value;
-  // const password = document.getElementById("import_keys_password_input").value;
 
-  // const triple_pass256 =  store.getTriplePass256();
-  // // if(!triple_pass256) {
-  // //   window.location.href = "/login";
-  // // }
-  // const round1 =  crypto.createHash('sha256').update(password).digest('hex');
-  // const round2 =  crypto.createHash('sha256').update(round1).digest('hex');
-  // const round3 =  crypto.createHash('sha256').update(round2).digest('hex');
-
-  // if(triple_pass256 != round3) {
-  //   alert("Incorrect password");
-  //   return false;
-  // }
-
-  // const status = await apiCheckSeed256(store.getToken(), seed, store.getUsername(), password);
-  // if (status instanceof Error) {
-  //   console.error({ apiCheckSeed256: status })
-  // }
-  // else if (status) {
-  //   document.getElementById("import_keys_input").value = "";
-  //   document.getElementById("import_keys_password_input").value = "";
-
-  //   const root = await bitcoin.seed_root(seed);
-  //   const parent_128 = bitcoin.derive_parent_128(root);
-
-  //   if (!store.setParent128(parent_128, store.getUsername(), password)) {
-  //     console.error("Error setting parent_128 key.")
-  //     return false;
-  //   }
-  //   if (!store.setParentKeys(parent_128['xprv'])) {
-  //     console.error("Error setting parent usecase keys.")
-  //     return false;
-  //   }
-  //   else {
-  //     alert("Successfully Imported Keys");
-  //   }
-  // }
-  // else {
-  //   alert("Incorrect Seed!!!");
-  // }
-  // document.getElementById("close_import_keys_modal").click();
-  // // window.location.reload();
-
+function peekSeed() {
+  const pass = document.getElementById("peek_seed_password_input").value;
+  document.getElementById("peek_seed_password_input").value = "";
+  const mnemonic = store.getMnemonic(pass);
+  return mnemonic;
 }
 
 // EVENT LISTENERS
@@ -145,30 +132,34 @@ async function loadProfileEvents() {
 
   switch (endpoint) {
     case "profile":
-      // document.getElementById("profile_username").textContent = store.getUsername();
-
-      // if (!localStorage.getItem(`${store.getUsername()}_parent_128`)) {
-      //   document.getElementById("import_keys_button").click();
-      // }
 
       document.getElementById("exit").addEventListener("click", (event) => {
         event.preventDefault();
         exit();
       });
 
-      // const init_profile = await initProfileState();
-      // if (init_profile instanceof Error) {
-      //   alert("Error initializing profile state")
-      // }
+      const my_identity = store.getIdentities().identities.filter(identity => {
+        if (identity.xpub === store.getMyKeyChain().identity.xpub) {
+          return identity;
+        }
+      });
+
+      document.getElementById("profile_username").textContent = `@${my_identity[0].username}`;
+
+      const init_profile = await initProfileState();
+      if (init_profile instanceof Error) {
+        console.error({ init_profile });
+        alert("Error initializing profile state")
+      }
       // store.setMyProfile(init_profile['profile']);
       // store.setMyKeys(init_profile['keys']);
-      
+
       // const contact_info = (store.getParentKeys() && init_profile['profile']['cipher_info']) ? 
       //   createContactInfo(init_profile['profile']['cipher_info'], init_profile['profile']['derivation_scheme'], store.getParentKeys()['profile_parent']['xprv']) :
       //   (init_profile['profile']['cipher_info']) ? 
       //     init_profile['profile']['cipher_info'] : 
       //     "No contact info added.";
-      
+
       // displayProfile(init_profile['profile'], contact_info);
 
       // if (contact_info === "No contact info added.") {
@@ -176,9 +167,7 @@ async function loadProfileEvents() {
       //   document.getElementById("edit_button").click();
       // }
 
-      // document.getElementById("profile_page_spinner").classList.add("hidden");
-      // document.getElementById("profile_page").classList.remove("hidden");
-    
+
       /***
        * 
        * 
@@ -192,43 +181,35 @@ async function loadProfileEvents() {
         editComposite();
       });
 
+      document.getElementById("peek_seed_button").addEventListener("click", async (event) => {
+        event.preventDefault();
+        alert("Peeking into seed.");
+      });
+
+      document.getElementById("peek_seed_execute").addEventListener("click", async (event) => {
+        event.preventDefault();
+        alert("Peeking into seed w/peek_seed_password_input");
+        alert(peekSeed());
+      });
       /**
        * MODAL EXECUTE BUTTON
        */
-      document.getElementById("import_keys_execute").addEventListener("click", async (event) => {
-        event.preventDefault();
-        importKeys();
-      });
-
-      document.getElementById("invite_button").addEventListener("click", async (event) => {
-        event.preventDefault();
-        const invite_link = await apiInvite(store.getUsername(), store.getToken());
-        if (invite_link instanceof Error) {
-          console.error({ invite_link })
-        }
-        else {
-          document.getElementById("invite_link_space").textContent = invite_link;
-        }
-      });
-      document.getElementById("invite_link_space").addEventListener("click", (event) => {
-        event.preventDefault();
-        var copyText = document.getElementById("invite_link_space");
-        navigator.clipboard.writeText(copyText.textContent);
-        alert("Copied invitation link to clipboard.")
-      });
 
       document.getElementById("profile_delete_button").addEventListener("click", (event) => {
         event.preventDefault();
         if (confirm(`Deleting your profile is irreversible!\n Are you sure?`)) {
           apiDeleteMyProfile(store.getToken());
         }
-        else{
-          return; 
+        else {
+          return;
         }
       });
 
 
-     
+      document.getElementById("profile_page_spinner").classList.add("hidden");
+      document.getElementById("profile_page").classList.remove("hidden");
+
+
       break;
 
     default:
@@ -241,7 +222,7 @@ window.onload = loadProfileEvents();
 
 
 module.exports = {
- 
+
 }
 
 /**

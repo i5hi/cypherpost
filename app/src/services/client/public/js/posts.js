@@ -318,8 +318,8 @@ async function loadPostsEvents() {
   // store.setOthersPosts(others_posts);
   // await populateOthersPosts(others_posts);
 
-  // document.getElementById("posts_page_spinner").classList.add("hidden");
-  // document.getElementById("posts_page").classList.remove("hidden");
+  document.getElementById("posts_page_spinner").classList.add("hidden");
+  document.getElementById("posts_page").classList.remove("hidden");
 
 }
 
