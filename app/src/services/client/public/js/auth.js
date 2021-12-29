@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { loadInitialState, checkInitialState } = require('./init');
+const { loadInitialState } = require('./init');
 const store = require("./store");
 const bitcoin = require("./bitcoin");
 const {
@@ -93,7 +93,7 @@ async function resetComposite() {
 
     const identities = await downloadAllIdentities(keys.identity);
     if (identities instanceof Error) {
-      alert("Error getting identities!")
+      alert("Error getting identities!")      
       return false;
     };
     const identity_matches = store.getIdentities().filter(identity=>{
@@ -171,6 +171,10 @@ async function loadAuthEvents() {
         event.preventDefault();
         window.location.href = "registration";
       });
+      document.getElementById("home_reset").addEventListener("click", (event) => {
+        event.preventDefault();
+        window.location.href = "reset";
+      });
       break;
     case "login":
       const status = localStorage.getItem("my_mnemonic");
@@ -184,8 +188,7 @@ async function loadAuthEvents() {
         const status = await loginComposite();
         if (status) {
           await loadInitialState();
-          await checkInitialState();
-          window.location.href = "posts"
+          window.location.href = "notifications"
         }
         else alert("Login failed!");
       });
@@ -211,8 +214,7 @@ async function loadAuthEvents() {
         const status = await registerComposite();
         if (status) {
           await loadInitialState();
-          await checkInitialState();
-          window.location.href = "profile"  
+          window.location.href = "notifications"  
         }
         else alert("Registration failed!");
 
@@ -225,8 +227,7 @@ async function loadAuthEvents() {
         if (status) 
         {
           await loadInitialState();
-          await checkInitialState();
-          window.location.href = "posts"
+          window.location.href = "notifications"
         }
         else alert("Reset failed!");
       });

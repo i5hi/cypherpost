@@ -93,7 +93,19 @@ async function checkInitialState() {
   const keys = store.getMyKeyChain();
   const ids = store.getIdentities();
   const badges = store.getAllBadges();
-  console.log({badges})
+  if(badges instanceof Error || !badges){
+    console.error({badges});
+  }
+
+  console.log({badges});
+
+  const my_network = badges.badges.filter((badge)=>{
+    if(badge.to === keys.identity.xpub || badge.from === keys.identity.xpub){
+      return badge;
+    };
+  })
+  console.log({my_network})
+
   const my_profile = store.getMyProfile();
   const my_posts = store.getMyPosts();
   const others_posts = store.getOthersPosts();
@@ -102,19 +114,30 @@ async function checkInitialState() {
   const has_profile_keys = (my_profile.keys.length > 0);
   const has_posts = (my_posts.posts.length > 0);
   const has_others_posts = (others_posts.posts.length > 0);
+  const has_network = (my_network.length>0);
   // const has others_profile = (others_profile.profiles.length);
-  if (!has_posts) {
-    alert("You have not created any posts.");
+  let notifications = {
+    profile:{
+      msg: "Profile",
+    },
+    network:{
+      msg: "Network",
+    },
+    posts:{
+      msg: "Posts",
+    }
+  };
+
+  if (!has_network) {
+    notifications.network.msg = "You are not connected to anyone yet.";
   }
-  if (!has_others_posts) {
-    alert("You cannot view anyones posts. Build the trust of other clients to gain visibility of their posts.");
+  if (!has_posts && !has_others_posts) {
+    notifications.posts.msg = "You have 0 live posts.";
   }
   if (!has_profile) {
-    alert("You have not initialized a profile.");
+    notifications.profile.msg = "You have not created a profile yet.";
   }
-  if (!has_profile_keys) {
-    alert("You cannot view anyones profile. Build the trust of other clients to gain visibility of their posts.");
-  }
+  return notifications;
 
 }
 
