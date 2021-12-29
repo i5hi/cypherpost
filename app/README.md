@@ -33,5 +33,3 @@ Implementation of known e2ee protocols need not change, this proposal only sugge
 Servers can hold derivation schemes that are relavant to a users account to support account recovery. Menmonics and their subsequent seed/root key is never stored on any device; only the derived child at m/128' is stored on the device (either browser of mobile) and ideally encrypted with local PIN or password to protect from compromised devices. This new parent key can then be used to further derive keys for various other use-cases within the application.
 
 
-## Caveats
-

@@ -13,6 +13,18 @@ const store = new MongoProfileKeyStore();
 const uuid = new S5UID();
 
 export class CypherpostProfileKeys implements ProfileKeyInterface {
+  // improve these responses.  check mongo storage implementation too.
+  async removeAllProfileDecryptionKeyOfUser(xpub: string): Promise<boolean | Error> {
+   try{
+    let status = await store.removeAllGiver(xpub);
+    if (status instanceof Error) return status;
+    status = await store.removeAllReciever(xpub);
+    return status;
+   }
+   catch(e){
+     handleError(e);
+   }
+  }
 
   async addProfileDecryptionKeys(giver: string, key_update: ProfileKeyStoreUpdate[]): Promise<boolean | Error> {
     try {
@@ -57,7 +69,7 @@ export class CypherpostProfileKeys implements ProfileKeyInterface {
     return store.removeManyByReciever(giver, reciever);
   }
   async removeProfileDecryptionKeyByGiver(giver: string): Promise<boolean | Error> {
-    return store.removeAll(giver);
+    return store.removeAllGiver(giver);
   }
 
 }

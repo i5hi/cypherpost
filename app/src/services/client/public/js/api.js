@@ -62,6 +62,23 @@ async function apiIdentityAll(identity_parent){
 
 }
 
+async function apiIdentityDelete(identity_parent){
+  const nonce = Date.now();
+  const resource = "/identity";
+  const url = api_url + resource;
+  const method = "DELETE";
+  const body = {};
+
+  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
+  const headers = createRequestHeaders(identity_parent,nonce,signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response;
+
+}
+
 async function apiGetProfileSelf(identity_parent){
   const nonce = Date.now();
   const resource = "/profile/self";
@@ -199,4 +216,5 @@ module.exports = {
   apiPostsSelf: apiGetPostsSelf,
   apiPostsOthers: apiGetPostsOthers,
   apiAllBadges,
+  apiIdentityDelete
 }

@@ -43,6 +43,20 @@ const profile_key_schema = new mongoose.Schema(
 const profileKeyStore = mongoose.model("profile_key", profile_key_schema);
 // ------------------ '(◣ ◢)' ---------------------
 export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
+  async removeAllReciever(reciever: string): Promise<boolean | Error> {
+    try {
+      const query = { reciever };
+
+      const status = await profileKeyStore.deleteMany(query)
+      if (status instanceof mongoose.Error) {
+        return handleError(status);
+      }
+      if (status.deletedCount >= 1) return true;
+      else return false;
+    } catch (e) {
+      return handleError(e);
+    }
+  }
 
   async createMany(keys: ProfileDecryptionKey[]): Promise<boolean | Error> {
     try {
@@ -133,7 +147,7 @@ export class MongoProfileKeyStore implements ProfileDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async removeAll(giver: string): Promise<boolean | Error> {
+  async removeAllGiver(giver: string): Promise<boolean | Error> {
     try {
       const query = { giver };
 

@@ -1357,9 +1357,59 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     })
   });
 
-  describe.skip("GLOBAL", function () {
-    it("DELETES AN IDENTITY AND ALL ASSOCIATIONS", function () {
+  describe("GLOBAL", function () {
+    it("DELETES ALL CREATED IDENTITIES AND ALL ASSOCIATIONS", function (done) {
+      endpoint = "/api/v2/identity";
+      body = {};
+      nonce = Date.now();
+      request_signature = bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      chai
+        .request(server)
+        .delete(endpoint)
+        .set({
+          "x-client-xpub": a_key_set.identity_xpub,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+        });
 
+      nonce = Date.now();
+      request_signature = bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
+      chai
+        .request(server)
+        .delete(endpoint)
+        .set({
+          "x-client-xpub": b_key_set.identity_xpub,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+        });
+
+      nonce = Date.now();
+      request_signature = bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
+      chai
+        .request(server)
+        .delete(endpoint)
+        .set({
+          "x-client-xpub": c_key_set.identity_xpub,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          done();
+        });
+
+    });
+    it.skip("DUMPS ENTIRE DATABASE",function(done){
+      done();
     });
   });
 });

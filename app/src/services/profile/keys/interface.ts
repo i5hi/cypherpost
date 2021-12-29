@@ -10,6 +10,7 @@ export interface ProfileKeyInterface {
   findProfileDecryptionKeyByGiver(giver: string): Promise<ProfileDecryptionKey[] | Error>;
   removeProfileDecryptionKeyByReciever(giver: string, reciever: string): Promise<boolean | Error>;
   removeProfileDecryptionKeyByGiver(giver: string): Promise<boolean | Error>;
+  removeAllProfileDecryptionKeyOfUser(xpub: string): Promise<boolean | Error>;
 };
 
 export interface ProfileDecryptionKeyStore {
@@ -17,7 +18,8 @@ export interface ProfileDecryptionKeyStore {
   readByGiver(giver: string): Promise<ProfileDecryptionKey[] | Error>;
   readByReciever(reciever: string): Promise<ProfileDecryptionKey[] | Error>;
   removeManyByReciever(giver: string, reciever: string): Promise<boolean | Error>;
-  removeAll(giver: string): Promise<boolean | Error>;
+  removeAllGiver(giver: string): Promise<boolean | Error>;
+  removeAllReciever(reciever: string): Promise<boolean | Error>;
   updateOne(giver: string, reciever: string, decryption_key: string): Promise<boolean | Error>;
 }
 

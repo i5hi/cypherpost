@@ -5,9 +5,8 @@ const { encrypt, decrypt } = require("./aes");
 const { exit } = require("./auth");
 const store = require("./store");
 const {
-  apiProfileSelf, apiUpdateProfile
+  apiProfileSelf, apiUpdateProfile, apiIdentityDelete
 } = require("./api");
-const api = require("./api");
 
 
 const INIT_DERIVATION_PATH = "m/1h/0h/0h";
@@ -110,7 +109,6 @@ async function editComposite() {
   }
   else { 
     window.location.reload()
-
   }
 }
 
@@ -195,10 +193,14 @@ async function loadProfileEvents() {
        * MODAL EXECUTE BUTTON
        */
 
-      document.getElementById("profile_delete_button").addEventListener("click", (event) => {
+      document.getElementById("profile_delete_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        if (confirm(`Deleting your profile is irreversible!\n Are you sure?`)) {
-          apiDeleteMyProfile(store.getToken());
+        if (confirm(`Deleting your identity is irreversible!\nYou will lose all data associated with this identity.\nAre you sure?`)) {
+          const status = await apiIdentityDelete(store.getMyKeyChain().identity);
+          if(status instanceof Error)
+          console.log({status});
+          else
+          window.location.href = "/";
         }
         else {
           return;

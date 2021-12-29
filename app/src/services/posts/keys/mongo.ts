@@ -48,6 +48,20 @@ const post_key_schema = new mongoose.Schema(
 const postKeyStore = mongoose.model("post_key", post_key_schema);
 // ------------------ '(◣ ◢)' ---------------------
 export class MongoPostKeyStore implements PostDecryptionKeyStore {
+  async removeAllReciever(reciever: string): Promise<boolean | Error> {
+    try{
+    const query = { reciever };
+
+    const status = await postKeyStore.deleteMany(query)
+    if (status instanceof mongoose.Error) {
+      return handleError(status);
+    }
+    if (status.deletedCount >= 1) return true;
+    else return false;
+  } catch (e) {
+    return handleError(e);
+  }
+  }
 
   async createMany(keys: PostDecryptionKey[]): Promise<boolean | Error> {
     try {
@@ -181,7 +195,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async removeAll(giver: string): Promise<boolean | Error> {
+  async removeAllGiver(giver: string): Promise<boolean | Error> {
     try {
       const query = { giver };
 

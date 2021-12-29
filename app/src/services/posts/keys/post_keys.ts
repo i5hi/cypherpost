@@ -13,6 +13,17 @@ const store = new MongoPostKeyStore();
 const uuid = new S5UID();
 
 export class CypherpostPostKeys implements PostKeyInterface {
+  async removeAllPostDecryptionKeyOfUser(xpub: string): Promise<boolean | Error> {
+    try {
+      let status = await store.removeAllGiver(xpub);
+      if (status instanceof Error) return status;
+      status = await store.removeAllReciever(xpub);
+      return status;
+    }
+    catch (e) {
+      handleError(e);
+    }
+  }
   async addPostDecryptionKeys(giver: string, post_id: string, key_update: PostKeyStoreUpdate[]): Promise<boolean | Error> {
     try {
       let keys = [];
@@ -60,7 +71,7 @@ export class CypherpostPostKeys implements PostKeyInterface {
     return store.removeManyByReciever(giver, reciever);
   }
   async removePostDecryptionKeyByGiver(giver: string): Promise<boolean | Error> {
-    return store.removeAll(giver);
+    return store.removeAllGiver(giver);
   }
 
 }
