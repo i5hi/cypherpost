@@ -13,11 +13,11 @@ const store = new MongoPostKeyStore();
 const uuid = new S5UID();
 
 export class CypherpostPostKeys implements PostKeyInterface {
-  async removeAllPostDecryptionKeyOfUser(xpub: string): Promise<boolean | Error> {
+  async removeAllPostDecryptionKeyOfUser(pubkey: string): Promise<boolean | Error> {
     try {
-      let status = await store.removeAllGiver(xpub);
+      let status = await store.removeAllGiver(pubkey);
       if (status instanceof Error) return status;
-      status = await store.removeAllReciever(xpub);
+      status = await store.removeAllReciever(pubkey);
       return status;
     }
     catch (e) {

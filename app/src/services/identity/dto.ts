@@ -23,7 +23,7 @@ export async function identityMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
     const signature = request.headers['x-client-signature'];
-    const xpub = request.headers['x-client-xpub'];
+    const pubkey = request.headers['x-client-pubkey'];
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
@@ -31,10 +31,11 @@ export async function identityMiddleware(req, res, next) {
     const message = `${method} ${resource} ${body} ${nonce}`;
 
     console.log({message});
-    const pubkey = bitcoin.extract_ecdsa_pub(xpub);
-    if(pubkey instanceof Error) return pubkey;
+    console.log({signature});
+    console.log({pubkey});
     
-    let verified = bitcoin.verify(message, signature, pubkey);
+    let verified = await bitcoin.verify(message, signature, pubkey);
+    console.log({verified})
     if (verified instanceof Error) throw verified;
     if (!verified) throw{
       code: 401,
@@ -60,7 +61,7 @@ export async function handleRegistration(req, res) {
       }
     }
 
-    let status = await identity.register(request.body.username, request.headers['x-client-xpub']);
+    let status = await identity.register(request.body.username, request.headers['x-client-pubkey']);
     if (status instanceof Error) throw status;
     
     const response = {
@@ -123,16 +124,16 @@ export async function handleDeleteIdentity(req, res) {
     // badges
     // identities
 
-    const rm_posts = await posts.removeAllByOwner(request.headers['x-client-xpub']);
+    const rm_posts = await posts.removeAllByOwner(request.headers['x-client-pubkey']);
     if(rm_posts instanceof Error) throw rm_posts;
 
-    const rm_post_keys = await posts_keys.removeAllPostDecryptionKeyOfUser(request.headers['x-client-xpub']);
+    const rm_post_keys = await posts_keys.removeAllPostDecryptionKeyOfUser(request.headers['x-client-pubkey']);
     if (rm_post_keys instanceof Error) throw rm_post_keys;
 
-    const rm_badges = await badges.removeAllOfUser(request.headers['x-client-xpub'])
+    const rm_badges = await badges.removeAllOfUser(request.headers['x-client-pubkey'])
     if (rm_badges instanceof Error) throw rm_badges;
 
-    const rm_identity = await identity.remove(request.headers['x-client-xpub']);
+    const rm_identity = await identity.remove(request.headers['x-client-pubkey']);
     if (rm_identity instanceof Error) throw rm_identity;
     
     const response = {

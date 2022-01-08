@@ -85,16 +85,16 @@ export class MongoBadgeStore implements BadgeStore {
       return handleError(e);
     }
   }
-  async removeAll(xpub: string): Promise<boolean | Error> {
+  async removeAll(pubkey: string): Promise<boolean | Error> {
     try {
-      const giver_query = { giver : {$in: xpub} };
+      const giver_query = { giver : {$in: pubkey} };
 
       let status = await badgeStore.deleteMany(giver_query)
       if (status instanceof mongoose.Error) {
         return handleError(status);
       }
 
-      const reciever_query = { reciever : {$in: xpub} };
+      const reciever_query = { reciever : {$in: pubkey} };
 
       status = await badgeStore.deleteMany(reciever_query)
       if (status instanceof mongoose.Error) {

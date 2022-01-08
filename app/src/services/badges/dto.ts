@@ -19,7 +19,7 @@ export async function badgesMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
     const signature = request.headers['x-client-signature'];
-    const xpub = request.headers['x-client-xpub'];
+    const xpub = request.headers['x-client-pubkey'];
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
@@ -48,9 +48,9 @@ export async function handleGetMyBadges(req, res) {
       }
     }
 
-    const given = await badges.findByGiver(request.headers['x-client-xpub']);
+    const given = await badges.findByGiver(request.headers['x-client-pubkey']);
     if (given instanceof Error) throw given;
-    const recieved = await badges.findByReciever(request.headers['x-client-xpub']);
+    const recieved = await badges.findByReciever(request.headers['x-client-pubkey']);
     if (recieved instanceof Error) throw recieved;
 
     const response = {
@@ -108,7 +108,7 @@ export async function handleTrust(req, res) {
         message: "Trust in self implied."
       }
     }
-    let status = await badges.create(request.headers['x-client-xpub'], request.body.trusting, BadgeType.Trusted, request.headers['x-nonce'], request.body.signature);
+    let status = await badges.create(request.headers['x-client-pubkey'], request.body.trusting, BadgeType.Trusted, request.headers['x-nonce'], request.body.signature);
     if (status instanceof Error) throw status;
 
     const response = {
@@ -135,10 +135,10 @@ export async function handleRevokeTrust(req, res) {
       }
     }
 
-    let status = await badges.revoke(request.headers['x-client-xpub'], request.body.revoking, BadgeType.Trusted);
+    let status = await badges.revoke(request.headers['x-client-pubkey'], request.body.revoking, BadgeType.Trusted);
     if (status instanceof Error) throw status;
     // REMOVE ALL RELATED KEYS
-    status = await postKeys.removePostDecryptionKeyByReciever(request.headers['x-client-xpub'],request.body.revoking);
+    status = await postKeys.removePostDecryptionKeyByReciever(request.headers['x-client-pubkey'],request.body.revoking);
     if (status instanceof Error) throw status;
     
     const response = {

@@ -24,13 +24,20 @@ const ONE_HOUR = 60 * 60 * 1000;
 
 export class CypherpostIdentity implements IdentityInterface {
   async verify(xpub: string, message: string, signature: string): Promise<boolean | Error> {
-    const identity = await store.readOne(xpub, IdentityIndex.XPub);
+    if(!xpub.startsWith("xpub")){
+      return handleError({
+        code: 401,
+        message: "Invalid Xpub"
+      })
+    };
+    const identity = await store.readOne(xpub, IdentityIndex.Pubkey);
     if (identity instanceof Error) return identity;
 
-    const pubkey = bitcoin.extract_ecdsa_pub(identity.xpub);
+    const pubkey = await bitcoin.extract_ecdsa_pub(identity.pubkey);
     if(pubkey instanceof Error) return pubkey;
     
-    let verified = bitcoin.verify(message, signature, pubkey);
+    let verified = await bitcoin.verify(message, signature, pubkey);
+    if(verified instanceof Error) return  verified;
     if (!verified) return handleError({
       code: 401,
       message: "Invalid Request Signature."
@@ -42,7 +49,7 @@ export class CypherpostIdentity implements IdentityInterface {
     const new_identity: UserIdentity = {
       genesis: Date.now(),
       username,
-      xpub
+      pubkey: xpub
     };
 
     const status = await store.createOne(new_identity);

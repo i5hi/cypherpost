@@ -28,6 +28,11 @@ const post_schema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+    reference: {
+      type: String,
+      required: false,
+      index: true,
+    },
     cypher_json: {
       type: String,
     },

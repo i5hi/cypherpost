@@ -20,14 +20,14 @@ export async function postMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
     const signature = request.headers['x-client-signature'];
-    const xpub = request.headers['x-client-xpub'];
+    const pubkey = request.headers['x-client-pubkey'];
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
     const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
-    const status = await identity.verify(xpub, message, signature);
+    const status = await identity.verify(pubkey, message, signature);
     if (status instanceof Error) throw status;
     else next();
   }
@@ -49,7 +49,7 @@ export async function handleCreatePost(req, res) {
       }
     }
 
-    const id = await posts.create(req.headers['x-client-xpub'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
+    const id = await posts.create(req.headers['x-client-pubkey'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
     if (id instanceof Error) throw id;
 
     const response = {
@@ -74,21 +74,21 @@ export async function handleGetMyPosts(req, res) {
       }
     }
 
-    const ids_removed = await posts.removeAllExpiredByOwner(req.headers['x-client-xpub']);
+    const ids_removed = await posts.removeAllExpiredByOwner(req.headers['x-client-pubkey']);
     if (ids_removed instanceof Error) throw ids_removed;
 
     if(ids_removed.length>0)
     ids_removed.map((id)=>{
-      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],id);
+      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-pubkey'],id);
       if (status instanceof Error){ 
         console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", {status});
         throw status};
     });
 
-    const my_posts = await posts.findAllByOwner(req.headers['x-client-xpub']);
+    const my_posts = await posts.findAllByOwner(req.headers['x-client-pubkey']);
     if (my_posts instanceof Error) throw my_posts;
 
-    const my_posts_keys = await postKeys.findPostDecryptionKeyByGiver(req.headers['x-client-xpub']);
+    const my_posts_keys = await postKeys.findPostDecryptionKeyByGiver(req.headers['x-client-pubkey']);
     if (my_posts_keys instanceof Error) throw my_posts_keys;
 
     const response = {
@@ -117,7 +117,7 @@ export async function handleGetOthersPosts(req, res) {
     // find my trusted_by list of xpubs
     // find their posts
 
-    const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-xpub']);
+    const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-pubkey']);
     if (reciever_keys instanceof Error) throw reciever_keys;
 
     const posts_recieved = await posts.findManyById(reciever_keys.map(key=>key.id));
@@ -134,7 +134,7 @@ export async function handleGetOthersPosts(req, res) {
 
     if(expired_ids.length>0)
     expired_ids.map((id)=>{
-      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],id);
+      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-pubkey'],id);
       if (status instanceof Error){ 
         console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", {status});
         throw status};
@@ -164,10 +164,10 @@ export async function handleDeletePost(req, res) {
       }
     }
 
-    let status = await posts.removeOneById(req.params.id, request.headers['x-client-xpub']);
+    let status = await posts.removeOneById(req.params.id, request.headers['x-client-pubkey']);
     if (status instanceof Error) throw status;
 
-    status = await postKeys.removePostDecryptionKeyById(request.headers['x-client-xpub'], req.params.id);
+    status = await postKeys.removePostDecryptionKeyById(request.headers['x-client-pubkey'], req.params.id);
     if (status instanceof Error) throw status;
 
     const response = {
@@ -199,7 +199,7 @@ export async function handleUpdatePostKeys(req, res) {
       }
     });
 
-    const status = await postKeys.addPostDecryptionKeys(request.headers['x-client-xpub'], req.body.id, decryption_keys);
+    const status = await postKeys.addPostDecryptionKeys(request.headers['x-client-pubkey'], req.body.id, decryption_keys);
     if (status instanceof Error) throw status;
 
     const response = {

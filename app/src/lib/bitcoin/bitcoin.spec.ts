@@ -133,7 +133,7 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
 
 
     it("should extract_ecdsa_pair from extended key pair", async function () {
-      let key_pair = bitcoin.extract_ecdsa_pair(xkeys);
+      let key_pair = await bitcoin.extract_ecdsa_pair(xkeys);
       if (key_pair instanceof Error) throw key_pair;
       expect(key_pair.public_key).to.equal(expected_ecdsa_pair.public_key);
       expect(key_pair.private_key).to.equal(expected_ecdsa_pair.private_key);
@@ -147,13 +147,14 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
     
     });
 
-    let message = "hello";
+    let message = `"hello 123 {}"`;
     let signature;
-    it("should sign and verify a message with ecdsa keys", async function () {
-      signature = bitcoin.sign(message,alice_pair.private_key);
+    it.only("should sign and verify a message with ecdsa keys", async function () {
+      console.log(alice_pair.public_key);
+      signature = await  bitcoin.sign(message,alice_pair.private_key);
       if (signature instanceof Error) throw signature;
-      console.log(signature);
-      let status = bitcoin.verify(message,signature,alice_pair.public_key);
+      console.log({signature});
+      let status = await bitcoin.verify(message,signature,alice_pair.public_key);
       if (status instanceof Error) throw status;
       expect(status).to.equal(true);
     });

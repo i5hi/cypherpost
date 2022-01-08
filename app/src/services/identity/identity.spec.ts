@@ -33,7 +33,7 @@ let signature;
 let userIdentity: UserIdentity = {
   username,
   genesis: Date.now(),
-  xpub:xpub,
+  pubkey:xpub,
 };
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 describe("Initalizing Test: Identity Service", function () {
@@ -49,19 +49,19 @@ describe("Initalizing Test: Identity Service", function () {
       xpub,xprv
     });
     if (ecdsa_keys instanceof Error) throw ecdsa_keys;
-    signature = bitcoin.sign(message,ecdsa_keys.private_key);
+    signature = await bitcoin.sign(message,ecdsa_keys.private_key);
   });
   describe("IDENTITY SERVICE OPERATIONS:", async function () {
     it("should REGISTER a new user identity", async function () {
-      const response = await identity.register(username, xpub);
+      const response = await identity.register(username, ecdsa_keys.public_key);
       expect(response).to.equal(true);
     });
     it("should NOT ALLOW REGISTER of DUPLICATE User", async function () {
-      const response = await identity.register(username2, xpub);
+      const response = await identity.register(username2, ecdsa_keys.public_key);
       expect(response["name"]).to.equal("409");
     });
     it("should VERIFY a user signature", async function () {
-      const response = await identity.verify(xpub,message,signature);
+      const response = await identity.verify(ecdsa_keys.public_key,message,signature);
       expect(response).to.equal(true);
     });
     it("should GET ALL identities", async function () {
@@ -70,7 +70,7 @@ describe("Initalizing Test: Identity Service", function () {
       expect(response.length).to.equal(1);
     });
     it("should REMOVE a user identity and verify", async function () {
-      const response = await identity.remove(xpub);
+      const response = await identity.remove(ecdsa_keys.public_key);
       expect(response).to.equal(true);
     });
   });

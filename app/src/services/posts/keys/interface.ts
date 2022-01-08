@@ -11,7 +11,7 @@ export interface PostKeyInterface {
   removePostDecryptionKeyById(giver: string, id: string): Promise<boolean | Error>;
   removePostDecryptionKeyByReciever(giver: string, reciever: string): Promise<boolean | Error>;
   removePostDecryptionKeyByGiver(giver: string): Promise<boolean | Error>;
-  removeAllPostDecryptionKeyOfUser(xpub: string): Promise<boolean | Error>;
+  removeAllPostDecryptionKeyOfUser(pubkey: string): Promise<boolean | Error>;
 };
 
 

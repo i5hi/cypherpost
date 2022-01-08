@@ -4,26 +4,26 @@ Developed @ Stackmate India
 */
 
 export interface IdentityInterface{
-  register(username: string, xpub: string):Promise<boolean | Error>;
-  verify(xpub: string, message: string, signature: string): Promise<boolean | Error>;
+  register(username: string, pubkey: string):Promise<boolean | Error>;
+  verify(pubkey: string, message: string, signature: string): Promise<boolean | Error>;
   all(): Promise<Array<UserIdentity> | Error>;
-  remove(xpub: string): Promise<boolean | Error>;
+  remove(pubkey: string): Promise<boolean | Error>;
 }
 
 export interface IdentityStore{
   createOne(identity: UserIdentity): Promise<boolean | Error>;
   readOne(index: string, indexType: IdentityIndex): Promise<UserIdentity | Error>;
   readAll(): Promise<Array<UserIdentity> | Error>;
-  removeOne(xpub: string): Promise<boolean | Error>;
+  removeOne(pubkey: string): Promise<boolean | Error>;
 }
 
 export interface UserIdentity{
   genesis : number;
   username: string;
-  xpub:string;
+  pubkey:string;
 }
 
 export enum IdentityIndex{
   Username,
-  XPub
+  Pubkey
 }

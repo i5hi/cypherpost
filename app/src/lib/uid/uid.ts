@@ -7,7 +7,7 @@ import * as crypto from "crypto";
 import { v4 } from "uuid";
 import { InternalTxidPair, UIDInterface } from "./interface";
 // ------------------ '(◣ ◢)' ---------------------
-const LENGTH = 17;
+const LENGTH = 21;
 
 export class S5UID implements UIDInterface {
   createUserID(): string {

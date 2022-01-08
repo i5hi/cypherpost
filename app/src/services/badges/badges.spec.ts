@@ -65,10 +65,10 @@ describe("Initalizing Test: Badge Service", function () {
     };
     await db.connect(connection);
 
-    const key_pair = bitcoin.extract_ecdsa_pair({xpub,xprv});
+    const key_pair = await bitcoin.extract_ecdsa_pair({xpub,xprv});
     if(key_pair instanceof Error) return key_pair;
     const message = `${xpub}:${xpub1}:${BadgeType.Trusted.toString()}:${nonce}`;
-    signature = bitcoin.sign(message,key_pair.private_key);
+    signature = await bitcoin.sign(message,key_pair.private_key);
   });
 
   describe("BADGE SERVICE OPERATIONS:", async function () {

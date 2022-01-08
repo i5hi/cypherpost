@@ -3,7 +3,7 @@ export interface BadgeInterface{
   findByGiver(from: string): Promise<Badge[] | Error>;
   findByReciever(to:string):  Promise<Badge[] | Error>;
   revoke(from: string, to: string, type: BadgeType): Promise<boolean | Error>;
-  removeAllOfUser(xpub: string): Promise<boolean | Error>;
+  removeAllOfUser(pubkey: string): Promise<boolean | Error>;
   getAll(): Promise<Badge[] | Error>;
 }
 
@@ -13,7 +13,7 @@ export interface BadgeStore{
   readByGiver(giver: string): Promise<Badge[] | Error>;
   readByReciever(reciever: string): Promise<Badge[] | Error>;
   removeByReciever(giver: string, reciever: string, type: BadgeType): Promise<boolean | Error>;
-  removeAll(xpub: string): Promise<boolean | Error>;
+  removeAll(pubkey: string): Promise<boolean | Error>;
 }
 
 export interface Badge {
