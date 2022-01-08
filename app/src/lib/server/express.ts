@@ -12,7 +12,9 @@ import { router as posts } from "../../services/posts/router";
 import { logger } from "../logger/winston";
 import { respond } from "./handler";
 
-const base_path = `/home/node/cypherpost/app/src/services/client/public`
+const base_path = `/home/node/cypherpost/app/src/services/client/public`;
+export const router = express.Router();
+
 // ------------------ '(◣ ◢)' ---------------------
 export async function start(port: string) {
   return new Promise(async (resolve, reject) => {

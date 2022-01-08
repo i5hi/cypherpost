@@ -1,27 +1,21 @@
-# cypherpost.io
+# cypherpost
 
-## Note: This project is in extreme BETA and actively looking for community support. We see this project forming a basis for privacy respecting social networks; if this is something you are interested in, please reach out.
+## A centralized encrypted data store, enabling client-side applications that require end-to-end encryption and selective visibility of content.
 
-### REFERENCE CLIENT UNDER CONSTRUCTION.
-
-A private, end-to-end encrypted social network to selectively post ads and messages to members of a trusted network.
-
-- Your identity on the platform is a username:xpub
-- Your profile and posts are encrypted.
-- Posts can be decrypted only those you select.
-- You can give individuals badges to help you classify and decide who to share keys with.
+- Your identity on the platform is a `username:xpub`
+- All your posts are encrypted custom json strings.
+- Posts can be decrypted only by the identities you give visibility to.
+- You give identities visibility by sharing decryption keys with them.
+- ECDSA Shared Secrets are used per identity, to encrypt decryption keys in transit.
+- Badges form a reputation system and help build a trusted network.
+- Value of badges are subjective and based on who the givers are.
 - Badges include: Trusted, VerifiedInPerson & Scammer
 - Your identity, badges given & recieved and number of live posts are public.
+- At any point in time, a dump of the entire server can be taken and continued with new history by anyone.
 
-BIP39 key generation & BIP32 key derivation is used for portable end-to-end encryption; to allow users to recover their accounts on any device without the need to maintain a master device holding a non-human readable master key.
+### Server LIVE at https://cypherpost.io/api/v2
 
-### Actualization
-
-The aim of this project is to facilitate such a scenario:
-
-- You wish to buy/sell bitcoin (or anything else?).
-- Find someone in your network who has posted an ad OR You post an ad.
-- Moments later, the two of you get in touch and fulfil each other's request.
+### Reference client UNDER CONSTRUCTION at https://cypherpost.io.
 
 ![cypherpost](design/assets/owl.png)
 
