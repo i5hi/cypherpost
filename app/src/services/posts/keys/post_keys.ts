@@ -24,16 +24,16 @@ export class CypherpostPostKeys implements PostKeyInterface {
       handleError(e);
     }
   }
-  async addPostDecryptionKeys(giver: string, post_id: string, key_update: PostKeyStoreUpdate[]): Promise<boolean | Error> {
+  async addPostDecryptionKeys(giver: string, id: string, key_update: PostKeyStoreUpdate[]): Promise<boolean | Error> {
     try {
       let keys = [];
       key_update.map(key => {
         keys.push({
           genesis: Date.now(),
           giver: giver,
-          post_id: post_id,
+          id: id,
           reciever: key.reciever,
-          hash: crypto.createHash("sha256").update(`${giver}:${key.reciever}:${post_id}`).digest('hex'),
+          hash: crypto.createHash("sha256").update(`${giver}:${key.reciever}:${id}`).digest('hex'),
           decryption_key: key.decryption_key
         })
       });
@@ -43,11 +43,11 @@ export class CypherpostPostKeys implements PostKeyInterface {
       handleError(e);
     }
   }
-  async updatePostDecryptionKeys(giver: string, post_id: string, key_update: PostKeyStoreUpdate[]): Promise<boolean | Error> {
+  async updatePostDecryptionKeys(giver: string, id: string, key_update: PostKeyStoreUpdate[]): Promise<boolean | Error> {
     try {
       let keys = [];
       let updates = await key_update.map(async key => {
-        const status = await store.updateOne(giver, post_id, key.reciever, key.decryption_key);
+        const status = await store.updateOne(giver, id, key.reciever, key.decryption_key);
         if (status instanceof Error) throw status;
       });
 
@@ -64,8 +64,8 @@ export class CypherpostPostKeys implements PostKeyInterface {
   async findPostDecryptionKeyByGiver(giver: string): Promise<Error | PostDecryptionKey[]> {
     return store.readByGiver(giver);
   }
-  async removePostDecryptionKeyById(giver: string, post_id: string): Promise<boolean | Error> {
-    return store.removeManyByPostId(giver, post_id);
+  async removePostDecryptionKeyById(giver: string, id: string): Promise<boolean | Error> {
+    return store.removeManyByPostId(giver, id);
   }
   async removePostDecryptionKeyByReciever(giver: string, reciever: string): Promise<boolean | Error> {
     return store.removeManyByReciever(giver, reciever);

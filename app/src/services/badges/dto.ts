@@ -6,7 +6,6 @@ import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostIdentity } from "../identity/identity";
 import { CypherpostPostKeys } from "../posts/keys/post_keys";
-import { CypherpostProfileKeys } from "../profile/keys/profile_keys";
 import { CypherpostBadges } from "./badges";
 import { BadgeType } from "./interface";
 
@@ -14,7 +13,6 @@ const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
 const badges = new CypherpostBadges();
-const profileKeys = new CypherpostProfileKeys();
 const postKeys = new CypherpostPostKeys();
 
 export async function badgesMiddleware(req, res, next) {
@@ -140,9 +138,6 @@ export async function handleRevokeTrust(req, res) {
     let status = await badges.revoke(request.headers['x-client-xpub'], request.body.revoking, BadgeType.Trusted);
     if (status instanceof Error) throw status;
     // REMOVE ALL RELATED KEYS
-    status = await profileKeys.removeProfileDecryptionKeyByReciever(request.headers['x-client-xpub'],request.body.revoking);
-    if (status instanceof Error) throw status;
-
     status = await postKeys.removePostDecryptionKeyByReciever(request.headers['x-client-xpub'],request.body.revoking);
     if (status instanceof Error) throw status;
     

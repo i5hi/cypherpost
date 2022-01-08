@@ -20,16 +20,12 @@ import { BadgeType } from "./services/badges/interface";
 import { CypherpostIdentity } from "./services/identity/identity";
 import { CypherpostPostKeys } from "./services/posts/keys/post_keys";
 import { CypherpostPosts } from "./services/posts/posts";
-import { CypherpostProfileKeys } from "./services/profile/keys/profile_keys";
-import { CypherpostProfile } from "./services/profile/profile";
 
 const sinon = require('sinon');
 const bitcoin = new CypherpostBitcoinOps();
 const s5crypto = new S5Crypto();
 const identity = new CypherpostIdentity();
 const badges = new CypherpostBadges();
-const profile = new CypherpostProfile();
-const profile_keys = new CypherpostProfileKeys();
 const posts = new CypherpostPosts();
 const post_keys = new CypherpostPostKeys();
 const db = new MongoDatabase();
@@ -49,16 +45,15 @@ chai.use(chaiHttp);
  * C trusts A => A can view C's profile and posts
  * A deletes their identity
  */
-interface TestKeySet {
-  mnemonic: string,
-  root_xprv: string,
-  cypherpost_parent: ExtendedKeys,
-  identity_xpub: string;
-  identity_private: string;
-  identity_public: string;
-};
+
+enum PostType{
+  Profile="Profile",
+  Ad="Ad",
+  Preferences="Preferences"
+}
 
 interface Profile {
+  type: PostType,
   nickname: string,
   status: string,
   contact: string
@@ -110,7 +105,8 @@ enum ReferenceExchange {
 }
 
 interface Post {
-  type: OrderType,
+  type: PostType,
+  order: OrderType,
   message: string,
   network: BitcoinNetwork,
   minimum: number,
@@ -127,8 +123,17 @@ interface TestPostSet {
   plain: Post,
   cypher: string,
   encryption_key: string,
-  post_id: string;
+  id: string;
 }
+
+interface TestKeySet {
+  mnemonic: string,
+  root_xprv: string,
+  cypherpost_parent: ExtendedKeys,
+  identity_xpub: string;
+  identity_private: string;
+  identity_public: string;
+};
 
 const init_identity_ds = "m/0h/0h/0h";
 const init_profile_ds = "m/1h/0h/0h";
@@ -212,13 +217,14 @@ function createPostSet(plain_post: Post, cypherpost_parent: ExtendedKeys, deriva
     plain: plain_post,
     cypher,
     encryption_key,
-    post_id: "unset"
+    id: "unset"
   }
 }
-function createDefaultTestPost(type: OrderType, message: string, fixed: boolean): Post {
+function createDefaultTestPost(type: PostType,order: OrderType, message: string, fixed: boolean): Post {
   return {
     message,
     type,
+    order,
     network: BitcoinNetwork.OnChain,
     minimum: 1000,
     maximum: 100000,
@@ -249,28 +255,31 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     c_key_set = await createTestKeySet() as TestKeySet;
     // ------------------ (◣_◢) ------------------
     a_profile_set = createProfileSet({
+      type: PostType.Profile,
       nickname: "Alice Articulates",
       status: "Sound Money, Sound World.",
       contact: "@alice3us on Telegram"
     }, a_key_set.cypherpost_parent, init_profile_ds);
 
     b_profile_set = createProfileSet({
+      type: PostType.Profile,
       nickname: "Bobby Breeds",
       status: "Making Babies.",
       contact: "@bob3us on Telegram"
     }, b_key_set.cypherpost_parent, init_profile_ds);
 
     c_profile_set = createProfileSet({
+      type: PostType.Profile,
       nickname: "Carol Cares",
       status: "Trying Hard Not To Cry.",
       contact: "@carol3us on Telegram"
     }, c_key_set.cypherpost_parent, init_profile_ds);
     // ------------------ (◣_◢) ------------------
-    a_post_set = createPostSet(createDefaultTestPost(OrderType.Sell, "Urgent", true), a_key_set.cypherpost_parent, init_posts_ds);
+    a_post_set = createPostSet(createDefaultTestPost(PostType.Ad,OrderType.Sell, "Urgent", true), a_key_set.cypherpost_parent, init_posts_ds);
 
-    b_post_set = createPostSet(createDefaultTestPost(OrderType.Buy, "Stacking", false), b_key_set.cypherpost_parent, init_posts_ds);
+    b_post_set = createPostSet(createDefaultTestPost(PostType.Ad,OrderType.Buy, "Stacking", false), b_key_set.cypherpost_parent, init_posts_ds);
 
-    c_post_set = createPostSet(createDefaultTestPost(OrderType.Sell, "GM", false), c_key_set.cypherpost_parent, init_posts_ds);
+    c_post_set = createPostSet(createDefaultTestPost(PostType.Ad,OrderType.Sell, "GM", false), c_key_set.cypherpost_parent, init_posts_ds);
     // ------------------ (◣_◢) ------------------    
   });
 
@@ -281,12 +290,6 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     await badges.removeAllOfUser(a_key_set.identity_xpub);
     await badges.removeAllOfUser(b_key_set.identity_xpub);
     await badges.removeAllOfUser(c_key_set.identity_xpub);
-    await profile.remove(a_key_set.identity_xpub);
-    await profile.remove(b_key_set.identity_xpub);
-    await profile.remove(c_key_set.identity_xpub);
-    await profile_keys.removeProfileDecryptionKeyByGiver(a_key_set.identity_xpub);
-    await profile_keys.removeProfileDecryptionKeyByGiver(b_key_set.identity_xpub);
-    await profile_keys.removeProfileDecryptionKeyByGiver(c_key_set.identity_xpub);
     await posts.removeAllByOwner(a_key_set.identity_xpub);
     await posts.removeAllByOwner(b_key_set.identity_xpub);
     await posts.removeAllByOwner(c_key_set.identity_xpub);
@@ -369,8 +372,17 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         })
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['identities'].length).to.equal(3);
           all_identities = res.body['identities'];
+          let counter=0;
+          console.log({all_identities});
+          all_identities.map((identity)=>{
+            if(identity.xpub === a_key_set.identity_xpub || 
+              identity.xpub === b_key_set.identity_xpub || 
+              identity.xpub === c_key_set.identity_xpub)
+              counter++;
+          })
+          expect(counter).to.equal(3);
+
           done();
         })
     })
@@ -497,9 +509,9 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     });
   });
 
-  describe("UPDATE PROFILES for A, B & C and VERIFY via GET SELF", function () {
+  describe.skip("UPDATE PROFILES for A, B & C and VERIFY via GET SELF", function () {
     it("UPDATES PROFILES", function (done) {
-      endpoint = "/api/v2/profile";
+      endpoint = "/api/v2/posts";
       body = {
         cypher_json: a_profile_set.cypher,
         derivation_scheme: init_profile_ds
@@ -560,59 +572,13 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
           done();
         });
     });
-    it("GETS EACH SELF PROFILE", function (done) {
-      endpoint = "/api/v2/profile/self";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profile'].cypher_json).to.equal(a_profile_set.cypher);
-        })
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profile'].cypher_json).to.equal(b_profile_set.cypher);
-        })
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profile'].cypher_json).to.equal(c_profile_set.cypher);
-          done();
-        })
-    })
+
   });
 
-  describe("ADD PROFILE KEYS based on Trust Badges and VERIFY via GET OTHERS", function () {
+  describe.skip("ADD PROFILE KEYS based on Trust Badges and VERIFY via GET OTHERS", function () {
     it("ADDS PROFILE DECRYPTION KEYS of TRUSTED", function (done) {
 
-      endpoint = "/api/v2/profile/keys";
+      endpoint = "/api/v2/posts/keys";
       body = {
         decryption_keys: [],
       };
@@ -820,7 +786,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         .send(body)
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
         });
       body = {
         cypher_json: a_post_set.cypher,
@@ -840,8 +806,8 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         .send(body)
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
-          a_post_set.post_id = res.body['post_id'];
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
+          a_post_set.id = res.body['id'];
         });
       body = {
         cypher_json: b_post_set.cypher,
@@ -861,8 +827,8 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         .send(body)
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
-          b_post_set.post_id = res.body['post_id'];
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
+          b_post_set.id = res.body['id'];
         });
       body = {
         cypher_json: c_post_set.cypher,
@@ -882,8 +848,8 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         .send(body)
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
-          c_post_set.post_id = res.body['post_id'];
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
+          c_post_set.id = res.body['id'];
           done();
         });
     });
@@ -945,7 +911,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
       endpoint = "/api/v2/posts/keys";
       body = {
         decryption_keys: [],
-        id: a_post_set.post_id
+        id: a_post_set.id
       };
       a_trust.map((recipient_xpub) => {
         const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
@@ -980,7 +946,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         });
       body = {
         decryption_keys: [],
-        id: b_post_set.post_id
+        id: b_post_set.id
       };
       b_trust.map((recipient_xpub) => {
         const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
@@ -1015,7 +981,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         });
       body = {
         decryption_keys: [],
-        id: c_post_set.post_id
+        id: c_post_set.id
       };
       c_trust.map((recipient_xpub) => {
         const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
@@ -1152,44 +1118,19 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
           expect(res.body['status']).to.equal(true);
         });
     });
-    // A must update their profile and decryption keys 
-    // ALTHOUGH B will no longer recieve A's keys in GET profile/others
-    it("UPDATES PROFILE w/ new cypher_json", async function () {
-      const new_derivation_scheme = "m/1h/1h/0h";
-      a_profile_set.encryption_key = crypto.createHash("sha256").update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, new_derivation_scheme) as ExtendedKeys).xprv).digest('hex');
-      a_profile_set.cypher = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_profile_set.plain), a_profile_set.encryption_key) as string;
-      endpoint = "/api/v2/profile";
-      body = {
-        cypher_json: a_profile_set.cypher,
-        derivation_scheme: new_derivation_scheme
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-    });
   });
 
-  describe("UPDATE PREFERENCES for A & VERIFY via GET", function () {
+  describe.skip("UPDATE PREFERENCES for A & VERIFY via GET", function () {
     it("UPDATES PREFERENCES", function (done) {
       const preference_key = crypto.createHash("sha256")
       .update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, init_preferences_ds) as ExtendedKeys)['xprv'])
       .digest("hex");
       cypher_preference = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_preferences), preference_key);
-      endpoint = "/api/v2/preference";
+      endpoint = "/api/v2/posts";
       body = {
         cypher_json: cypher_preference,
+        expiry: 0,
+        derivation_scheme:init_preferences_ds,
       };
       nonce = Date.now();
       request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
@@ -1295,36 +1236,6 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
           done();
         });
     });
-    it("PREVENTS DUPLICATE PROFILE DECRYPTION KEY ENTRY", function (done) {
-      endpoint = "/api/v2/profile/keys";
-      // client must first parse through all_badges and find who trusts them
-      // here we assume knowledge of trust givers
-      let shared_sercret = bitcoin.calculate_shared_secret({
-        private_key: b_key_set.identity_private,
-        public_key: c_key_set.identity_public
-      }) as string;
-
-      const b_decryption_key = s5crypto.encryptAESMessageWithIV(b_profile_set.encryption_key, shared_sercret);
-      body = {
-        decryption_keys: [{ decryption_key: b_decryption_key, reciever: c_key_set.identity_xpub }],
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(409);
-          done();
-        });
-
-    })
     it("PREVENTS DUPLICATE POSTS DECRYPTION KEY ENTRY", function (done) {
       endpoint = "/api/v2/posts/keys";
       // client must first parse through all_badges and find who trusts them
@@ -1337,7 +1248,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
       const b_decryption_key = s5crypto.encryptAESMessageWithIV(b_post_set.encryption_key, shared_sercret);
       body = {
         decryption_keys: [{ decryption_key: b_decryption_key, reciever: c_key_set.identity_xpub }],
-        id: b_post_set.post_id
+        id: b_post_set.id
       };
       nonce = Date.now();
       request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);

@@ -71,7 +71,7 @@ let post_key: PostDecryptionKey = {
   genesis: 0,
   giver: xpub,
   reciever: xpub1,
-  post_id: "5omePostID",
+  id: "5omePostID",
   decryption_key: ""
 };
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
@@ -128,13 +128,13 @@ describe("Initalizing Test: Post Key Service", function () {
       const response = await postKeys.findPostDecryptionKeyByGiver(xpub);
       expect(response[0]['giver']).to.equal(xpub);
       expect(response[0]['reciever']).to.equal(xpub1);
-      expect(response[0]['post_id']).to.equal(post_id);
+      expect(response[0]['id']).to.equal(post_id);
     });
     it("FIND post decryption key BY RECIEVER", async function () {
       const response = await postKeys.findPostDecryptionKeyByReciever(xpub1);
       expect(response[0]['reciever']).to.equal(xpub1);
       expect(response[0]['giver']).to.equal(xpub);
-      expect(response[0]['post_id']).to.equal(post_id);
+      expect(response[0]['id']).to.equal(post_id);
     });
     it("DELETE post decryption key BY RECIEVER", async function () {
       const response = await postKeys.removePostDecryptionKeyByReciever(xpub, xpub1);
@@ -162,7 +162,7 @@ describe("Initalizing Test: Post Key Service", function () {
       const response = await postKeys.findPostDecryptionKeyByGiver(xpub1);
       expect(response[0]['giver']).to.equal(xpub1);
       expect(response[0]['reciever']).to.equal(xpub);
-      expect(response[0]['post_id']).to.equal(post_id_2);
+      expect(response[0]['id']).to.equal(post_id_2);
     });
     it("DELETE post decryption key BY giver SHOULD be false since no keys exist", async function () {
       const response = await postKeys.removePostDecryptionKeyByGiver(xpub1);

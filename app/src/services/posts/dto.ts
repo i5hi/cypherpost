@@ -49,11 +49,11 @@ export async function handleCreatePost(req, res) {
       }
     }
 
-    const post_id = await posts.create(req.headers['x-client-xpub'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
-    if (post_id instanceof Error) throw post_id;
+    const id = await posts.create(req.headers['x-client-xpub'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
+    if (id instanceof Error) throw id;
 
     const response = {
-      post_id
+      id
     };
     respond(200, response, res, request);
   }
@@ -78,8 +78,8 @@ export async function handleGetMyPosts(req, res) {
     if (ids_removed instanceof Error) throw ids_removed;
 
     if(ids_removed.length>0)
-    ids_removed.map((post_id)=>{
-      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],post_id);
+    ids_removed.map((id)=>{
+      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],id);
       if (status instanceof Error){ 
         console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", {status});
         throw status};
@@ -120,7 +120,7 @@ export async function handleGetOthersPosts(req, res) {
     const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-xpub']);
     if (reciever_keys instanceof Error) throw reciever_keys;
 
-    const posts_recieved = await posts.findManyById(reciever_keys.map(key=>key.post_id));
+    const posts_recieved = await posts.findManyById(reciever_keys.map(key=>key.id));
     if(posts_recieved instanceof Error) throw posts_recieved;
     let expired_ids=[]; 
 
@@ -133,8 +133,8 @@ export async function handleGetOthersPosts(req, res) {
     if (ids_removed instanceof Error) throw ids_removed;
 
     if(expired_ids.length>0)
-    expired_ids.map((post_id)=>{
-      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],post_id);
+    expired_ids.map((id)=>{
+      let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-xpub'],id);
       if (status instanceof Error){ 
         console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", {status});
         throw status};

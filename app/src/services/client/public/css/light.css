@@ -241,7 +241,12 @@ background-color: #0A0A0A  ;
 .nickname{
   font-size:2.1rem;
 }
+.n_badges{
+  font-size: 1rem;
+  font-family: 'Aldrich', sans-serif !important;
 
+
+}
 .usename{
   font-size:1rem;
 }

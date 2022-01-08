@@ -9,245 +9,247 @@
   <title>CypherPost</title>
   <!-- Font Awesome -->
   <link rel="icon" type="image/png" href="/img/owl.png" />
-  <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
+  <!-- <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" /> -->
   <link rel="stylesheet" type='text/css' href="/css/mdb.min.css" />
   <link rel="stylesheet" type='text/css' href="/css/light.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+  <!-- <script src="https://kit.fontawesome.com/878bb5821f.js"></script> -->
 
   <!-- <script type="text/javascript" src="/js/mdb.min.js"></script> -->
 
 </head>
 
 <body>
-
   <header>
-
-    <header>
-      <div class='row'>
-        <nav class="navbar fixed-top navbar-expand-lg navbar-light pink scrolling-navbar">
-          <div class="col-6 outline">
-            <img class="sats-ico" loading="lazy" src='/img/owl.png' href="https://cypherpost.io">
-          </div>
-          <div class="col-5 outline">
-            <a id="exit" class="container rightme outline">Exit</a>
-          </div>
-          <div class="col-1"></div>
-        </nav>
-      </div>
-    </header>
-
-    <div id="network_page_spinner" class="container">
-      <br/>
-      <div class="spinner-grow centerme" role="status">
-        <span class="sr-only">Loading...</span>
-      </div>
-      <br>
+    <div class='row'>
+      <nav class="navbar fixed-top navbar-expand-lg navbar-light pink scrolling-navbar">
+        <div class="col-7 outline">
+          <img class="sats-ico" loading="lazy" src='/img/owl.png' href="https://cypherpost.io">
+        </div>
+        <div class="col-5 outline">
+          <a id="exit" class="container rightme outline">Exit</a>
+        </div>
+      </nav>
     </div>
+  </header>
 
-    <main id="network_page" class="hidden">
-      <br>
+  <div id="network_page_spinner" class="container">
+    <br />
+    <div class="spinner-grow centerme" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+    <br>
+  </div>
+
+  <main id="network_page" class="hidden">
+    <br>
+    <div class="container outline">
+      <div class="row outline">
+        <ul class="nav nav-tabs outline">
+
+          <div class="col-4">
+
+            <li class="nav-item outline">
+              <a class="nav-link centerme outline" href="posts.html">
+                <i class="fa fa-envelope fa-2x" aria-hidden="true"></i>
+              </a>
+            </li>
+          </div>
+          <div class="col-4">
+
+            <li class="nav-item outline">
+              <a class="nav-link centerme " href="profile.html">
+                <i class="fa fa-user fa-2x"></i>
+              </a>
+            </li>
+          </div>
+
+          <div class="col-4">
+
+            <li class="nav-item outline">
+              <a class="nav-link centerme " href="network.html">
+                <i class="fa fa-users fa-2x"></i>
+              </a>
+            </li>
+          </div>
+
+        </ul>
+
+      </div>
+
+      <hr>
       <div class="container outline">
         <div class="row outline">
-          <ul class="nav nav-tabs outline">
 
-            <div class="col-4">
-  
-              <li class="nav-item outline">
-                <a class="nav-link centerme outline" href="posts.html">
-                  <i class="fa fa-envelope fa-2x" aria-hidden="true"></i> 
-                </a>
-              </li>
-            </div>
-            <div class="col-4">
-  
-              <li class="nav-item outline">
-                <a class="nav-link centerme " href="profile.html">
-                  <i class="fa fa-user fa-2x"></i> 
-                </a>
-              </li>
-            </div>
-  
-            <div class="col-4">
-  
-              <li class="nav-item outline">
-                <a class="nav-link centerme " href="network.html">
-                  <i class="fa fa-users fa-2x"></i> 
-                </a>
-              </li>
-            </div>
-  
-          </ul>
+          <div class="col-4">
+            <button id="network_trusting_menu" class="btn-lg centerme outline">Trusting</a>
+          </div>
+
+          <div class="col-4">
+            <button id="network_trusted_by_menu" class="btn-lg centerme outline">Trusted By</a>
+          </div>
+
+          <div class="col-4">
+            <button id="network_search_menu" class="btn-lg centerme outline">All</a>
+          </div>
 
         </div>
+      </div>
+      <br>
 
-        <hr>
-        <div class="container outline">
-          <div class="row outline">
 
-            <div class="col-4">
-              <button id="network_trusting_menu" class="btn-lg centerme outline">Trusting</a>
-            </div>
 
-            <div class="col-4">
-              <button id="network_trusted_by_menu" class="btn-lg centerme outline">Trusted By</a>
-            </div>
+      <div id="network_profile_bio" class="container outline bio">
 
-            <div class="col-4">
-              <button id="network_search_menu" class="btn-lg centerme outline">All</a>
-            </div>
+        <div class="row">
+          <div id="network_profile_nickname" class="col-12 outline nickname">
+            Nickname
+          </div>
+        </div>
 
+        <div class="row outline username">
+          <div id="network_profile_username" class="col-12">
+            Username
+          </div>
+        </div>
+
+
+        <div class="row outline contact_info">
+          <div id="network_profile_contact" class="col-12">
+            Contact Info
+          </div>
+        </div>
+        <div class="row outline status">
+          <div id="network_profile_status" class="col-12">
+            Status
           </div>
         </div>
         <br>
 
 
-
-        <div id="network_profile_bio" class="container outline bio">
-
-          <div class="row">
-            <div id="network_profile_nickname" class="col-12 outline nickname">
-              Nickname
-            </div>
-          </div>
-
-          <div class="row outline username">
-            <div id="network_profile_username" class="col-12">
-              Username
-            </div>
-          </div>
+      </div>
 
 
-          <div class="row outline contact_info">
-            <div id="network_profile_contact" class="col-12">
-              Contact Info
-            </div>
-          </div>
-          <div class="row outline status">
-            <div id="network_profile_status" class="col-12">
-              Status
-            </div>
-          </div>
-          <br>
-          <div class="row outline">
-            <div id="network_profile_trusting_list" class="col-12">
-              Trust List
-            </div>
-          </div>
-          <div class="row outline">
-            <div id="network_profile_trusted_by_list" class="col-12">
+      <br>
 
-            </div>
-          </div>
-
-
-        </div>
-
-
-        <br>
+      <div id="network_profile_badges" class="container outline bio">
+        <h3 class="leftme">Badges</h3>
 
         <div class="row outline trusting">
-          <div class="col-4">
-            <div class="row outline centerme trusted_by_title">Trusted By</div>
+          <div class="col-3">
+            <div class="row outline centerme trusting_title">Given</div>
           </div>
           <div class="col-3">
-            <div id="network_profile_trust_intersection" class="row outline centerme trust_value">0</div>
+            <div id="network_profile_given" class="row outline centerme trust_value">0</div>
           </div>
-          <div class="col-5">
-            <div class="row outline centerme trusting_title">that you Trust.</div>
+          <div class="col-3">
+            <div class="row outline centerme trusted_by_title">Recieved</div>
           </div>
-        </div>
-
-        <div id="trust_intersection_list" class="container outline">
-
-
+          <div class="col-3">
+            <div id="network_profile_recieved" class="row outline centerme trust_value">0</div>
+          </div>
         </div>
         <br>
-        <div class="container">
-          <div class="container">
 
-            <div id="network_profile_mute_button" class="row outline"></div>
+        <div class="row badges outline trusting">
+          <div class="col-4 centerme outline">
+            <div class="row outline centerme trust_title">Trust</div>
+            <div class="row outline badge_links leftme">ExampleIdentity</div>
+          </div>
+          <div class="col-4 centerme outline">
+            <div class="row outline centerme vip">VerifiedInPerson</div>
+            <div class="row outline badge_links leftme">ExampleIdentity</div>
+          </div>
+          <div class="col-4 centerme outline">
+            <div class="row outline centerme scammer_title">Scammer</div>
+            <div class="row outline badge_links leftme">ExampleIdentity</div>
+          </div>
+        </div>
+
+      </div>
+
+      <br>
+
+      <hr>
+
+
+
+
+
+      <div id="network_search" class="container outline">
+        <div class="container-fluid outline">
+
+          <div class="row outline">
+
+            <div class="col-8">
+              <input type="text" class="" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1"
+                disabled>
+            </div>
+
+            <div class="col-4 outline"><button id="network_search_button" class="btn-sm centerme" type="submit"><i
+                  class="fa fa-search" aria-hidden="true" disabled></i></button>
+            </div>
           </div>
         </div>
 
         <hr>
+        <div id="search_userlist" class="container outline">
 
-
-
-
-
-        <div id="network_search" class="container outline">
-          <div class="container-fluid outline">
-
-            <div class="row outline">
-
-              <div class="col-8">
-                <input type="text" class="" placeholder="Username" aria-label="Username"
-                  aria-describedby="basic-addon1" disabled>
-              </div>
-
-              <div class="col-4 outline"><button id="network_search_button" class="btn-sm centerme" type="submit"><i
-                    class="fa fa-search" aria-hidden="true" disabled></i></button>
-              </div>
-            </div>
-          </div>
-
-          <hr>
-          <div id="search_userlist" class="container outline">
-
-
-          </div>
 
         </div>
 
-        <div id="network_trusting" class="container outline hidden">
-          <div class="container-fluid outline">
+      </div>
 
-            <div class="row outline">
+      <div id="network_trusting" class="container outline hidden">
+        <div class="container-fluid outline">
 
-              <div class="col-8">
-                <input type="text" class="" placeholder="Username" aria-label="Username"
-                  aria-describedby="basic-addon1">
-              </div>
+          <div class="row outline">
 
-              <div class="col-4 outline"><button id="network_trusting_button" class="btn-sm centerme" type="submit"><i
-                    class="fa fa-search" aria-hidden="true"></i></button>
-              </div>
+            <div class="col-5">
+              <input type="text" class="" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+            </div>
+
+            <div class="col-4 outline"><button id="network_trusting_button" class="btn-sm centerme" type="submit"><i
+                  class="fa fa-search" aria-hidden="true"></i></button>
             </div>
           </div>
+        </div>
 
-          <hr>
-          <div id="trusting_userlist" class="container outline">
+        <hr>
+        <div id="trusting_userlist" class="container outline">
 
-
-          </div>
 
         </div>
 
-        <div id="network_trusted_by" class="container outline hidden">
-          <div class="container-fluid outline">
+      </div>
 
-            <div class="row outline">
+      <div id="network_trusted_by" class="container outline hidden">
+        <div class="container-fluid outline">
 
-              <div class="col-8">
-                <input type="text" class="" placeholder="Username" aria-label="Username"
-                  aria-describedby="basic-addon1">
-              </div>
+          <div class="row outline">
 
-              <div class="col-4 outline"><button id="trusted_by_search_button" class="btn-sm centerme" type="submit"><i
-                    class="fa fa-search" aria-hidden="true"></i></button>
-              </div>
+            <div class="col-8">
+              <input type="text" class="" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+            </div>
+
+            <div class="col-4 outline"><button id="trusted_by_search_button" class="btn-sm centerme" type="submit"><i
+                  class="fa fa-search" aria-hidden="true"></i></button>
             </div>
           </div>
+        </div>
 
-          <hr>
-          <div id="trusted_by_userlist" class="container outline">
+        <hr>
+        <div id="trusted_by_userlist" class="container outline">
 
-
-          </div>
 
         </div>
 
-        <!-- 
+      </div>
+
+      <!-- 
       <div id="network_trust_intersection" class="container outline hidden">
         <div class="container-fluid outline">
 
@@ -270,42 +272,42 @@
         </div>
 
       </div> -->
+      <br>
+
+
+
+
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="page-footer font-small teal pt-4">
+
+    <!-- Footer Text -->
+    <div class="container-fluid text-center text-md-left">
+
+      <!-- Copyright -->
+      <div class="footer-copyright text-center py-3">
+
+        <a href="https://cypherpost.io"> cypherpost.io</a> 2021
         <br>
 
-
-
-
-    </main>
-
-
-    <!-- Footer -->
-    <footer class="page-footer font-small teal pt-4">
-
-      <!-- Footer Text -->
-      <div class="container-fluid text-center text-md-left">
-
-        <!-- Copyright -->
-        <div class="footer-copyright text-center py-3">
-
-          <a href="https://cypherpost.io"> cypherpost.io</a> 2021
-          <br>
-
-          <i class="fab fa-bitcoin"></i>
-          <i class="fab fa-linux"></i>
-          <i class="fab fa-creative-commons"></i>
-        </div>
+        <i class="fab fa-bitcoin"></i>
+        <i class="fab fa-linux"></i>
+        <i class="fab fa-creative-commons"></i>
       </div>
-      <!-- Copyright -->
+    </div>
+    <!-- Copyright -->
 
-    </footer>
-    <!-- Footer -->
-    <!-- MDB -->
+  </footer>
+  <!-- Footer -->
+  <!-- MDB -->
 
-    <script type="text/javascript" src="/js/bundles/mdb.min.js"></script>
+  <script type="text/javascript" src="/js/bundles/mdb.min.js"></script>
 
-    <!-- Custom scripts -->
-    <!-- <script type="text/javascript" src="/js/trust_bundle.js"></script> -->
-    <script type="text/javascript" src="/js/bundles/network_bundle.js"></script>
+  <!-- Custom scripts -->
+  <!-- <script type="text/javascript" src="/js/trust_bundle.js"></script> -->
+  <script type="text/javascript" src="/js/bundles/network_bundle.js"></script>
 </body>
 
 

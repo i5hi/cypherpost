@@ -6,13 +6,21 @@ const { encrypt, decrypt } = require("./aes");
 const store = require("./store");
 
 const { exit } = require("./auth");
-const {  } = require('./api');
+const { apiIdentityAll } = require("./api");
 
 
 
 // console.log({ existing_usernames });
 // console.log({ trusting_usernames });
 // console.log({ search_usernames });
+async function initNetworkState() {
+  const keys = store.getMyKeyChain();
+  console.log({keys})
+  const all_identities = await apiIdentityAll(keys.identity);
+  if (all_identities instanceof Error) return all_identities;
+
+  return store.setIdentities(all_identities);
+}
 
 async function trust(username) {
 
@@ -260,6 +268,11 @@ async function loadNetworkEvents() {
     exit();
   });
 
+  const status = await initNetworkState();
+  console.log({status});
+  if(status instanceof Error){
+    alert("Error initializing Network.");
+  }
   // const my_profile = await apiGetMyProfile(store.getToken());
   // if (my_profile instanceof Error) {
   //   console.error(my_profile);
@@ -281,67 +294,70 @@ async function loadNetworkEvents() {
   document.getElementById("network_page_spinner").classList.add("hidden");
   document.getElementById("network_page").classList.remove("hidden");
 
-  search_usernames.map((username) => {
-    document.getElementById('search_userlist').innerHTML += `<div id="search_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trust_${username}" class="btn-sm centerme" type="submit">Trust</button></div></div><hr>`
+  const trusted_badges = 0;
+  const in_person_badges = 0;
+  const scammer_badges = 0;
+  store.getIdentities().identities.map((identity) => {
+    document.getElementById('search_userlist').innerHTML += `<div id="search_item_${identity.username}" class="row"><div class="col-6 outline leftme">${identity.username}</div><div class="col-2 outline"><i class="fas fa-shield-alt n_badges" aria-hidden="true"></i>${trusted_badges}</div><div class="col-2 outline"><i class="far fa-handshake n_badges" aria-hidden="true"></i>${in_person_badges}</div><div class="col-2 outline"><i class="fas fa-ban n_badges" aria-hidden="true"></i>${scammer_badges}</div></div><hr>`
   });
 
-  search_usernames.map((username) => {
-    document.getElementById(`trust_${username}`).addEventListener("click", (event) => {
+  store.getIdentities().identities.map((identity) => {
+    document.getElementById(`trust_${identity.username}`).addEventListener("click", (event) => {
       event.preventDefault();
-      trust(username);
+      // trust(identity.xpub);
     });
-    document.getElementById(`search_item_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      // displayProfile(store.getMyProfile(),store.getMyKeys(),username);
-    });
-  });
-
-  trusting_usernames.map((username) => {
-    document.getElementById('trusting_userlist').innerHTML += `<div id="trusting_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusting_revoke_${username}" class="btn-sm centerme" type="submit">Trusting</button></div></div><hr>`
-  });
-
-  trusting_usernames.map((username) => {
-    document.getElementById(`trusting_revoke_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      // revoke(username);
-    });
-    document.getElementById(`trusting_item_${username}`).addEventListener("click", (event) => {
+    document.getElementById(`search_item_${identity.username}`).addEventListener("click", (event) => {
       event.preventDefault();
       // displayProfile(store.getMyProfile(),store.getMyKeys(),username);
     });
   });
 
-  trusted_by_usernames.map((username) => {
-    /**
-     * 
-     * Check if the user is already trusted by the current user
-     * Accordingly change button text
-     * 
-     */
+  // trusting_usernames.map((username) => {
+  //   document.getElementById('trusting_userlist').innerHTML += `<div id="trusting_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusting_revoke_${username}" class="btn-sm centerme" type="submit">Trusting</button></div></div><hr>`
+  // });
 
-    if (trusting_usernames.includes(username))
-      document.getElementById('trusted_by_userlist').innerHTML += `<div id="trusted_by_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusted_by_revoke_${username}" class="btn-sm centerme" type="submit">Trusting</button></div></div><hr>`
-    else
-      document.getElementById('trusted_by_userlist').innerHTML += `<div id="trusted_by_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusted_by_${username}" class="btn-sm centerme" type="submit">Trust</button></div></div><hr>`
-  });
+  // trusting_usernames.map((username) => {
+  //   document.getElementById(`trusting_revoke_${username}`).addEventListener("click", (event) => {
+  //     event.preventDefault();
+  //     // revoke(username);
+  //   });
+  //   document.getElementById(`trusting_item_${username}`).addEventListener("click", (event) => {
+  //     event.preventDefault();
+  //     // displayProfile(store.getMyProfile(),store.getMyKeys(),username);
+  //   });
+  // });
 
-  trusted_by_usernames.map((username) => {
-    if (trusting_usernames.includes(username))
-      document.getElementById(`trusted_by_revoke_${username}`).addEventListener("click", (event) => {
-        event.preventDefault();
-        // revoke(username);
-      });
-    else
-      document.getElementById(`trusted_by_${username}`).addEventListener("click", (event) => {
-        event.preventDefault();
-        // trust(username);
-      });
+  // trusted_by_usernames.map((username) => {
+  //   /**
+  //    * 
+  //    * Check if the user is already trusted by the current user
+  //    * Accordingly change button text
+  //    * 
+  //    */
 
-    document.getElementById(`trusted_by_item_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      // displayProfile(store.getMyProfile(),store.getMyKeys(),username);
-    });
-  });
+  //   if (trusting_usernames.includes(username))
+  //     document.getElementById('trusted_by_userlist').innerHTML += `<div id="trusted_by_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusted_by_revoke_${username}" class="btn-sm centerme" type="submit">Trusting</button></div></div><hr>`
+  //   else
+  //     document.getElementById('trusted_by_userlist').innerHTML += `<div id="trusted_by_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusted_by_${username}" class="btn-sm centerme" type="submit">Trust</button></div></div><hr>`
+  // });
+
+  // trusted_by_usernames.map((username) => {
+  //   if (trusting_usernames.includes(username))
+  //     document.getElementById(`trusted_by_revoke_${username}`).addEventListener("click", (event) => {
+  //       event.preventDefault();
+  //       // revoke(username);
+  //     });
+  //   else
+  //     document.getElementById(`trusted_by_${username}`).addEventListener("click", (event) => {
+  //       event.preventDefault();
+  //       // trust(username);
+  //     });
+
+  //   document.getElementById(`trusted_by_item_${username}`).addEventListener("click", (event) => {
+  //     event.preventDefault();
+  //     // displayProfile(store.getMyProfile(),store.getMyKeys(),username);
+  //   });
+  // });
 
   document.getElementById(`network_trusting_menu`).addEventListener("click", (event) => {
     event.preventDefault();
