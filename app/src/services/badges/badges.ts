@@ -23,11 +23,10 @@ export class CypherpostBadges implements BadgeInterface {
   }
   async create(from: string, to: string, type: BadgeType, nonce: string, signature: string): Promise<boolean | Error> {
     try{
-      const pubkey = await bitcoin.extract_ecdsa_pub(from);
-      if(pubkey instanceof Error) return pubkey;
+  
       const trust_message = `${from}:${to}:${type.toString()}:${nonce}`;
       // console.log({trust_message});
-      const verify = await bitcoin.verify(trust_message, signature,pubkey);
+      const verify = await bitcoin.verify(trust_message, signature,from);
       if (verify instanceof Error) return verify;
       if (!verify) return handleError({
         code: 401,

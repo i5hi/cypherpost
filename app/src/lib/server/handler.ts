@@ -301,6 +301,8 @@ export interface S5Input {
   signature?:string;
   currency?: string;
   amount?: number;
+  filter?:object;
+  post_id?:string;
 
 };
 

@@ -88,7 +88,7 @@ describe("Initalizing Test: Post Key Service", function () {
     encryption_key = bitcoin.derive_hardened(xprv,2,0,0);
     if (encryption_key instanceof Error) throw encryption_key;
     encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
-    let pair = bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
+    let pair = await bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
     if(pair instanceof Error) throw pair;
     shared_secret = bitcoin.calculate_shared_secret(pair);
     decryption_key = s5crypto.encryptAESMessageWithIV(encryption_key as string,shared_secret as string);
@@ -113,7 +113,7 @@ describe("Initalizing Test: Post Key Service", function () {
       encryption_key = bitcoin.derive_hardened(xprv,2,0,1);
       if (encryption_key instanceof Error) throw encryption_key;
       encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
-      let pair = bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
+      let pair = await bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
       if(pair instanceof Error) throw pair;
       shared_secret = bitcoin.calculate_shared_secret(pair);
       decryption_key = s5crypto.encryptAESMessageWithIV(encryption_key as string,shared_secret as string);

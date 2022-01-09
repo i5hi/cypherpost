@@ -30,12 +30,12 @@ export async function identityMiddleware(req, res, next) {
     const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
-    console.log({message});
-    console.log({signature});
-    console.log({pubkey});
+    // console.log({message});
+    // console.log({signature});
+    // console.log({pubkey});
     
     let verified = await bitcoin.verify(message, signature, pubkey);
-    console.log({verified})
+    // console.log({verified})
     if (verified instanceof Error) throw verified;
     if (!verified) throw{
       code: 401,

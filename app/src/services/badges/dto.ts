@@ -19,7 +19,7 @@ export async function badgesMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
     const signature = request.headers['x-client-signature'];
-    const xpub = request.headers['x-client-pubkey'];
+    const pubkey = request.headers['x-client-pubkey'];
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
@@ -27,7 +27,7 @@ export async function badgesMiddleware(req, res, next) {
     const message = `${method} ${resource} ${body} ${nonce}`;
 
     // console.log({message});
-    const status = await identity.verify(xpub, message, signature);
+    const status = await identity.verify(pubkey, message, signature);
     if (status instanceof Error) throw status;
     else next();
   }

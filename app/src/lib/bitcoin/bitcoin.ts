@@ -132,6 +132,7 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
 
   calculate_shared_secret(ecdsa_keys: ECDSAKeys): string | Error {
 
+    ecdsa_keys.public_key= (ecdsa_keys.public_key.startsWith("02" || "03"))?ecdsa_keys.public_key: "02" + ecdsa_keys.public_key;
     const type = "secp256k1";
 
     let curve = crypto.createECDH(type);

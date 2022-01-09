@@ -4,9 +4,11 @@ Developed @ Stackmate India
 */
 
 export interface PostInterface{
-  create(owner: string, expiry: number, cypher_json: string, derivation_scheme: string): Promise<string | Error>;
+  create(owner: string, expiry: number, cypher_json: string, derivation_scheme: string, reference?: string): Promise<string | Error>;
   findManyById(ids: Array<string>): Promise<Array<UserPost> | Error>;
   findAllByOwner(owner: string): Promise<Array<UserPost> | Error>; 
+  findByDate(after: number): Promise<Array<UserPost> | Error>;
+
   removeOneById(id: string, owner: string): Promise<boolean | Error>;
   removeManyById(ids: string[]): Promise<boolean | Error>
   removeAllByOwner(owner:string): Promise<Array<string> | Error>;
@@ -23,6 +25,7 @@ export interface PostStore{
  
 export interface UserPost{
   id?: string;
+  reference?: string;
   genesis?: number;
   expiry?: number;
   owner?: string;
@@ -32,5 +35,7 @@ export interface UserPost{
 
 export enum PostStoreIndex{
   Owner,
-  PostId
+  PostId,
+  Ref,
+  Genesis
 }

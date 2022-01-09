@@ -2,7 +2,7 @@
 
 ## A centralized encrypted data store, enabling client-side applications that require end-to-end encryption and selective visibility of content.
 
-- Your identity on the platform is a `username:xpub`
+- Your identity on the platform is a `username:pubkey`
 - All your posts are encrypted custom json strings.
 - Posts can be decrypted only by the identities you give visibility to.
 - You give identities visibility by sharing decryption keys with them.

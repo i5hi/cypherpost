@@ -13,10 +13,6 @@ const post_schema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    expiry: {
-      type: Number,
-      required: true,
-    },
     owner: {
       type: String,
       required: true,
@@ -32,6 +28,11 @@ const post_schema = new mongoose.Schema(
       type: String,
       required: false,
       index: true,
+    },
+    // no filters
+    expiry: {
+      type: Number,
+      required: true,
     },
     cypher_json: {
       type: String,
@@ -95,7 +96,10 @@ export class MongoPostStore implements PostStore {
   }
   async readMany(indexes: Array<string>, index_type: PostStoreIndex): Promise<Array<UserPost> | Error> {
     try {
-      const query = (index_type == PostStoreIndex.Owner) ? { owner: { $in: indexes } } : { id: { $in: indexes } } ;
+      const query = (index_type == PostStoreIndex.Owner) ? { owner: { $in: indexes } } 
+      : (index_type == PostStoreIndex.Ref) ? {reference: {$in: indexes}} 
+      : (index_type == PostStoreIndex.Genesis) ? {genesis: {"$gte": parseInt(indexes[0])}} 
+      : { id: { $in: indexes } } ;
 
       const docs = await postStore.find(query).sort({"genesis": -1}).exec();
       if (docs.length>0) {
@@ -108,6 +112,7 @@ export class MongoPostStore implements PostStore {
             id: doc["id"],
             genesis: doc["genesis"],
             expiry: doc["expiry"],
+            reference: doc['reference'],
             cypher_json: doc["cypher_json"],
             derivation_scheme: doc["derivation_scheme"],
           }
@@ -120,6 +125,7 @@ export class MongoPostStore implements PostStore {
       return handleError(e);
     }
   }
+
   async readAll(): Promise<Array<UserPost> | Error> {
     try {
       const docs = await postStore.find({}).sort({"genesis": -1}).exec();
