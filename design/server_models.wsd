@@ -1,0 +1,50 @@
+@startuml
+
+title All
+
+note left
+"*" indicates end-to-end encrypted fields
+end note
+
+map Identity {
+  genesis => UInt
+  username => String
+  pubkey => String
+  hash_id => String
+  server_signature => String
+}
+
+object BadgeType{
+  Trusted,
+  VerifiedInPerson,
+  Scammer
+}
+
+map Badge {
+  genesis=> UInt;
+  giver=> Identity;
+  reciever=> Identity;
+  type=> BadgeType;
+  nonce=> String;
+  hash_id=> String;
+  client_signature=> String;
+}
+
+map Post{
+  genesis=> UInt;
+  expiry=> UInt;
+  owner=> String;
+  derivation_scheme=> String;
+  cypher_json=> String;
+  hash_id=> String;
+  post_reference=> String;
+}
+
+map Key {
+  genesis=> UInt;
+  post_reference=> String;
+  giver=> String;
+  reciever=> String;
+  decryption_key?=> String;
+}
+@enduml
