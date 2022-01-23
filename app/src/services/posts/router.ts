@@ -5,7 +5,7 @@ Developed @ Stackmate India
 // ------------------ '(◣ ◢)' ---------------------
 import { Router } from "express";
 import * as val from "express-validator";
-import { handleCreatePost, handleDeletePost, handleGetMyPosts, handleGetOthersPosts, handleGetPosts, handleUpdatePostKeys, postMiddleware } from "./dto";
+import { handleCreatePost, handleDeletePostAndReferenceKeys, handleGetMyPosts, handleGetOthersPosts, handleGetPosts, handlePutKeys, postMiddleware } from "./dto";
 
 // ------------------ '(◣ ◢)' ---------------------
 export const router = Router();
@@ -20,7 +20,7 @@ const createPostCheck = [
 const getPostsCheck=[
   val.check('filter').exists()
 ]
-const updatePostKeysCheck = [
+const updatePutKeysCheck = [
   val.check('decryption_keys').exists().isArray(),
   val.check('post_id').exists()
 ];
@@ -31,7 +31,7 @@ router.put("/", createPostCheck, handleCreatePost);
 router.get("/self", handleGetMyPosts); 
 router.get("/",getPostsCheck,handleGetPosts);
 router.get("/others", handleGetOthersPosts);
-router.delete("/:id", handleDeletePost);
-router.put("/keys",updatePostKeysCheck, handleUpdatePostKeys);
+router.put("/keys",updatePutKeysCheck, handlePutKeys);
+router.delete("/:id", handleDeletePostAndReferenceKeys);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------
 

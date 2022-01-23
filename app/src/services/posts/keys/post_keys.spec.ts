@@ -71,7 +71,7 @@ let post_key: PostDecryptionKey = {
   genesis: 0,
   giver: xpub,
   reciever: xpub1,
-  id: "5omePostID",
+  post_id: "5omePostID",
   decryption_key: ""
 };
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------

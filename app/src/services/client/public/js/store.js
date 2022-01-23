@@ -42,6 +42,11 @@ function getAllBadges() {
   return (all_badges) ? JSON.parse(all_badges) : null
 }
 
+function setMyBadges(my_badges){
+  sessionStorage.setItem(`my_badges`, JSON.stringify(profile));
+  return true;
+}
+
 function setMnemonic(mnemonic, password) {
   const encryption_key = crypto.createHash("sha256")
     .update(password)
@@ -72,6 +77,29 @@ function getMyProfile() {
   return (profile) ? JSON.parse(profile) : null
 }
 
+
+function setMyPreferences(preferences) {
+  sessionStorage.setItem(`my_preferences`, JSON.stringify(preferences));
+  return true;
+}
+
+function getMyPreferences() {
+  const preferences = sessionStorage.getItem("my_preferences");
+  return (preferences) ? JSON.parse(preferences) : null;
+
+}
+
+function setMyTrades(posts) {
+  sessionStorage.setItem(`my_posts`, JSON.stringify(posts));
+  return true;
+}
+
+function getMyTrades() {
+  const posts = sessionStorage.getItem("my_posts");
+  return (posts) ? JSON.parse(posts) : null;
+
+}
+
 // function setMyProfileKeys(keys) {
 //   sessionStorage.setItem(`profile_keys`, JSON.stringify(keys));
 //   return true;
@@ -91,45 +119,27 @@ function getMyKeyChain() {
   return (keys) ? JSON.parse(keys) : null;
 }
 
-function setUserProfile(username, profile) {
-  sessionStorage.setItem(`${username}_profile`, JSON.stringify(profile));
+function setOthersTrades(trades) {
+  sessionStorage.setItem(`others_trades`, JSON.stringify(trades));
   return true;
 }
 
-function getUserProfile(username) {
-  return sessionStorage.getItem(`${username}_profile`) ? JSON.parse(sessionStorage.getItem(`${username}`)) : null;
-}
+function getOthersTrades() {
+  const trades = sessionStorage.getItem("others_trades");
+  return (trades) ? JSON.parse(trades) : null;
 
-function setUserKeys(username, keys) {
-  sessionStorage.setItem(`${username}_keys`, JSON.stringify(keys));
+}
+function setOthersProfiles(profiles) {
+  sessionStorage.setItem(`others_profiles`, JSON.stringify(profile));
   return true;
 }
 
-function getUserKeys(username) {
-  return sessionStorage.getItem(`${username}_keys`) ? JSON.parse(sessionStorage.getItem(`${username}`)) : null;
-}
-
-function setMyPosts(posts) {
-  sessionStorage.setItem(`my_posts`, JSON.stringify(posts));
-  return true;
-}
-
-function getMyPosts() {
-  const posts = sessionStorage.getItem("my_posts");
-  return (posts) ? JSON.parse(posts) : null;
+function getOthersProfiles() {
+  const profiles = sessionStorage.getItem("others_profiles");
+  return (profiles) ? JSON.parse(profiles) : null;
 
 }
 
-function setOthersPosts(posts) {
-  sessionStorage.setItem(`others_posts`, JSON.stringify(posts));
-  return true;
-}
-
-function getOthersPosts() {
-  const posts = sessionStorage.getItem("others_posts");
-  return (posts) ? JSON.parse(posts) : null;
-
-}
 
 module.exports = {
   setIdentities,
@@ -140,14 +150,15 @@ module.exports = {
   getMyProfile,
   setMyKeyChain,
   getMyKeyChain,
-  setUserKeys,
-  getUserKeys,
-  setUserProfile,
-  getUserProfile,
-  setMyPosts,
-  getMyPosts,
-  setOthersPosts,
-  getOthersPosts,
+  setOthersProfiles,
+  getOthersProfiles,
+  setMyTrades,
+  getMyTrades,
+  setOthersTrades,
+  getOthersTrades,
   setMnemonic,
-  getMnemonic
+  getMnemonic,
+  setMyPreferences,
+  getMyPreferences,
+  setMyBadges
 }

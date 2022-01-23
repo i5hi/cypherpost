@@ -26,6 +26,6 @@ export interface Badge {
   signature: string;
 }
 export enum BadgeType {
-  Trusted="Trusted",
-  VerifiedInPerson="VerifiedInPerson",
+  Trusted="TRUST",
+  Scammer="SCAMMER"
 }

@@ -3,9 +3,12 @@ const { loadInitialState } = require('./init');
 const store = require("./store");
 const bitcoin = require("./bitcoin");
 const {
-  apiIdentityRegistration,
-  apiIdentityAll,
+  registerIdentity,
+  getAllIdentities,
 } = require("./api");
+
+const util = require("./util");
+
 const web_url = (document['domain'] === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
 
 function displayMnemonic(mnemonic) {
@@ -19,37 +22,7 @@ function displayRegistration() {
   document.getElementById("registration").classList.remove("hidden");
   return true;
 }
-async function storeMnemonic() {
-  const mnemonic = document.getElementById("mnemonic").textContent;
-  const password = document.getElementById("mnemonic_pass").value;
-  const confirm = document.getElementById("mnemonic_confirm_pass").value;
-  console.log({ mnemonic, password, confirm });
-  document.getElementById("mnemonic_pass").value = "";
-  document.getElementById("mnemonic_confirm_pass").value = "";
-  if (password === confirm) {
-    const seed_root = await bitcoin.seed_root(mnemonic);
-    const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
-    const keys = {
-      cypherpost: cypherpost_parent,
-      identity: bitcoin.derive_identity_parent(cypherpost_parent['xprv']),
-      // profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
-      // preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
-      // post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
-    };
-    store.setMyKeyChain(keys);
-    const status = await downloadAllIdentities(keys.identity);
-    if (status instanceof Error) {
-      alert("Error getting identities!")
-      return false;
-    };
-    if (status)
-      return store.setMnemonic(mnemonic, password);
-    else return status;
-  } else {
-    alert("Passwords do not match!");
-    return false;
-  }
-}
+
 
 // COMPOSITES
 async function registerComposite() {
@@ -62,7 +35,7 @@ async function registerComposite() {
   });
   if (result.length > 0) return false;
   const keys = store.getMyKeyChain();
-  const response = await apiIdentityRegistration(keys.identity, username);
+  const response = await registerIdentity(keys.identity, username.toLowerCase());
   if (response instanceof Error) {
     alert(response.message);
     return false;
@@ -82,32 +55,24 @@ async function resetComposite() {
   document.getElementById("reset_confirm_pass").value = "";
 
   if (password === confirm) {
-    const seed_root = await bitcoin.seed_root(mnemonic);
-    const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
-    const keys = {
-      cypherpost: cypherpost_parent,
-      identity: bitcoin.derive_identity_parent(cypherpost_parent['xprv']),
-    };
-    store.setMyKeyChain(keys);
-
+    const keys = await initKeyChain(mnemonic);
+    if (keys instanceof Error) return keys;
     const identities = await downloadAllIdentities(keys.identity);
     if (identities instanceof Error) {
-      alert("Error getting identities!")      
+      alert("Error getting identities!")
       return false;
     };
-    const identity_matches = store.getIdentities().filter(identity=>{
-      if (identity.xpub === keys.identity['xpub']) {
-        return identity;
-      }
-    });
-    // if they are more than 1 something is wrong
+    const identity_matches = store
+      .getIdentities()
+      .filter(identity => identity.pubkey === keys.identity['pubkey']);
+
     if (identity_matches.length === 1)
       return store.setMnemonic(mnemonic, password);
-    else 
-      console.error({identity_matches})
-      alert("No identity matches! Redirecting to Register...");
-      window.location.href = "registration"
-      return false;      
+    else
+      console.error({ identity_matches })
+    alert("No identity matches! Redirecting to Register...");
+    window.location.href = "registration"
+    return false;
   } else {
     alert("Passwords do not match!");
     return false;
@@ -123,17 +88,7 @@ async function loginComposite() {
     return false;
   }
   if (mnemonic) {
-    const seed_root = await bitcoin.seed_root(mnemonic);
-    const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
-    keys = {
-      cypherpost: cypherpost_parent,
-      identity: bitcoin.derive_identity_parent(cypherpost_parent['xprv']),
-      // profile: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/1'/0'/0'"),
-      // preference: bitcoin.derive_preference_parent(cypherpost_parent['xprv']),
-      // post: bitcoin.derive_hardened_str(cypherpost_parent['xprv'], "m/3'/0'/0'"),
-    };
-    alert("SUCCESS! Decrypted Mnemonic!");
-    return store.setMyKeyChain(keys);
+    const keys = await initKeyChain(mnemonic);
   }
   else {
     alert("No encrypted mnemonic found. Import mnemonic through reset.");
@@ -141,15 +96,42 @@ async function loginComposite() {
   };
 }
 
+// HELPERS
 async function downloadAllIdentities(identity_parent) {
-  const response = await apiIdentityAll(identity_parent);
+  const response = await getAllIdentities(identity_parent);
   if (response instanceof Error) {
     alert(response.message);
     return false;
   }
   else {
-    store.setIdentities(response.identities);
+    store.setIdentities(response);
+    console.log(store.getIdentities());
     return true;
+  }
+}
+async function initKeyChain(mnemonic) {
+  const keys = await util.createRootKeyChain(mnemonic);
+  if (keys instanceof Error)
+    alert("Could not initialize Key Chain! Re-enter mnemonic.")
+  else
+    store.setMyKeyChain(keys);
+  return keys;
+}
+async function confirmAndStoreMnemonic() {
+  const mnemonic = document.getElementById("mnemonic").textContent;
+  const password = document.getElementById("mnemonic_pass").value;
+  const confirm = document.getElementById("mnemonic_confirm_pass").value;
+  console.log({ mnemonic, password, confirm });
+  document.getElementById("mnemonic_pass").value = "";
+  document.getElementById("mnemonic_confirm_pass").value = "";
+  document.getElementById("mnemonic").textContent = "";
+  if (password === confirm) {
+    const keys = await initKeyChain(mnemonic);
+    store.setMnemonic(mnemonic, password);
+    return keys;
+  } else {
+    alert("Passwords do not match!");
+    return false;
   }
 }
 // EVENT LISTENERS
@@ -177,7 +159,7 @@ async function loadAuthEvents() {
       });
       break;
     case "login":
-      const status = localStorage.getItem("my_mnemonic");
+      const status = store.getMnemonic();
       if (!status) {
         alert("COULD NOT FIND LOCALLY ENCRYPTED MNEMONIC.\nREDIRECTING TO RESET PAGE.")
         window.location.href = "reset";
@@ -200,12 +182,16 @@ async function loadAuthEvents() {
       });
       document.getElementById("mnemonic_confirm_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        const status = await storeMnemonic();
-        if (!status) {
-          return;
+        const keys = await confirmAndStoreMnemonic();
+        if (!keys) {
+          return false;
         }
         else {
-          document.getElementById("mnemonic").textContent = "";
+          const status = await downloadAllIdentities(keys.identity);
+          if (status instanceof Error) {
+            alert("Error getting identities!")
+            return false;
+          };
           displayRegistration();
         }
       });
@@ -214,7 +200,7 @@ async function loadAuthEvents() {
         const status = await registerComposite();
         if (status) {
           await loadInitialState();
-          window.location.href = "notifications"  
+          window.location.href = "notifications"
         }
         else alert("Registration failed!");
 
@@ -224,8 +210,7 @@ async function loadAuthEvents() {
       document.getElementById("reset_button").addEventListener("click", async (event) => {
         event.preventDefault();
         const status = await resetComposite();
-        if (status) 
-        {
+        if (status) {
           await loadInitialState();
           window.location.href = "notifications"
         }
@@ -246,7 +231,7 @@ async function exit() {
 window.onload = loadAuthEvents();
 
 module.exports = {
- exit
+  exit
 }
 /**
  * test user

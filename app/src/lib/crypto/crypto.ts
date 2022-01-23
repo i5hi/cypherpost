@@ -101,15 +101,15 @@ export class S5Crypto implements CryptoInterface {
     try{
     const algorithm = "aes-256-cbc";
     const key = Buffer.from(key_hex, "hex");
-    const IV_LENGTH = 16; // For AES, this is always 16
+    const IV_LENGTH = 16;
     const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(key), iv);
+    const cipher = crypto.createCipheriv(algorithm, Buffer.from(key), iv);
   
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
   
     const encrypted_text =
-      iv.toString("hex") + ":" + encrypted.toString("base64");
+      iv.toString("hex") + ":" + encrypted.toString("hex");
   
     return encrypted_text;
     }
@@ -125,8 +125,8 @@ export class S5Crypto implements CryptoInterface {
       const IV_LENGTH = 16; // For AES, this is always 16
       const text_parts = iv_text_crypt.split(":");
       const iv = Buffer.from(text_parts.shift(), "hex");
-      const encrypted_text = Buffer.from(text_parts.join(":"), "base64");
-      const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key), iv);
+      const encrypted_text = Buffer.from(text_parts.join(":"), "hex");
+      const decipher = crypto.createDecipheriv(algorithm, Buffer.from(key), iv);
     
       let decrypted = decipher.update(encrypted_text);
       decrypted = Buffer.concat([decrypted, decipher.final()]);

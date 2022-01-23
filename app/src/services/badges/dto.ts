@@ -20,6 +20,7 @@ export async function badgesMiddleware(req, res, next) {
   try {
     const signature = request.headers['x-client-signature'];
     const pubkey = request.headers['x-client-pubkey'];
+    // CHECK SIG AND PUBKEY FORMAT - RETURNS 500 IF NOT VALID
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;

@@ -206,8 +206,16 @@ export async function handleGetOthersPosts(req, res) {
         };
       });
 
+
+    const posts_and_keys = [];
+    posts_recieved.filter(function (post) {
+      const key = reciever_keys.find(key => key.post_id === post.id);
+      key ? posts_and_keys.push({ ...post, decryption_key: key.decryption_key }) : null;
+    });
+
+    console.log({ posts_and_keys });
     const response = {
-      posts: posts_recieved,
+      posts: posts_and_keys,
       keys: reciever_keys
     };
 
@@ -219,7 +227,7 @@ export async function handleGetOthersPosts(req, res) {
   }
 }
 
-export async function handleDeletePost(req, res) {
+export async function handleDeletePostAndReferenceKeys(req, res) {
   const request = parseRequest(req);
   try {
     const errors = validationResult(req)
@@ -247,7 +255,7 @@ export async function handleDeletePost(req, res) {
   }
 }
 
-export async function handleUpdatePostKeys(req, res) {
+export async function handlePutKeys(req, res) {
   const request = parseRequest(req);
   try {
     const errors = validationResult(req)

@@ -5,7 +5,7 @@ const { encrypt, decrypt } = require("./aes");
 const { exit } = require("./auth");
 const store = require("./store");
 const {
-  apiProfileSelf, apiUpdateProfile, apiIdentityDelete
+  createPost, setPostVisibility, deleteMyIdentity
 } = require("./api");
 
 
@@ -50,7 +50,8 @@ function displayProfile(plain_json) {
 // COMPOSITES
 async function initProfileState() {
   const keys = store.getMyKeyChain();
-  console.log({keys})
+  console.log({keys});
+
   const my_profile_and_keys = await apiProfileSelf(keys.identity);
   if (my_profile_and_keys instanceof Error) return my_profile_and_keys;
 
@@ -103,7 +104,7 @@ async function editComposite() {
 
   const cypher_json = encrypt(JSON.stringify(plain_json), encryption_key);
   
-  const new_profile = await apiUpdateProfile(keys.identity, cypher_json, derivation_scheme);
+  const new_profile = await createPost(keys.identity, cypher_json, derivation_scheme);
   if (new_profile instanceof Error) {
     console.error({ e: new_profile })
   }
@@ -196,7 +197,7 @@ async function loadProfileEvents() {
       document.getElementById("profile_delete_button").addEventListener("click", async (event) => {
         event.preventDefault();
         if (confirm(`Deleting your identity is irreversible!\nYou will lose all data associated with this identity.\nAre you sure?`)) {
-          const status = await apiIdentityDelete(store.getMyKeyChain().identity);
+          const status = await deleteMyIdentity(store.getMyKeyChain().identity);
           if(status instanceof Error)
           console.log({status});
           else

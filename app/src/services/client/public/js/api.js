@@ -7,26 +7,25 @@ const store = require('./store');
 const bitcoin = require("./bitcoin");
 const { request } = require('./request');
 
-const RESOURCE_PREFIX = "/api/v2";
-const api_url = (document.domain === 'localhost') ? "http://localhost/api/v2" : `https://cypherpost.io/api/v2`;
-const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
+const VERSION_PREFIX = "/api/v2";
+const api_url = ((document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`) + VERSION_PREFIX;
 
-function createRequestSignature(method,resource,body,identity_parent,nonce){
-  const message = `${method} ${RESOURCE_PREFIX}${resource} ${JSON.stringify(body)} ${nonce}`;
-  const ecdsa_keys = bitcoin.extract_ecdsa_pair(identity_parent);
-  console.log({message})
-  return bitcoin.sign(message,ecdsa_keys.private_key);
+async function createRequestSignature(method, resource, body, identity_parent, nonce) {
+  const message = `${method} ${VERSION_PREFIX}${resource} ${JSON.stringify(body)} ${nonce}`;
+  console.log({ message })
+  return await bitcoin.sign(message, identity_parent.privkey);
 };
 
-function createRequestHeaders(identity_parent,nonce,signature){
+function createRequestHeaders(identity_parent, nonce, signature) {
   return {
-    "x-client-xpub": identity_parent['xpub'],
+    "x-client-pubkey": identity_parent['pubkey'],
     "x-nonce": nonce,
     "x-client-signature": signature,
   };
 }
 
-async function apiIdentityRegistration(identity_parent,username){
+
+async function registerIdentity(identity_parent, username) {
   const nonce = Date.now();
   const resource = "/identity";
   const url = api_url + resource;
@@ -35,186 +34,205 @@ async function apiIdentityRegistration(identity_parent,username){
     username
   };
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
-  console.log({headers,body,signature});
+  console.log({ headers, body, signature });
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
-  return response;
+  return response.status;
 }
-
-async function apiIdentityAll(identity_parent){
+async function getAllIdentities(identity_parent) {
   const nonce = Date.now();
   const resource = "/identity/all";
   const url = api_url + resource;
   const method = "GET";
   const body = {};
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
+  console.log({headers});
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
-  return response;
+  return response.identities;
 
 }
-
-async function apiIdentityDelete(identity_parent){
+async function deleteMyIdentity(identity_parent) {
   const nonce = Date.now();
   const resource = "/identity";
   const url = api_url + resource;
   const method = "DELETE";
   const body = {};
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
-  return response;
+  return response.status;
 
 }
-
-async function apiGetProfileSelf(identity_parent){
-  const nonce = Date.now();
-  const resource = "/profile/self";
-  const url = api_url + resource;
-  const method = "GET";
-  const body = {};
-
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
-
-  const response = await request(method, url, headers, body);
-  if (response instanceof Error) return response;
-
-  return response;
-}
-async function apiUpdateProfile(identity_parent,cypher_json,derivation_scheme){
-  const nonce = Date.now();
-  const resource = "/profile";
-  const url = api_url + resource;
-  const method = "POST";
-  const body = {
-    cypher_json,
-    derivation_scheme,
-  };
-
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
-
-  const response = await request(method, url, headers, body);
-  if (response instanceof Error) return response;
-
-  return response;
-}
-async function apiUpdateProfileKeys(identity_parent,decryption_keys){
-  const nonce = Date.now();
-  const resource = "/profile/keys";
-  const url = api_url + resource;
-  const method = "POST";
-  const body = {
-    decryption_keys
-  };
-
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
-
-  const response = await request(method, url, headers, body);
-  if (response instanceof Error) return response;
-
-  return response;
-}
-async function apiAllBadges(identity_parent){
+async function getAllBadges(identity_parent) {
   const nonce = Date.now();
   const resource = "/badges/all";
   const url = api_url + resource;
   const method = "GET";
   const body = {};
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
-  return response;
+  return response.badges;
 }
-
-async function apiProfileOthers(identity_parent){
+async function getMyBadges(identity_parent){
   const nonce = Date.now();
-  const resource = "/profile/others";
+  const resource = "/badges/self";
   const url = api_url + resource;
   const method = "GET";
   const body = {};
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
   return response;
 }
-async function apiGetPreferences(identity_parent){
-  const nonce = Date.now();
-  const resource = "/preference";
+async function createBadgeSignature(identity_parent, reciever_pubkey, type, nonce) {
+  const ecdsa_keys = bitcoin.extract_ecdsa_pair(identity_parent);
+  const message = `${ecdsa_keys.pubkey}:${reciever_pubkey}${type}:${nonce}`;
+  console.log({ message })
+  return await bitcoin.sign(message, ecdsa_keys.privkey);
+}
+async function giveBadge(identity_parent, reciever, badge_type) {
+  let nonce = Date.now();
+  const badge_signature = await createBadgeSignature(key_set.identity_private, reciever, badge_type.toUpperCase(), nonce);
+  const resource = "/badges" + badge_type;
   const url = api_url + resource;
-  const method = "GET";
-  const body = {};
+  const method = "POST";
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const body = {
+    trusting: reciever,
+    nonce,
+    signature: badge_signature
+  };
+
+  nonce = Date.now();
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
-  return response;
+  return response.status;
 }
-async function apiGetPostsSelf(identity_parent){
+async function createPost(identity_parent, cypher_json, derivation_scheme, expiry, reference) {
+  const nonce = Date.now();
+  const resource = "/posts";
+  const url = api_url + resource;
+  const method = "PUT";
+  const body = {
+    cypher_json,
+    derivation_scheme,
+    expiry,
+    reference
+  };
+
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
+
+  // console.log({headers,body,signature});
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response.id;
+}
+async function setPostVisibility(identity_parent, post_id, decryption_keys) {
+  const nonce = Date.now();
+  const resource = "/posts/keys";
+  const url = api_url + resource;
+  const method = "PUT";
+  const body = {
+    post_id,
+    decryption_keys
+  };
+
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response.status;
+}
+async function getMyPosts(identity_parent) {
   const nonce = Date.now();
   const resource = "/posts/self";
   const url = api_url + resource;
   const method = "GET";
   const body = {};
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
-  return response;
+  return response.posts;
 }
-async function apiGetPostsOthers(identity_parent){
+async function getPostsForMe(identity_parent) {
   const nonce = Date.now();
   const resource = "/posts/others";
   const url = api_url + resource;
   const method = "GET";
   const body = {};
 
-  const signature = createRequestSignature(method,resource,body,identity_parent,nonce);
-  const headers = createRequestHeaders(identity_parent,nonce,signature);
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
 
   const response = await request(method, url, headers, body);
   if (response instanceof Error) return response;
 
-  return response;
+  return response.posts;
+}
+async function deletePost(identity_parent, post_id) {
+  const nonce = Date.now();
+  const resource = "/posts/" + post_id;
+  const url = api_url + resource;
+  const method = "DELETE";
+  const body = {
+    post_id,
+    decryption_keys
+  };
+
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response.status;
 }
 
+
 module.exports = {
-  apiIdentityRegistration,
-  apiIdentityAll,
-  apiUpdateProfile,
-  apiPreferences: apiGetPreferences,
-  apiProfileSelf: apiGetProfileSelf,
-  apiProfileOthers,
-  apiPostsSelf: apiGetPostsSelf,
-  apiPostsOthers: apiGetPostsOthers,
-  apiAllBadges,
-  apiIdentityDelete
+  registerIdentity,
+  getAllIdentities,
+  getMyPosts,
+  getPostsForMe,
+  getAllBadges,
+  giveBadge,
+  deleteMyIdentity,
+  createPost,
+  setPostVisibility,
+  deletePost,
+  getMyBadges
 }
