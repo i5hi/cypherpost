@@ -38,7 +38,7 @@ function populateOthersTrades(others_posts) {
         : "cold-color";
 
       if (post.expiry != 0) {
-        let expiry_time;
+        let expiry_time = null;
         if ((post.expiry - Date.now()) / (1000 * 60 * 60) >= 24)
           expiry_time = `${Math.round((post.expiry - Date.now()) / (1000 * 60 * 60 * 24))} days`
         else if ((post.expiry - Date.now()) / (1000 * 60 * 60) >= 1)
