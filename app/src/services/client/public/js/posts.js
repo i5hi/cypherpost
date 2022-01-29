@@ -276,7 +276,8 @@ async function loadPostsEvents() {
         await addToMuteList(post.owner);
         document.getElementById("others_posts_menu").click();
       });
-    })
+    });
+    return;
   });
 
   document.getElementById("create_post_execute").addEventListener("click", async (event) => {
@@ -301,7 +302,7 @@ async function loadPostsEvents() {
     document.getElementById("close_create_post_modal").click();
     await comps.downloadAllMyPosts(keys.identity);
     document.getElementById("my_posts_menu").click();
-
+    
   });
 
 
