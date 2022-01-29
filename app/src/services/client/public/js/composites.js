@@ -136,6 +136,8 @@ async function createCypherPreferencePost(
   const preferences_id = await api.createPost(keys.identity, cypher_preferences.cypher_json, PREFERENCES_DS, 0, reference);
   if (preferences_id instanceof Error) return preferences_id;
 
+  if(!store.getMyPreferences()) return  preferences_id;
+  
   const removeOldPrefs = await api.deletePost(keys.identity,store.getMyPreferences().id);
   if (removeOldPrefs instanceof Error) return removeOldPrefs;
 
