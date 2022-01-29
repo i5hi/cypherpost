@@ -29,7 +29,7 @@ async function downloadAllIdentitiesAndBadges(identity_parent) {
   if (identities instanceof Error) return identities;
   const id_store = store.setIdentities(identities);
 
-  const my_identity = identities.find((identity)=>identity.pubkey == identity_parent.pubkey);
+  const my_identity = identities.find((identity) => identity.pubkey == identity_parent.pubkey);
   store.setMyUsername(my_identity.username);
 
   const all_badges = await api.getAllBadges(identity_parent);
@@ -47,16 +47,16 @@ async function downloadAllMyPosts(identity_parent) {
   const posts = await api.getMyPosts(identity_parent);
   if (posts instanceof Error) return posts;
 
-  console.log({posts})
+  console.log({ posts })
   const plain_json_posts = util.decryptMyCypherPosts(store.getMyKeyChain().cypherpost, posts);
   if (plain_json_posts instanceof Error) return plain_json_posts;
-  console.log({plain_json_posts})
+  console.log({ plain_json_posts })
 
   const segregated = util.segregateMyPlainPosts(plain_json_posts);
-  console.log({segregated})
+  console.log({ segregated })
 
-  const latest_preference = removeDuplicatePreferences(identity_parent,segregated.preferences);
-  
+  const latest_preference = removeDuplicatePreferences(identity_parent, segregated.preferences);
+
   const profile = store.setMyProfile(segregated.profile);
   const trades = store.setMyTrades(segregated.trades);
   const preferences = store.setMyPreferences(latest_preference);
@@ -78,17 +78,17 @@ async function downloadAllPostsForMe(identity_parent) {
   return profiles && trades;
 }
 
-function removeDuplicatePreferences(identity_parent,prefs){
+function removeDuplicatePreferences(identity_parent, prefs) {
   // const sorted_prefs = util.sortObjectByProperty(prefs,"genesis",false,true);
   // console.log({sorted_prefs});
 
-  
+
   const latest_preference = prefs.pop();
-  const prefs_delete_statuses = prefs.map(async (preference)=>{
-    const status = await api.deletePost(identity_parent,preference.id);
-    if(status instanceof Error) return status;
+  const prefs_delete_statuses = prefs.map(async (preference) => {
+    const status = await api.deletePost(identity_parent, preference.id);
+    if (status instanceof Error) return status;
   });
-  console.error({prefs_delete_statuses})
+  console.error({ prefs_delete_statuses })
 
   return latest_preference;
 }
@@ -136,10 +136,11 @@ async function createCypherPreferencePost(
   const preferences_id = await api.createPost(keys.identity, cypher_preferences.cypher_json, PREFERENCES_DS, 0, reference);
   if (preferences_id instanceof Error) return preferences_id;
 
-  if(!store.getMyPreferences() || !store.getMyPreferences().id) return preferences_id;
-
-  const removeOldPrefs = await api.deletePost(keys.identity,store.getMyPreferences().id);
-  if (removeOldPrefs instanceof Error) return removeOldPrefs;
+  if (!store.getMyPreferences()) console.log("INIT PREFS");
+  else {
+    const removeOldPrefs = await api.deletePost(keys.identity, store.getMyPreferences().id);
+    if (removeOldPrefs instanceof Error) return removeOldPrefs;
+  }
 
   return preferences_id;
 };
@@ -159,19 +160,19 @@ async function createCypherTradePost(
   const preferences = store.getMyPreferences().plain_json;
   // USE ONLY LATEST PREFERENCE
   // CURRENTLY ASSUMING
-  console.log({preferences});
+  console.log({ preferences });
   const trade_derivation_scheme = util.rotatePath(preferences.last_trade_derivation_scheme);
-  const mute_list = (preferences.mute_list)?preferences.mute_list:[];
-  const plain_trade =  {
+  const mute_list = (preferences.mute_list) ? preferences.mute_list : [];
+  const plain_trade = {
     type: TRADE,
     message,
-    networks: networks.length===0?["Bitcoin"]:networks,
+    networks: networks.length === 0 ? ["Bitcoin"] : networks,
     order,
-    minimum: minimum?minimum:0,
-    maximum: maximum?maximum:"No-Limit",
-    payment_methods: payment_methods.length===0?["ANY"]:payment_methods,
+    minimum: minimum ? minimum : 0,
+    maximum: maximum ? maximum : "No-Limit",
+    payment_methods: payment_methods.length === 0 ? ["ANY"] : payment_methods,
     reference_exchange,
-    reference_percent: reference_percent?reference_percent:0
+    reference_percent: reference_percent ? reference_percent : 0
   };
   const keys = store.getMyKeyChain();
   const cypher_trade = util.createCypherJSON(
@@ -187,7 +188,7 @@ async function createCypherTradePost(
   const plain_preferences = {
     type: PREFERENCES,
     last_trade_derivation_scheme: trade_derivation_scheme,
-    mute_list:mute_list, 
+    mute_list: mute_list,
   };
   const cypher_preferences = util.createCypherJSON(
     keys.cypherpost,
@@ -197,10 +198,10 @@ async function createCypherTradePost(
   const preferences_id = await api.createPost(keys.identity, cypher_preferences.cypher_json, PREFERENCES_DS, 0, reference);
   if (preferences_id instanceof Error) return preferences_id;
 
-  const removeOldPrefs = await api.deletePost(keys.identity,preferences.id);
+  const removeOldPrefs = await api.deletePost(keys.identity, preferences.id);
   if (removeOldPrefs instanceof Error) return removeOldPrefs;
 
-  console.log({selected_pubkeys});
+  console.log({ selected_pubkeys });
   const decryption_keys = util.createDecryptionKeys(keys.identity, cypher_trade.primary_key, selected_pubkeys);
 
   const status = await api.setPostVisibility(keys.identity, trade_id, decryption_keys);
