@@ -18,7 +18,7 @@ router.get("/registration", handleGetRegistrationPage);
 router.get("/notifications", handleGetNotificationsPage);
 router.get("/login", handleGetLoginPage);
 router.get("/reset", handleGetResetPage);
-router.get("/profile", handleGetProfilePage);
+router.get("/preferences", handleGetProfilePage);
 router.get("/network", handleGetNetworkPage);
 router.get("/posts", handleGetPostsPage);
 // // ------------------ '(◣ ◢)' ---------------------
