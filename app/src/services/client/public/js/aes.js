@@ -1,39 +1,47 @@
 const crypto = require("crypto");
+const ALGORITHM = "aes-256-cbc";
+const IV_LENGTH = 16;
 
-function encrypt(text, key_hex){
-  const algorithm = "aes-256-cbc";
-  const key = Buffer.from(key_hex, "hex");
-  const IV_LENGTH = 16; // For AES, this is always 16
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(key), iv);
 
-  let encrypted = cipher.update(text);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
+function encrypt(text, key_hex) {
+  try {
+    const key = Buffer.from(key_hex, "hex");
+    const iv = crypto.randomBytes(IV_LENGTH);
+    const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(key), iv);
 
-  const encrypted_text =
-    iv.toString("hex") + ":" + encrypted.toString("base64");
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
 
-  return encrypted_text;
+    const cipher_text =
+      iv.toString("hex") + ":" + encrypted.toString("hex");
+    return cipher_text;
+  }
+  catch (e) {
+    console.error({ e })
+    return null
+  }
 }
 
-function decrypt(cipher_text, key_hex){
-
-    const algorithm = "aes-256-cbc";
+function decrypt(cipher_text, key_hex) {
+  try {
     const key = Buffer.from(key_hex, "hex");
-  
-    const IV_LENGTH = 16; // For AES, this is always 16
     const text_parts = cipher_text.split(":");
     const iv = Buffer.from(text_parts.shift(), "hex");
-    const encrypted_text = Buffer.from(text_parts.join(":"), "base64");
-    const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key), iv);
-  
-    let decrypted = decipher.update(encrypted_text);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-  
-    return decrypted.toString();
+
+    const encrypted_text = Buffer.from(text_parts.join(":"), "hex");
+    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(key), iv);
+
+    let plain_text = decipher.update(encrypted_text);
+    plain_text = Buffer.concat([plain_text, decipher.final()]);
+    return plain_text.toString();
+  }
+  catch (e) {
+    console.error({ e })
+    return null
+  }
 
 }
 
-module.exports={
-  encrypt,decrypt
+module.exports = {
+  encrypt, decrypt
 }

@@ -1,27 +1,19 @@
-# cypherpost.io
+# cypherpost
 
-## Note: This project is in extreme BETA and actively looking for community support. We see this project forming a basis for privacy respecting social networks; if this is something you are interested in, please reach out.
+## A centralized encrypted data store, enabling client-side applications that require end-to-end encryption and selective visibility of content.
 
-### REFERENCE CLIENT UNDER CONSTRUCTION.
+- Your identity on the platform is a `username:pubkey`
+- All your posts are encrypted custom json strings.
+- Posts can be decrypted only by the identities you give visibility to.
+- You give identities visibility by sharing decryption keys with them.
+- ECDSA Shared Secrets are used per identity, to encrypt decryption keys in transit.
+- Badges form a reputation system and help build a trusted network.
+- Value of badges are subjective and based on who the givers are.
+=======
 
-A private, end-to-end encrypted social network to selectively post ads and messages to members of a trusted network.
+### Server LIVE at https://cypherpost.io/api/v2
 
-- Your identity on the platform is a username:xpub
-- Your profile and posts are encrypted.
-- Profile and posts can be decrypted only by those you select.
-- You can give individuals badges to help you classify and decide who to share keys with.
-- Badges include: Trusted, VerifiedInPerson & Scammer
-- Your identity, badges given & recieved and number of live posts are public.
-
-BIP39 key generation & BIP32 key derivation is used for portable end-to-end encryption; to allow users to recover their accounts on any device without the need to maintain a master device holding a non-human readable master key.
-
-### Actualization
-
-The aim of this project is to facilitate such a scenario:
-
-- You wish to buy/sell bitcoin (or anything else?).
-- Find someone in your network who has posted an ad OR You post an ad.
-- Moments later, the two of you get in touch and fulfil each other's request.
+### Reference client UNDER CONSTRUCTION at https://cypherpost.io.
 
 ![cypherpost](design/assets/owl.png)
 

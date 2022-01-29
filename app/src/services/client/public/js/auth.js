@@ -1,256 +1,223 @@
-/**
- * 
- * localStorage:
- *  ${username}_parent_128
- * 
- * sessionStorage:
- *  existing_usernames
- *  token
- *  username
- *  inivited_by
- *  invite_code
- *  seed256
- *  recipient_parent
- *  profile_parent
- *  posts_parent
- */
-const crypto = require("crypto");
-
-const { loadInitialState } = require('./init');
-const store = require("./store");
-const bitcoin = require("./bitcoin");
+const INIT_TRADE_DS = "m/3h/0h/0h";
 const {
-  apiLogin,
-  apiRegister,
-  apiReset,
-  apiGetUsernames
+  generateMnemonic
+} = require("./bitcoin");
+const {
+  registerIdentity,
 } = require("./api");
+const store = require("./store");
+const util = require("./util");
+const comps = require("./composites");
 
-const web_url = (document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
-
-// DISPLAY
-function displayInvitation(valid, invited_by) {
-  if (valid) {
-    document.getElementById('invitation').textContent = `You have been invited by ${invited_by}.`;
-  }
-  else {
-    document.getElementById('invitation').textContent = `Your invitation is invalid or expired.`;
-    document.getElementById("seed_note_0").classList.add("hidden");
-    document.getElementById("seed_note_1").classList.add("hidden");
-  }
-}
 function displayMnemonic(mnemonic) {
-
   document.getElementById("welcome").classList.add("hidden");
   document.getElementById("seedgen").classList.remove("hidden");
   document.getElementById('mnemonic').textContent = mnemonic;
-
   return true;
 }
 function displayRegistration() {
   document.getElementById("seedgen").classList.add("hidden");
   document.getElementById("registration").classList.remove("hidden");
-
   return true;
 }
 
-
-// STORAGE
-function storeInvitation() {
-  const params = new URLSearchParams(window.location.search)
-  if (params.has('invited_by') && params.has('invite_code')) {
-    if (!store.setInvitation(params.get('invited_by'), params.get('invite_code'))) return false;
-    else return true;
+// Final Action Button Handlers
+async function completeRegistration() {
+  const username = document.getElementById("register_username").value.toLowerCase();
+  const username_availability = store.getIdentities().filter((identity) => {
+    if (identity.username === username) {
+      alert("Username already exists!");
+      return username;
+    }
+  });
+  if (username_availability.length > 0) return false;
+  const keys = store.getMyKeyChain();
+  const response = await registerIdentity(keys.identity, username.toLowerCase());
+  if (response instanceof Error) {
+    console.error(response.message);
+    return false;
   }
   else {
+    alert("SUCCESS! You are now registered!");
+    return true;
+  }
+}
+async function completeReset() {
+  const mnemonic = document.getElementById("reset_seed").value;
+  const password = document.getElementById("reset_pass").value;
+  const confirm = document.getElementById("reset_confirm_pass").value;
+
+  document.getElementById("reset_seed").value = "";
+  document.getElementById("reset_pass").value = "";
+  document.getElementById("reset_confirm_pass").value = "";
+
+  if (password === confirm) {
+    const keys = await initKeyChain(mnemonic);
+    if (keys instanceof Error) {
+      console.error({status: keys});
+      return false;
+    }
+    const status = await comps.downloadAllIdentities(keys.identity);
+    if (status instanceof Error) {
+      console.error({status});
+      return false;
+    };
+    const identity_matches = store
+      .getIdentities()
+      .filter(identity => identity.pubkey === keys.identity['pubkey']);
+
+    if (identity_matches.length === 1)
+      return store.setMnemonic(mnemonic, password);
+    else
+      console.error({ identity_matches })
+    alert("No identity matches! Redirecting to Register...");
+    window.location.href = "registration"
+    return false;
+  } else {
+    alert("Passwords do not match!");
+    return false;
+  }
+}
+async function completeLogin() {
+  const password = document.getElementById("login_pass").value;
+  document.getElementById("login_pass").value = "";
+  const mnemonic = store.getMnemonic(password);
+  if (mnemonic instanceof Error) {
+    console.error({status: mnemonic});
+    return false;
+  }
+  if (mnemonic) {
+    const keys = await initKeyChain(mnemonic);
+    if (keys instanceof Error) {
+      console.error({status: keys});
+      return false;
+    }
+    return true;
+  }
+  else {
+    alert("No encrypted mnemonic found. Import mnemonic through reset.");
     return false;
   };
 }
 
-async function tempParentAndSeed256Storage(seed) {
-
-  const root = await bitcoin.seed_root(seed);
-  const parent_128 = bitcoin.derive_parent_128(root);
-  if (!store.setParentKeys(parent_128['xprv'])) {
-    console.error("Error setting parent keys.")
+// HELPERS
+async function initKeyChain(mnemonic) {
+  const keys = await util.createRootKeyChain(mnemonic);
+  if (keys instanceof Error)
+    alert("Could not initialize Key Chain! Re-enter mnemonic.")
+  else
+    store.setMyKeyChain(keys);
+  return keys;
+}
+async function confirmAndStoreMnemonic() {
+  const mnemonic = document.getElementById("mnemonic").textContent;
+  const password = document.getElementById("mnemonic_pass").value;
+  const confirm = document.getElementById("mnemonic_confirm_pass").value;
+  console.log({ mnemonic, password, confirm });
+  document.getElementById("mnemonic_pass").value = "";
+  document.getElementById("mnemonic_confirm_pass").value = "";
+  if (password === confirm) {
+    const keys = await initKeyChain(mnemonic);
+    store.setMnemonic(mnemonic, password);
+    document.getElementById("mnemonic").textContent = "";
+    return keys;
+  } else {
+    alert("Passwords do not match!");
     return false;
   }
-
-  // temp encryption
-  store.setParent128(parent_128, "temp", "temp");
-
-  const seed256 = crypto.createHash('sha256')
-    .update(seed)
-    .digest('hex');
-
-  return store.setSeed256(seed256);
-
 }
 
-function updateParentStorage(username, password) {
-
-  const parent_128_plain = store.getParent128("temp", "temp");
-  // update encryption
-  return store.setParent128(parent_128_plain, username, password);
-}
-
-// GLOBAL
-async function exit() {
-  sessionStorage.clear();
-  window.location.href = web_url;
-}
-
-async function decodeJWTUser(token){
-  const split_token = token.split(".");
-  const header = JSON.parse(Buffer.from(split_token[0],"base64"));
-  const payload = JSON.parse(Buffer.from(split_token[1],"base64"));
-  // console.log(header, payload['payload']);
-  return payload['payload']['user'];
-}
-// COMPOSITES
-
-async function registerComposite() {
-  const username = document.getElementById("register_username").value.toLowerCase();
-  const password = document.getElementById("register_pass").value;
-  const confirm = document.getElementById("register_confirm_pass").value;
-  document.getElementById("register_pass").value = "";
-  document.getElementById("register_confirm_pass").value = "";
-
-
-  const token = await apiRegister(username, password, confirm);
-  if (token instanceof Error) {
-    alert(e.message)
-    return false;
-  }
-  else {
-    updateParentStorage(username, password);
-    const status = await loadInitialState(token, username, password);
-    if (!status) alert("Error in loading initial state. App might be buggy!\n Check logs and report to admin.");
-    window.location.href = "profile";
-  }
-  return;
-}
-
-async function resetComposite() {
-  const seed = document.getElementById("reset_seed").value;
-  const password = document.getElementById("reset_pass").value;
-  const confirm = document.getElementById("reset_confirm_pass").value;
-  document.getElementById("reset_seed").value = "";
-  document.getElementById("reset_pass").value = "";
-  document.getElementById("reset_confirm_pass").value = "";
-  const token = await apiReset(seed, password, confirm);
-  if (token instanceof Error) {
-    alert(token.message)
-    return false;
-  }
-
-  const username = decodeJWTUser(token);
-  updateParentStorage(username, password);
-  const status = await loadInitialState(token, username, password);
-  if (!status) alert("Error in loading initial state. App might be buggy!\n Check logs and report to admin.");
-  else window.location.href = "posts";
-
-}
-
-async function loginComposite() {
-  const username = document.getElementById("login_username").value.toLowerCase();
-  const password = document.getElementById("login_pass").value;
-  document.getElementById("login_pass").value = "";
-
-  const token = await apiLogin(username, password);
-  if (token instanceof Error) {
-    alert(token.message)
-    return false;
-  }
-
-  const status = await loadInitialState(token, username, password);
-  if (!status) alert("Error in loading initial state. App might be buggy!\n Check logs and report to admin.");
-  else if (status === "import_seed") window.location.href = "profile";
-  else window.location.href = "posts";
-
-}
 // EVENT LISTENERS
 async function loadAuthEvents() {
   const path = window.location.href.split("/");
+  console.log(path);
+
   let endpoint = path[path.length - 1];
-  if (endpoint.startsWith('invitation')) endpoint = "invitation";
+  if (endpoint.startsWith('registration')) endpoint = "registration";
   if (endpoint === '') endpoint = "home";
   else endpoint = endpoint.split(".")[0];
-
   switch (endpoint) {
     case "home":
       document.getElementById("home_login").addEventListener("click", (event) => {
         event.preventDefault();
         window.location.href = "login";
       });
+      document.getElementById("home_register").addEventListener("click", (event) => {
+        event.preventDefault();
+        window.location.href = "registration";
+      });
       document.getElementById("home_reset").addEventListener("click", (event) => {
         event.preventDefault();
         window.location.href = "reset";
       });
-      document.getElementById("home_signup").addEventListener("click", (event) => {
-        event.preventDefault();
-        window.location.href = "invitation?invited_by=ravi&invite_code=foo";
-      });
       break;
-
     case "login":
+      // this has to go outside
+      const status = store.checkMnemonic();
+      if (!status) {
+        alert("COULD NOT FIND LOCALLY ENCRYPTED MNEMONIC.\nREDIRECTING TO RESET PAGE.")
+        window.location.href = "reset";
+      }
+
       document.getElementById("login_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        loginComposite();
+        const status = await completeLogin();
+        if (status) {
+          window.location.href = "notifications"
+        }
+        else alert("Login failed!");
       });
-
       break;
-
-    case "invitation":
-
+    case "registration":
       document.getElementById("show_mnemonic_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        displayMnemonic(bitcoin.generate_mnemonic());
+        displayMnemonic(generateMnemonic());
       });
-      document.getElementById("setup_access_button").addEventListener("click", async (event) => {
+      
+      document.getElementById("mnemonic_confirm_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        await tempParentAndSeed256Storage(document.getElementById("mnemonic").textContent);
-        document.getElementById("mnemonic").textContent = "";
-        displayRegistration();
+        const keys = await confirmAndStoreMnemonic();
+        if (!keys) {
+          return false;
+        }
+        else {
+          const status = await comps.downloadAllIdentities(keys.identity);
+          if (status instanceof Error) {
+            alert("Error getting identities!")
+            return false;
+          };
+          displayRegistration();
+        }
       });
+
       document.getElementById("register_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        registerComposite()
+        const status = await completeRegistration();
+        if (status) {
+          const preference_update = await comps.createCypherPreferencePost([],INIT_TRADE_DS);
+          if(preference_update instanceof Error) return preference_update;
+          window.location.href = "notifications"
+        }
+        else alert("Registration failed!");
+
       });
-
-      const params = new URLSearchParams(window.location.search)
-      const invited_by = params.get('invited_by');
-      const invite_code = params.get('invite_code');
-
-      // getUsernames doubles up as a check for a valid invite code
-      const usernames = await apiGetUsernames(false, invite_code, invited_by);
-      if (usernames && usernames.includes(invited_by)) {
-        storeInvitation();
-        // displayInvitation(true, invited_by);
-        store.setExistingUsernames(usernames);
-      }
-      else displayInvitation(false);
-
       break;
-
     case "reset":
       document.getElementById("reset_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        resetComposite()
+        const status = await completeReset();
+        if (status) {
+          window.location.href = "notifications"
+        }
+        else alert("Reset failed!");
       });
       break;
-
     default:
       break;
   }
 }
 
 window.onload = loadAuthEvents();
-
-module.exports = {
-  exit
-}
-
 
 /**
  * test user

@@ -1,5 +1,7 @@
 # Signatures
 
+Cypherpost uses schnorr pubkeys and signatures.
+
 ## Request
 
 Requests must be signed with the identity public key as authentication for all requests.
@@ -15,17 +17,37 @@ Example:
 
 The nonce used can be any random string just to create enough entropy to prevent reusing signatures.
 
+The following headers must be included in every request:
+
+```
+x-client-xpub: string
+x-nonce
+x-client-signature: string
+```
 ## Badges
 
-Assigning badges requires the client to provide a different signature as part of the request body along with the nonce used.
+Assigning badges requires the client to provide an additional signature as part of the request body along with a different nonce used.
 
-This allows all users to verify the issuance of badges with the GET badges resource (which will include necessary values to verify the signature).
+This allows all users to verify the issuance of badges among each other with the GET badges resource (which will include necessary values to verify the signature).
 
 These signatures must follow the following format: (values separated by colon)
 
 ```
-"$from:$to:$badge_type:$nonce
+"$from:$to:$badge_type:$nonce"
 
 Example: 
 "xpub6GgUfU6vTzJ39kYofmA8EmkboBNxsET8YNEpUBkQeZSSeWjricbVQGr1nguh1bkkVrMkPySn292QksZeNjMVS4oZYPrSFj6GDppV1hB5Dpk:xpub6FdGhaAVAtckACFK6rSSoHrJSbnoCaazDYnYU8xo8LM6LUxK3sqous5Lbo1wRpyinn7VjVE8euRTW5tzYqrZ53PGDKbYPHw3SdrFcJQREzF:Trusted:1640016946571"
 ```
+
+## Identities
+
+When a user choses an identity, the server signs the following message to confirm their identity on cypherpost.
+
+The preimage to the hashed message which is signed by the server is as follows:
+
+```
+"cypherpost:$username:$pubkey:$timestamp"
+
+```
+
+Cypherpost's pubkey to verify identities can be found on the cypherpost.io website or by using the API GET global/pubkey resource.

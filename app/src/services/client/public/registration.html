@@ -15,7 +15,7 @@
   <link rel="shortcut icon" type="image/png" href="/img/owl.png"/>
   <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
   <link rel="stylesheet" type='text/css' href="/css/mdb.min.css" />
-  <link rel="stylesheet" type='text/css' href="/css/light.css" />
+  <link rel="stylesheet" type='text/css' href="/css/dark.css" />
 
 </head>
 
@@ -24,7 +24,6 @@
   <header>
 
     <img class="sats-ico" loading="lazy" src='/img/owl.png' href="https://cypherpost.io">
-    BETA
     <div class='container-fluid nav-line'>
     </div>
 
@@ -56,7 +55,7 @@
               <p id="invitation" class="stat"></p>
 
               <p id="seed_note_0" class="stathead warning-color">A 12 word mnemonic will be generated as the master key to your account.
-               <span><br/><br/></span> This seed will be used to generate keys used for end-to-end encryption and recover your account incase you lose your access credentials.</p>
+               <span><br/><br/></span> This seed will be used to generate keys used for authentication and end-to-end encryption services on cypherpost.</p>
               <br>
               <p id="seed_note_1" class="stathead warning-color">Please read before proceeding.</p>
               <!-- Sign in button -->
@@ -83,11 +82,20 @@
           <div class="text-center" action="#!">
             <h4 class="h4 mb-4">Mnemonic</p>
               <p id="seed_note_1" class="stathead warning-color">Write it down or Copy into an encrypted storage medium.</p>
-              <p id="seed_note_1" class="stathead warning-color">Try Signal's "Note to self" feature.</p>
+              <p id="seed_note_1" class="stathead warning-color">Try Signal's "Note to self" feature while testing.</p>
 
               <p id="mnemonic" class="stat"></p>
+              <br>
+              
+              <p id="seed_note_1" class="stathead warning-color">Password is only used to locally encrypt/decrypt your master key.</p>
+              <p id="seed_note_1" class="stathead warning-color">You can change this at anytime by importing your seed and setting a new password.</p>
+  
+              <input type="password" id="mnemonic_pass" class="" placeholder="Password">
+              <br>
+              <input type="password" id="mnemonic_confirm_pass" class="" placeholder="Confirm Password">
+              <br>
 
-              <button id="setup_access_button" class="btn centerme" type="submit">Next</button>
+              <button id="mnemonic_confirm_button" class="btn centerme" type="submit">Next</button>
 
 
           </div>
@@ -108,17 +116,12 @@
           <!-- Default form login -->
 
           <div class="text-center" action="#!">
-            <p class="h4 mb-4">Setup Access</p>
+            <p class="h4 mb-4">Setup Identity</p>
 
             <!-- Admin -->
             <input type="text" id="register_username" class="" placeholder="Username">
             <!-- Secret -->
             <br>
-            <input type="password" id="register_pass" class="" placeholder="Password">
-            <br>
-            <input type="password" id="register_confirm_pass" class="" placeholder="Confirm Password">
-            <br>
-
             <!-- REGISTER button -->
             <button id="register_button" class="btn centerme" type="submit">Next</button>
 

@@ -23,14 +23,12 @@ const crypto = new S5Crypto();
 const ONE_HOUR = 60 * 60 * 1000;
 
 export class CypherpostIdentity implements IdentityInterface {
-  async verify(xpub: string, message: string, signature: string): Promise<boolean | Error> {
-    const identity = await store.readOne(xpub, IdentityIndex.XPub);
+  async verify(pubkey: string, message: string, signature: string): Promise<boolean | Error> {
+    const identity = await store.readOne(pubkey, IdentityIndex.Pubkey);
     if (identity instanceof Error) return identity;
-
-    const pubkey = bitcoin.extract_ecdsa_pub(identity.xpub);
-    if(pubkey instanceof Error) return pubkey;
     
-    let verified = bitcoin.verify(message, signature, pubkey);
+    let verified = await bitcoin.verify(message, signature, pubkey);
+    if(verified instanceof Error) return verified;
     if (!verified) return handleError({
       code: 401,
       message: "Invalid Request Signature."
@@ -38,19 +36,19 @@ export class CypherpostIdentity implements IdentityInterface {
     else return verified;
   }
 
-  async register(username: string, xpub: string): Promise<boolean | Error> {
+  async register(username: string, pubkey: string): Promise<boolean | Error> {
     const new_identity: UserIdentity = {
       genesis: Date.now(),
       username,
-      xpub
+      pubkey: pubkey
     };
 
     const status = await store.createOne(new_identity);
     return status;
   };
 
-  async remove(xpub: string): Promise<boolean | Error> {
-    const status = await store.removeOne(xpub);
+  async remove(pubkey: string): Promise<boolean | Error> {
+    const status = await store.removeOne(pubkey);
     return status;
   }
 

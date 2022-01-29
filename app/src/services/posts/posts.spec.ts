@@ -112,6 +112,13 @@ describe("Initalizing Test: Profile Service", function () {
       if(response instanceof Error) throw response;
       expect(response.length ===3).to.equal(true);
     });
+    it("FIND new posts by Date",async function(){
+      let response = await posts.findByDate(Date.now()) as Array<UserPost>;
+      expect(response.length === 0).to.equal(true);
+      response = await posts.findByDate(2) as Array<UserPost>;
+      console.log({response});
+      expect(response.length > 0).to.equal(true);
+    });
     it("REMOVE posts by ID", async function () {
       const response = await posts.removeOneById(post1_id, xpub);
       expect(response).to.equal(true);

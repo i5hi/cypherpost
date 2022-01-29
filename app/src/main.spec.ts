@@ -20,16 +20,12 @@ import { BadgeType } from "./services/badges/interface";
 import { CypherpostIdentity } from "./services/identity/identity";
 import { CypherpostPostKeys } from "./services/posts/keys/post_keys";
 import { CypherpostPosts } from "./services/posts/posts";
-import { CypherpostProfileKeys } from "./services/profile/keys/profile_keys";
-import { CypherpostProfile } from "./services/profile/profile";
 
 const sinon = require('sinon');
 const bitcoin = new CypherpostBitcoinOps();
 const s5crypto = new S5Crypto();
 const identity = new CypherpostIdentity();
 const badges = new CypherpostBadges();
-const profile = new CypherpostProfile();
-const profile_keys = new CypherpostProfileKeys();
 const posts = new CypherpostPosts();
 const post_keys = new CypherpostPostKeys();
 const db = new MongoDatabase();
@@ -49,16 +45,15 @@ chai.use(chaiHttp);
  * C trusts A => A can view C's profile and posts
  * A deletes their identity
  */
-interface TestKeySet {
-  mnemonic: string,
-  root_xprv: string,
-  cypherpost_parent: ExtendedKeys,
-  identity_xpub: string;
-  identity_private: string;
-  identity_public: string;
-};
+
+enum PostType {
+  Profile = "Profile",
+  Ad = "Ad",
+  Preferences = "Preferences"
+}
 
 interface Profile {
+  type: PostType,
   nickname: string,
   status: string,
   contact: string
@@ -110,7 +105,8 @@ enum ReferenceExchange {
 }
 
 interface Post {
-  type: OrderType,
+  type: PostType,
+  order: OrderType,
   message: string,
   network: BitcoinNetwork,
   minimum: number,
@@ -129,6 +125,15 @@ interface TestPostSet {
   encryption_key: string,
   post_id: string;
 }
+
+interface TestKeySet {
+  mnemonic: string,
+  root_xprv: string,
+  cypherpost_parent: ExtendedKeys,
+  identity_xpub: string;
+  identity_private: string;
+  identity_pubkey: string;
+};
 
 const init_identity_ds = "m/0h/0h/0h";
 const init_profile_ds = "m/1h/0h/0h";
@@ -174,9 +179,9 @@ async function createTestKeySet(): Promise<TestKeySet | Error> {
     if (root_xprv instanceof Error) throw root_xprv;
     const cypherpost_parent = bitcoin.derive_parent_128(root_xprv);
     if (cypherpost_parent instanceof Error) throw cypherpost_parent;
-    const identity_parent = bitcoin.derive_hardened_str(cypherpost_parent.xprv, init_identity_ds);
+    const identity_parent = await bitcoin.derive_hardened_str(cypherpost_parent.xprv, init_identity_ds);
     if (identity_parent instanceof Error) throw identity_parent;
-    const identity_ecdsa = bitcoin.extract_ecdsa_pair(identity_parent);
+    const identity_ecdsa = await bitcoin.extract_ecdsa_pair(identity_parent);
     if (identity_ecdsa instanceof Error) throw identity_ecdsa;
 
     const set: TestKeySet = {
@@ -185,7 +190,7 @@ async function createTestKeySet(): Promise<TestKeySet | Error> {
       cypherpost_parent,
       identity_xpub: identity_parent.xpub,
       identity_private: identity_ecdsa.private_key,
-      identity_public: identity_ecdsa.public_key
+      identity_pubkey: identity_ecdsa.public_key
     };
     return set;
   }
@@ -215,10 +220,11 @@ function createPostSet(plain_post: Post, cypherpost_parent: ExtendedKeys, deriva
     post_id: "unset"
   }
 }
-function createDefaultTestPost(type: OrderType, message: string, fixed: boolean): Post {
+function createDefaultTestPost(type: PostType, order: OrderType, message: string, fixed: boolean): Post {
   return {
     message,
     type,
+    order,
     network: BitcoinNetwork.OnChain,
     minimum: 1000,
     maximum: 100000,
@@ -230,9 +236,183 @@ function createDefaultTestPost(type: OrderType, message: string, fixed: boolean)
     reference_percent: (fixed) ? 0 : 5
   }
 }
+async function createIdentityRegistrationRequest(username, key_set: TestKeySet) {
+  const endpoint = "/api/v2/identity";
+  const body = {
+    username,
+  };
+  const nonce = Date.now();
+  const message = `POST ${endpoint} ${JSON.stringify(body)} ${nonce}`;
+  const signature = await bitcoin.sign(message, key_set.identity_private) as string;
+
+  return {
+    nonce,
+    endpoint,
+    body,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+async function createIdentityGetRequest(key_set: TestKeySet) {
+  const endpoint = "/api/v2/identity/all";
+  const nonce = Date.now();
+  const body = {};
+  const message = `GET ${endpoint} ${JSON.stringify(body)} ${nonce}`;
+  const signature = await bitcoin.sign(message, key_set.identity_private) as string;
+
+  return {
+    nonce,
+    endpoint,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+async function createBadgeIssueRequest(badge: BadgeType, to_pubkey: string, key_set: TestKeySet) {
+  const endpoint = "/api/v2/badges/trust";
+  const nonce = Date.now();
+
+  const badge_signature = await bitcoin.sign(`${key_set.identity_pubkey}:${to_pubkey}:${badge.toString()}:${nonce}`, key_set.identity_private) as string;
+
+  const body = {
+    trusting: to_pubkey,
+    nonce,
+    signature: badge_signature
+  };
+
+  const message = `POST ${endpoint} ${JSON.stringify(body)} ${nonce}`;
+  const signature = await bitcoin.sign(message, key_set.identity_private) as string;
+
+  return {
+    nonce,
+    endpoint,
+    body,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+
+async function createBadgesGetAllRequest(key_set: TestKeySet) {
+  const endpoint = "/api/v2/badges/all";
+  const nonce = Date.now();
+  const body = {};
+  const message = `GET ${endpoint} ${JSON.stringify(body)} ${nonce}`;
+  const signature = await bitcoin.sign(message, key_set.identity_private) as string;
+
+  return {
+    nonce,
+    endpoint,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+async function createPostRequest(expiry: number, post_set: TestPostSet, key_set: TestKeySet) {
+  const endpoint = "/api/v2/posts";
+  const nonce = Date.now();
+  const body = {
+    expiry,
+    cypher_json: post_set.cypher,
+    derivation_scheme: init_posts_ds
+  };
+
+  const message = `PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`;
+  const signature = await bitcoin.sign(message, key_set.identity_private) as string;
+
+  return {
+    nonce,
+    endpoint,
+    body,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+async function createPostsGetSelfRequest(key_set: TestKeySet) {
+  const endpoint = "/api/v2/posts/self";
+  const nonce = Date.now();
+  const body = {};
+
+  const message = `GET ${endpoint} ${JSON.stringify(body)} ${nonce}`;
+  const signature = await bitcoin.sign(message, key_set.identity_private) as string;
+
+  return {
+    nonce,
+    endpoint,
+    body,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+async function createPostsGetOthersRequest(key_set: TestKeySet) {
+  const endpoint = "/api/v2/posts/others";
+  const nonce = Date.now();
+  const body = {};
+
+  const message = `GET ${endpoint} ${JSON.stringify(body)} ${nonce}`;
+  const signature = await bitcoin.sign(message, key_set.identity_private) as string;
+
+  return {
+    nonce,
+    endpoint,
+    body,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+
+async function createKeyStoreUpdate(post_set: TestPostSet, trusted_list: string[], key_set: TestKeySet) {
+  const endpoint = "/api/v2/posts/keys";
+  const nonce = Date.now();
+
+  const body = {
+    decryption_keys: [],
+    post_id: post_set.post_id
+  };
+
+  trusted_list.map(async (trusted_pubkey) => {
+
+    const shared_sercret = bitcoin.calculate_shared_secret({
+      private_key: key_set.identity_private,
+      public_key: trusted_pubkey
+    }) as string;
+
+    const decryption_key = s5crypto.encryptAESMessageWithIV(post_set.encryption_key, shared_sercret);
+    const dk_entry = {
+      decryption_key,
+      reciever: trusted_pubkey
+    };
+    body.decryption_keys.push(dk_entry);
+  });
+
+  const signature = await bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, key_set.identity_private);
+
+  // console.log( JSON.stringify({body},null,2))
+  return {
+    nonce,
+    endpoint,
+    body,
+    signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+
+
+async function createRevokeTrustRequest(revoke: string, key_set: TestKeySet) {
+  const endpoint = "/api/v2/badges/trust/revoke";
+  const body = {
+    revoking: revoke,
+  };
+  const nonce = Date.now();
+  const signature = await bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, key_set.identity_private);
+  return {
+    nonce,
+    endpoint,
+    body,
+    signature: signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 
-describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
+describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
   before(async function () {
     const connection: DbConnection = {
       port: process.env.DB_PORT,
@@ -249,105 +429,109 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
     c_key_set = await createTestKeySet() as TestKeySet;
     // ------------------ (◣_◢) ------------------
     a_profile_set = createProfileSet({
+      type: PostType.Profile,
       nickname: "Alice Articulates",
       status: "Sound Money, Sound World.",
       contact: "@alice3us on Telegram"
     }, a_key_set.cypherpost_parent, init_profile_ds);
 
     b_profile_set = createProfileSet({
+      type: PostType.Profile,
       nickname: "Bobby Breeds",
       status: "Making Babies.",
       contact: "@bob3us on Telegram"
     }, b_key_set.cypherpost_parent, init_profile_ds);
 
     c_profile_set = createProfileSet({
+      type: PostType.Profile,
       nickname: "Carol Cares",
       status: "Trying Hard Not To Cry.",
       contact: "@carol3us on Telegram"
     }, c_key_set.cypherpost_parent, init_profile_ds);
     // ------------------ (◣_◢) ------------------
-    a_post_set = createPostSet(createDefaultTestPost(OrderType.Sell, "Urgent", true), a_key_set.cypherpost_parent, init_posts_ds);
+    a_post_set = createPostSet(createDefaultTestPost(PostType.Ad, OrderType.Sell, "Urgent", true), a_key_set.cypherpost_parent, init_posts_ds);
 
-    b_post_set = createPostSet(createDefaultTestPost(OrderType.Buy, "Stacking", false), b_key_set.cypherpost_parent, init_posts_ds);
+    b_post_set = createPostSet(createDefaultTestPost(PostType.Ad, OrderType.Buy, "Stacking", false), b_key_set.cypherpost_parent, init_posts_ds);
 
-    c_post_set = createPostSet(createDefaultTestPost(OrderType.Sell, "GM", false), c_key_set.cypherpost_parent, init_posts_ds);
+    c_post_set = createPostSet(createDefaultTestPost(PostType.Ad, OrderType.Sell, "Contact me on Signal.", false), c_key_set.cypherpost_parent, init_posts_ds);
     // ------------------ (◣_◢) ------------------    
   });
 
   after(async function () {
-    await identity.remove(a_key_set.identity_xpub);
-    await identity.remove(b_key_set.identity_xpub);
-    await identity.remove(c_key_set.identity_xpub);
-    await badges.removeAllOfUser(a_key_set.identity_xpub);
-    await badges.removeAllOfUser(b_key_set.identity_xpub);
-    await badges.removeAllOfUser(c_key_set.identity_xpub);
-    await profile.remove(a_key_set.identity_xpub);
-    await profile.remove(b_key_set.identity_xpub);
-    await profile.remove(c_key_set.identity_xpub);
-    await profile_keys.removeProfileDecryptionKeyByGiver(a_key_set.identity_xpub);
-    await profile_keys.removeProfileDecryptionKeyByGiver(b_key_set.identity_xpub);
-    await profile_keys.removeProfileDecryptionKeyByGiver(c_key_set.identity_xpub);
-    await posts.removeAllByOwner(a_key_set.identity_xpub);
-    await posts.removeAllByOwner(b_key_set.identity_xpub);
-    await posts.removeAllByOwner(c_key_set.identity_xpub);
-    await post_keys.removePostDecryptionKeyByGiver(a_key_set.identity_xpub);
-    await post_keys.removePostDecryptionKeyByGiver(b_key_set.identity_xpub);
-    await post_keys.removePostDecryptionKeyByGiver(c_key_set.identity_xpub);
+    await identity.remove(a_key_set.identity_pubkey);
+    await identity.remove(b_key_set.identity_pubkey);
+    await identity.remove(c_key_set.identity_pubkey);
+    await badges.removeAllOfUser(a_key_set.identity_pubkey);
+    await badges.removeAllOfUser(b_key_set.identity_pubkey);
+    await badges.removeAllOfUser(c_key_set.identity_pubkey);
+    await posts.removeAllByOwner(a_key_set.identity_pubkey);
+    await posts.removeAllByOwner(b_key_set.identity_pubkey);
+    await posts.removeAllByOwner(c_key_set.identity_pubkey);
+    await post_keys.removePostDecryptionKeyByGiver(a_key_set.identity_pubkey);
+    await post_keys.removePostDecryptionKeyByGiver(b_key_set.identity_pubkey);
+    await post_keys.removePostDecryptionKeyByGiver(c_key_set.identity_pubkey);
   });
 
   describe("REGISTER IDENTITIES for A B C and VERIFY REGISTRATION via GET ALL", function () {
-    it("REGISTERS IDENTITIES", function (done) {
-      endpoint = "/api/v2/identity";
-      body = {
-        username: "alice",
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+    let request_a;
+    let request_b;
+    let request_c;
+    let request_c_get;
+
+    it("CREATES REQUEST OBJECTS", async function () {
+      request_a = await createIdentityRegistrationRequest("alice", a_key_set);
+      request_b = await createIdentityRegistrationRequest("bob", b_key_set);
+      request_c = await createIdentityRegistrationRequest("carol", c_key_set);
+      request_c_get = await createIdentityGetRequest(c_key_set);
+    });
+
+    it("REGISTERS IDENTITY A", function (done) {
+      // console.log({ request_a })
       chai
         .request(server)
-        .post(endpoint)
+        .post(request_a.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
         })
-        .send(body)
+        .send(request_a.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
+          done();
         });
-      body = {
-        "username": "bob"
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
+    });
+    it("REGISTERS IDENTITY B", function (done) {
+      // console.log({ request_b })
+
       chai
         .request(server)
-        .post(endpoint)
+        .post(request_b.endpoint)
         .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_b.pubkey,
+          "x-nonce": request_b.nonce,
+          "x-client-signature": request_b.signature,
         })
-        .send(body)
+        .send(request_b.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
+          done();
         });
-      body = {
-        "username": "carol"
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
+    });
+    it("REGISTERS IDENTITY C", function (done) {
+      // console.log({ request_c })
+
       chai
         .request(server)
-        .post(endpoint)
+        .post(request_c.endpoint)
         .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature
+          "x-client-pubkey": request_c.pubkey,
+          "x-nonce": request_c.nonce,
+          "x-client-signature": request_c.signature,
         })
-        .send(body)
+        .send(request_c.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
@@ -355,126 +539,101 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         });
     });
     it("GETS ALL IDENTITIES as C", function (done) {
-      endpoint = "/api/v2/identity/all";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
       chai
         .request(server)
-        .get(endpoint)
+        .get(request_c_get.endpoint)
         .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_c_get.pubkey,
+          "x-nonce": request_c_get.nonce,
+          "x-client-signature": request_c_get.signature,
         })
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['identities'].length).to.equal(3);
           all_identities = res.body['identities'];
+          let counter = 0;
+          // console.log({ all_identities });
+          all_identities.map((identity) => {
+            if (identity.pubkey === a_key_set.identity_pubkey ||
+              identity.pubkey === b_key_set.identity_pubkey ||
+              identity.pubkey === c_key_set.identity_pubkey)
+              counter++;
+          })
+          expect(counter).to.equal(3);
           done();
         })
-    })
+    });
   });
 
   describe("ISSUE TRUST BADGE A->B->C and VERIFY via GET ALL", function () {
-    it("ISSUES TRUST BADGES A->B->C", function (done) {
-      nonce = Date.now();
-      endpoint = "/api/v2/badges/trust";
-      body = {
-        trusting: b_key_set.identity_xpub,
-        nonce,
-        signature: bitcoin.sign(`${a_key_set.identity_xpub}:${b_key_set.identity_xpub}:${trusted_badge.toString()}:${nonce}`, a_key_set.identity_private)
-      };
-      console.log({badge_sig_message: `${a_key_set.identity_xpub}:${b_key_set.identity_xpub}:${trusted_badge.toString()}:${nonce}`})
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      console.log({badge_request_sig_message:`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`})
+    let request_a;
+    let request_b;
+    let request_c;
+    // let request_c_get_self;
+    let request_c_get_all;
+
+    it("CREATES REQUEST OBJECTS", async function () {
+      request_a = await createBadgeIssueRequest(BadgeType.Trusted, b_key_set.identity_pubkey, a_key_set);
+      request_b = await createBadgeIssueRequest(BadgeType.Trusted, c_key_set.identity_pubkey, b_key_set);
+      request_c = await createBadgeIssueRequest(BadgeType.Trusted, a_key_set.identity_pubkey, c_key_set);
+      request_c_get_all = await createBadgesGetAllRequest(c_key_set);
+    });
+
+    it("ISSUES TRUST BADGE A->B", function (done) {
       chai
         .request(server)
-        .post(endpoint)
+        .post(request_a.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
         })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-      nonce = Date.now();
-      body = {
-        trusting: c_key_set.identity_xpub,
-        nonce,
-        signature: bitcoin.sign(`${b_key_set.identity_xpub}:${c_key_set.identity_xpub}:${trusted_badge.toString()}:${nonce}`, b_key_set.identity_private)
-      };
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-      nonce = Date.now();
-      body = {
-        trusting: a_key_set.identity_xpub,
-        nonce,
-        signature: bitcoin.sign(`${c_key_set.identity_xpub}:${a_key_set.identity_xpub}:${trusted_badge.toString()}:${nonce}`, c_key_set.identity_private)
-      };
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature
-        })
-        .send(body)
+        .send(request_a.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
           done();
         });
     });
-    it("GETS SELF BADGES as C", function (done) {
-      endpoint = "/api/v2/badges/self";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
+    it("ISSUES TRUST BADGE B->C", function (done) {
       chai
         .request(server)
-        .get(endpoint)
+        .post(request_b.endpoint)
         .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_b.pubkey,
+          "x-nonce": request_b.nonce,
+          "x-client-signature": request_b.signature,
         })
+        .send(request_b.body)
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['given'].length).to.equal(1);
-          expect(res.body['recieved'].length).to.equal(1);
+          expect(res.body['status']).to.equal(true);
           done();
+        });
+    });
+    it("ISSUES TRUST BADGE C->A", function (done) {
+      chai
+        .request(server)
+        .post(request_c.endpoint)
+        .set({
+          "x-client-pubkey": request_c.pubkey,
+          "x-nonce": request_c.nonce,
+          "x-client-signature": request_c.signature
         })
+        .send(request_c.body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['status']).to.equal(true);
+          done();
+        });
     });
     it("GETS ALL BADGES as C", function (done) {
-      endpoint = "/api/v2/badges/all";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
       chai
         .request(server)
-        .get(endpoint)
+        .get(request_c_get_all.endpoint)
         .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_c_get_all.pubkey,
+          "x-nonce": request_c_get_all.nonce,
+          "x-client-signature": request_c_get_all.signature,
         })
         .end((err, res) => {
           res.should.have.status(200);
@@ -484,642 +643,305 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
         })
     });
     it("VERIFIES ALL BADGES ISSUED and POPULATES EACH USER's TRUSTED", function (done) {
-      all_badges.map((badge) => {
-        const pubkey = bitcoin.extract_ecdsa_pub(badge.giver);
+      all_badges.map(async (badge) => {
         const message = `${badge.giver}:${badge.reciever}:${badge.type}:${badge.nonce}`;
-        const verify = bitcoin.verify(message, badge.signature, pubkey as string);
+        const verify = await bitcoin.verify(message, badge.signature, badge.giver);
         if (!verify) throw "Badge Signature failed.";
-        if (badge.giver === a_key_set.identity_xpub) a_trust.push(badge.reciever);
-        if (badge.giver === b_key_set.identity_xpub) b_trust.push(badge.reciever);
-        if (badge.giver === c_key_set.identity_xpub) c_trust.push(badge.reciever);
+        if (badge.giver === a_key_set.identity_pubkey) a_trust.push(badge.reciever);
+        if (badge.giver === b_key_set.identity_pubkey) b_trust.push(badge.reciever);
+        if (badge.giver === c_key_set.identity_pubkey) c_trust.push(badge.reciever);
       });
       done();
     });
   });
 
-  describe("UPDATE PROFILES for A, B & C and VERIFY via GET SELF", function () {
-    it("UPDATES PROFILES", function (done) {
-      endpoint = "/api/v2/profile";
-      body = {
-        cypher_json: a_profile_set.cypher,
-        derivation_scheme: init_profile_ds
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      console.log({request_message: `POST ${endpoint} ${JSON.stringify(body)} ${nonce}` })
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-      body = {
-        cypher_json: b_profile_set.cypher,
-        derivation_scheme: init_profile_ds
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-      body = {
-        cypher_json: c_profile_set.cypher,
-        derivation_scheme: init_profile_ds
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-          done();
-        });
-    });
-    it("GETS EACH SELF PROFILE", function (done) {
-      endpoint = "/api/v2/profile/self";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profile'].cypher_json).to.equal(a_profile_set.cypher);
-        })
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profile'].cypher_json).to.equal(b_profile_set.cypher);
-        })
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profile'].cypher_json).to.equal(c_profile_set.cypher);
-          done();
-        })
-    })
-  });
-
-  describe("ADD PROFILE KEYS based on Trust Badges and VERIFY via GET OTHERS", function () {
-    it("ADDS PROFILE DECRYPTION KEYS of TRUSTED", function (done) {
-
-      endpoint = "/api/v2/profile/keys";
-      body = {
-        decryption_keys: [],
-      };
-      a_trust.map((recipient_xpub) => {
-        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
-        if (recipient_public instanceof Error) throw recipient_public;
-
-        const shared_sercret = bitcoin.calculate_shared_secret({
-          private_key: a_key_set.identity_private,
-          public_key: recipient_public
-        }) as string;
-
-        const decryption_key = s5crypto.encryptAESMessageWithIV(a_profile_set.encryption_key, shared_sercret);
-        const dk_entry = {
-          decryption_key,
-          reciever: recipient_xpub
-        };
-        body.decryption_keys.push(dk_entry);
-      });
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-
-      body = {
-        decryption_keys: [],
-      };
-      b_trust.map((recipient_xpub) => {
-        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
-        if (recipient_public instanceof Error) throw recipient_public;
-
-        const shared_sercret = bitcoin.calculate_shared_secret({
-          private_key: b_key_set.identity_private,
-          public_key: recipient_public
-        }) as string;
-
-        const decryption_key = s5crypto.encryptAESMessageWithIV(b_profile_set.encryption_key, shared_sercret);
-        const dk_entry = {
-          decryption_key,
-          reciever: recipient_xpub
-        };
-        body.decryption_keys.push(dk_entry);
-      });
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-
-      body = {
-        decryption_keys: [],
-      };
-      c_trust.map((recipient_xpub) => {
-        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
-        if (recipient_public instanceof Error) throw recipient_public;
-
-        const shared_sercret = bitcoin.calculate_shared_secret({
-          private_key: c_key_set.identity_private,
-          public_key: recipient_public
-        }) as string;
-
-        const decryption_key = s5crypto.encryptAESMessageWithIV(c_profile_set.encryption_key, shared_sercret);
-        const dk_entry = {
-          decryption_key,
-          reciever: recipient_xpub
-        };
-        body.decryption_keys.push(dk_entry);
-      });
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-          done();
-        });
-    });
-    it("GETS OTHERS PROFILES and VERIFY via ABILITY TO DECRYPT", function (done) {
-      endpoint = "/api/v2/profile/others";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profiles'].length).to.equal(1);
-
-          const shared_sercret = bitcoin.calculate_shared_secret({
-            private_key: a_key_set.identity_private,
-            public_key: c_key_set.identity_public
-          }) as string;
-
-          const c_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
-          const c_decrypted_profile = s5crypto.decryptAESMessageWithIV(res.body['profiles'][0].cypher_json, c_decryption_key) as string;
-          expect(JSON.parse(c_decrypted_profile)['contact']).to.equal(c_profile_set.plain.contact);
-        });
-
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profiles'].length).to.equal(1);
-
-          const shared_sercret = bitcoin.calculate_shared_secret({
-            private_key: b_key_set.identity_private,
-            public_key: a_key_set.identity_public
-          }) as string;
-
-          const a_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
-          const a_decrypted_profile = s5crypto.decryptAESMessageWithIV(res.body['profiles'][0].cypher_json, a_decryption_key) as string;
-          expect(JSON.parse(a_decrypted_profile)['contact']).to.equal(a_profile_set.plain.contact);
-        });
-
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['profiles'].length).to.equal(1);
-          const shared_sercret = bitcoin.calculate_shared_secret({
-            private_key: c_key_set.identity_private,
-            public_key: b_key_set.identity_public
-          }) as string;
-
-          const b_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
-          const b_decrypted_profile = s5crypto.decryptAESMessageWithIV(res.body['profiles'][0].cypher_json, b_decryption_key) as string;
-          expect(JSON.parse(b_decrypted_profile)['contact']).to.equal(b_profile_set.plain.contact);
-          done();
-        });
-    })
-  })
-
   describe("CREATES POSTS for A, B & C and VERIFY via GET SELF", function () {
-    it("CREATES POSTS: A - 1 expires, 1 persists, B - 1 persists, C - 1 persists", function (done) {
-      endpoint = "/api/v2/posts";
-      body = {
-        cypher_json: a_post_set.cypher,
-        derivation_scheme: init_posts_ds,
-        expiry: Date.now() + 10,
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+    let request_a;
+    let request_a0;
+    let request_a_get_self;
+    let request_b;
+    let request_b_get_self;
+    let request_c;
+    let request_c_get_self;
+    let request_c_get_others;
+
+    it("CREATES REQUEST OBJECTS", async function () {
+      request_a = await createPostRequest(Date.now() + 10, a_post_set, a_key_set);
+      request_a0 = await createPostRequest(Date.now() + 10000, a_post_set, a_key_set);
+      request_b = await createPostRequest(Date.now() + 10000, b_post_set, b_key_set);
+      request_c = await createPostRequest(Date.now() + 10000, c_post_set, c_key_set);
+      request_a_get_self = await createPostsGetSelfRequest(a_key_set);
+      request_b_get_self = await createPostsGetSelfRequest(b_key_set);
+      request_c_get_self = await createPostsGetSelfRequest(c_key_set);
+
+      request_c_get_others = await createPostsGetOthersRequest(c_key_set);
+    });
+
+    it("CREATES POSTS: A - 1 expires", function (done) {
       chai
         .request(server)
-        .put(endpoint)
+        .put(request_a.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
         })
-        .send(body)
+        .send(request_a.body)
         .end((err, res) => {
           res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
-        });
-      body = {
-        cypher_json: a_post_set.cypher,
-        derivation_scheme: init_posts_ds,
-        expiry: Date.now() + 100000,
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
-          a_post_set.post_id = res.body['post_id'];
-        });
-      body = {
-        cypher_json: b_post_set.cypher,
-        derivation_scheme: init_posts_ds,
-        expiry: Date.now() + 10000,
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
-          b_post_set.post_id = res.body['post_id'];
-        });
-      body = {
-        cypher_json: c_post_set.cypher,
-        derivation_scheme: init_posts_ds,
-        expiry: Date.now() + 100000,
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['post_id'].startsWith('s5')).to.equal(true);
-          c_post_set.post_id = res.body['post_id'];
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
           done();
         });
     });
-    it("GETS EACH SELF POSTS", function (done) {
-      endpoint = "/api/v2/posts/self";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+    it("CREATES POSTS: A - 1 persists", function (done) {
       chai
         .request(server)
-        .get(endpoint)
+        .put(request_a0.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a0.pubkey,
+          "x-nonce": request_a0.nonce,
+          "x-client-signature": request_a0.signature,
+        })
+        .send(request_a0.body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
+          a_post_set.post_id = res.body['id'];
+          done();
+        });
+    });
+    it("CREATES POSTS: B - 1 persists", function (done) {
+      chai
+        .request(server)
+        .put(request_b.endpoint)
+        .set({
+          "x-client-pubkey": request_b.pubkey,
+          "x-nonce": request_b.nonce,
+          "x-client-signature": request_b.signature,
+        })
+        .send(request_b.body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
+          b_post_set.post_id = res.body['id'];
+          done();
+        });
+    });
+    it("CREATES POSTS: C - 1 persists", function (done) {
+      chai
+        .request(server)
+        .put(request_c.endpoint)
+        .set({
+          "x-client-pubkey": request_c.pubkey,
+          "x-nonce": request_c.nonce,
+          "x-client-signature": request_c.signature
+        })
+        .send(request_c.body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['id'].startsWith('s5')).to.equal(true);
+          c_post_set.post_id = res.body['id'];
+          done();
+        });
+    });
+    it("GETS A SELF POSTS", function (done) {
+      chai
+        .request(server)
+        .get(request_a_get_self.endpoint)
+        .set({
+          "x-client-pubkey": request_a_get_self.pubkey,
+          "x-nonce": request_a_get_self.nonce,
+          "x-client-signature": request_a_get_self.signature,
         })
         .end((err, res) => {
           res.should.have.status(200);
           // 1 EXPIRED, 1 PERSISTED
           expect(res.body['posts'].length === 1).to.equal(true);
           expect(res.body['posts'][0].cypher_json).to.equal(a_post_set.cypher);
+          done();
         })
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
+    });
+    it("GETS B SELF POSTS", function (done) {
       chai
         .request(server)
-        .get(endpoint)
+        .get(request_b_get_self.endpoint)
         .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_b_get_self.pubkey,
+          "x-nonce": request_b_get_self.nonce,
+          "x-client-signature": request_b_get_self.signature,
         })
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['posts'].length === 1).to.equal(true);
           expect(res.body['posts'][0].cypher_json).to.equal(b_post_set.cypher);
-        })
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
+          done();
+        });
+    });
+    it("GETS C SELF POSTS", function (done) {
       chai
         .request(server)
-        .get(endpoint)
+        .get(request_c_get_self.endpoint)
         .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_c_get_self.pubkey,
+          "x-nonce": request_c_get_self.nonce,
+          "x-client-signature": request_c_get_self.signature,
         })
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['posts'].length === 1).to.equal(true);
           expect(res.body['posts'][0].cypher_json).to.equal(c_post_set.cypher);
           done();
+        });
+    });
+    it("GETS C OTHERS POSTS -> None as B has not shared keys", function (done) {
+      chai
+        .request(server)
+        .get(request_c_get_others.endpoint)
+        .set({
+          "x-client-pubkey": request_c_get_others.pubkey,
+          "x-nonce": request_c_get_others.nonce,
+          "x-client-signature": request_c_get_others.signature,
         })
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['posts'].length === 0).to.equal(true);
+          // expect(res.body['posts'][0].cypher_json).to.equal(b_post_set.cypher);
+          done();
+        });
     });
   });
 
   describe("UPDATE POST KEYS based on Trust Badges and VERIFY via GET OTHERS", function () {
-    it("UPDATES POST DECRYPTION KEYS of TRUSTED", function (done) {
-      endpoint = "/api/v2/posts/keys";
-      body = {
-        decryption_keys: [],
-        id: a_post_set.post_id
-      };
-      a_trust.map((recipient_xpub) => {
-        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
-        if (recipient_public instanceof Error) throw recipient_public;
+    let request_a;
+    let request_b;
+    let request_c;
+    let request_a_get_others;
+    let request_b_get_others;
+    let request_c_get_others;
 
-        const shared_sercret = bitcoin.calculate_shared_secret({
-          private_key: a_key_set.identity_private,
-          public_key: recipient_public
-        }) as string;
+    it("CREATES POST KEY REQUESTS", async function () {
+      request_a = await createKeyStoreUpdate(a_post_set, a_trust, a_key_set);
+      request_b = await createKeyStoreUpdate(b_post_set, b_trust, b_key_set);
+      request_c = await createKeyStoreUpdate(c_post_set, c_trust, c_key_set);
+      request_a_get_others = await createPostsGetOthersRequest(a_key_set);
+      request_b_get_others = await createPostsGetOthersRequest(b_key_set);
+      request_c_get_others = await createPostsGetOthersRequest(c_key_set);
+    });
 
-        const decryption_key = s5crypto.encryptAESMessageWithIV(a_post_set.encryption_key, shared_sercret);
-        const dk_entry = {
-          decryption_key,
-          reciever: recipient_xpub
-        };
-        body.decryption_keys.push(dk_entry);
-      });
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+    it("UPDATES POST DECRYPTION KEYS of A TRUSTED", function (done) {
       chai
         .request(server)
-        .put(endpoint)
+        .put(request_a.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
         })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-      body = {
-        decryption_keys: [],
-        id: b_post_set.post_id
-      };
-      b_trust.map((recipient_xpub) => {
-        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
-        if (recipient_public instanceof Error) throw recipient_public;
-
-        const shared_sercret = bitcoin.calculate_shared_secret({
-          private_key: b_key_set.identity_private,
-          public_key: recipient_public
-        }) as string;
-
-        const decryption_key = s5crypto.encryptAESMessageWithIV(b_post_set.encryption_key, shared_sercret);
-        const dk_entry = {
-          decryption_key,
-          reciever: recipient_xpub
-        };
-        body.decryption_keys.push(dk_entry);
-      });
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-      body = {
-        decryption_keys: [],
-        id: c_post_set.post_id
-      };
-      c_trust.map((recipient_xpub) => {
-        const recipient_public = bitcoin.extract_ecdsa_pub(recipient_xpub);
-        if (recipient_public instanceof Error) throw recipient_public;
-
-        const shared_sercret = bitcoin.calculate_shared_secret({
-          private_key: c_key_set.identity_private,
-          public_key: recipient_public
-        }) as string;
-
-        const decryption_key = s5crypto.encryptAESMessageWithIV(c_post_set.encryption_key, shared_sercret);
-        const dk_entry = {
-          decryption_key,
-          reciever: recipient_xpub
-        };
-        body.decryption_keys.push(dk_entry);
-      });
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
+        .send(request_a.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
           done();
         });
     });
-    it("GETS OTHERS POSTS and VERIFY via ABILITY TO DECRYPT", function (done) {
-      endpoint = "/api/v2/posts/others";
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+    it("UPDATES POST DECRYPTION KEYS of B TRUSTED", function (done) {
       chai
         .request(server)
-        .get(endpoint)
+        .put(request_b.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_b.pubkey,
+          "x-nonce": request_b.nonce,
+          "x-client-signature": request_b.signature,
         })
-        .send(body)
+        .send(request_b.body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['status']).to.equal(true);
+          done();
+        });
+    });
+    it("UPDATES POST DECRYPTION KEYS of C TRUSTED", function (done) {
+      chai
+        .request(server)
+        .put(request_c.endpoint)
+        .set({
+          "x-client-pubkey": request_c.pubkey,
+          "x-nonce": request_c.nonce,
+          "x-client-signature": request_c.signature,
+        })
+        .send(request_c.body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(res.body['status']).to.equal(true);
+          done();
+        });
+    });
+    it("GETS A OTHERS POSTS and VERIFY via ABILITY TO DECRYPT", function (done) {
+      chai
+        .request(server)
+        .get(request_a_get_others.endpoint)
+        .set({
+          "x-client-pubkey": request_a_get_others.pubkey,
+          "x-nonce": request_a_get_others.nonce,
+          "x-client-signature": request_a_get_others.signature,
+        })
+        .send(request_a_get_others.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['posts'].length).to.equal(1);
 
           const shared_sercret = bitcoin.calculate_shared_secret({
             private_key: a_key_set.identity_private,
-            public_key: c_key_set.identity_public
+            public_key: c_key_set.identity_pubkey
           }) as string;
 
           const c_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
           const c_decrypted_post = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].cypher_json, c_decryption_key) as string;
           expect(JSON.parse(c_decrypted_post)['type']).to.equal(c_post_set.plain.type);
+          done();
         });
-
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
+    });
+    it("GETS B OTHERS POSTS and VERIFY via ABILITY TO DECRYPT", function (done) {
       chai
         .request(server)
-        .get(endpoint)
+        .get(request_b_get_others.endpoint)
         .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_b_get_others.pubkey,
+          "x-nonce": request_b_get_others.nonce,
+          "x-client-signature": request_b_get_others.signature,
         })
-        .send(body)
+        .send(request_b_get_others.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['posts'].length).to.equal(1);
 
           const shared_sercret = bitcoin.calculate_shared_secret({
             private_key: b_key_set.identity_private,
-            public_key: a_key_set.identity_public
+            public_key: a_key_set.identity_pubkey
           }) as string;
 
           const a_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
           const a_decrypted_post = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].cypher_json, a_decryption_key) as string;
           expect(JSON.parse(a_decrypted_post)['type']).to.equal(a_post_set.plain.type);
+          done();
         });
-
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
+    });
+    it("GETS C OTHERS POSTS and VERIFY via ABILITY TO DECRYPT", function (done) {
       chai
         .request(server)
-        .get(endpoint)
+        .get(request_c_get_others.endpoint)
         .set({
-          "x-client-xpub": c_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_c_get_others.pubkey,
+          "x-nonce": request_c_get_others.nonce,
+          "x-client-signature": request_c_get_others.signature,
         })
-        .send(body)
+        .send(request_c_get_others.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['posts'].length).to.equal(1);
           const shared_sercret = bitcoin.calculate_shared_secret({
             private_key: c_key_set.identity_private,
-            public_key: b_key_set.identity_public
+            public_key: b_key_set.identity_pubkey
           }) as string;
 
           const b_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
@@ -1131,225 +953,80 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
   });
 
   describe("REVOKE A->B TRUST", function () {
-    it("REVOKES TRUST FROM A->B", function () {
-      endpoint = "/api/v2/badges/trust/revoke";
-      body = {
-        revoking: b_key_set.identity_xpub,
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+    let request_a;
+    it("CREATES REVOKE REQUEST", async function () {
+      request_a = await createRevokeTrustRequest(b_key_set.identity_pubkey, a_key_set);
+    });
+    it("REVOKES TRUST FROM A->B", function (done) {
       chai
         .request(server)
-        .post(endpoint)
+        .post(request_a.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
         })
-        .send(body)
+        .send(request_a.body)
         .end((err, res) => {
           res.should.have.status(200);
           expect(res.body['status']).to.equal(true);
-        });
-    });
-    // A must update their profile and decryption keys 
-    // ALTHOUGH B will no longer recieve A's keys in GET profile/others
-    it("UPDATES PROFILE w/ new cypher_json", async function () {
-      const new_derivation_scheme = "m/1h/1h/0h";
-      a_profile_set.encryption_key = crypto.createHash("sha256").update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, new_derivation_scheme) as ExtendedKeys).xprv).digest('hex');
-      a_profile_set.cypher = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_profile_set.plain), a_profile_set.encryption_key) as string;
-      endpoint = "/api/v2/profile";
-      body = {
-        cypher_json: a_profile_set.cypher,
-        derivation_scheme: new_derivation_scheme
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-        });
-    });
-  });
-
-  describe("UPDATE PREFERENCES for A & VERIFY via GET", function () {
-    it("UPDATES PREFERENCES", function (done) {
-      const preference_key = crypto.createHash("sha256")
-      .update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, init_preferences_ds) as ExtendedKeys)['xprv'])
-      .digest("hex");
-      cypher_preference = s5crypto.encryptAESMessageWithIV(JSON.stringify(a_preferences), preference_key);
-      endpoint = "/api/v2/preference";
-      body = {
-        cypher_json: cypher_preference,
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['status']).to.equal(true);
-          done();
-        });
-    });
-    it("GETS PREFERENCE & VERIFIES via ability to decrypt", function (done) {
-      body = {};
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .get(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          expect(res.body['preference']['cypher_json']).to.equal(cypher_preference);
-          const preference_key = crypto.createHash("sha256")
-          .update((bitcoin.derive_hardened_str(a_key_set.cypherpost_parent.xprv, init_preferences_ds) as ExtendedKeys)['xprv'])
-          .digest("hex");
-          expect(s5crypto.decryptAESMessageWithIV(res.body['preference']['cypher_json'], preference_key)).to.equal(JSON.stringify(a_preferences));
           done();
         });
     });
   });
 
   describe("E: 409's", function () {
+    let request_a;
+    let request_b;
+    let request_c;
+
+    it("CREATES REQUEST OBJECTS", async function () {
+      request_a = await createIdentityRegistrationRequest("alivf", a_key_set);
+      // console.log({ request_a })
+      request_b = await createBadgeIssueRequest(BadgeType.Trusted, c_key_set.identity_pubkey, b_key_set);
+      request_c = await createKeyStoreUpdate(c_post_set, c_trust, c_key_set);
+    });
     it("PREVENTS DUPLICATE IDENTITY", function (done) {
-      endpoint = "/api/v2/identity";
-      body = {
-        username: "alice",
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      // console.log({request_a})
       chai
         .request(server)
-        .post(endpoint)
+        .post(request_a.endpoint)
         .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
         })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(409);
-        });
-      body = {
-        username: "alex",
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
-      chai
-        .request(server)
-        .post(endpoint)
-        .set({
-          "x-client-xpub": a_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
+        .send(request_a.body)
         .end((err, res) => {
           res.should.have.status(409);
           done();
         });
     });
     it("PREVENTS DUPLICATE TRUST BADGE", function (done) {
-      nonce = Date.now();
-      endpoint = "/api/v2/badges/trust";
-      body = {
-        trusting: c_key_set.identity_xpub,
-        nonce,
-        signature: bitcoin.sign(`${b_key_set.identity_xpub}:${c_key_set.identity_xpub}:${trusted_badge.toString()}:${nonce}`, b_key_set.identity_private)
-      };
-      request_signature = bitcoin.sign(`POST ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
       chai
         .request(server)
-        .post(endpoint)
+        .post(request_b.endpoint)
         .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_b.pubkey,
+          "x-nonce": request_b.nonce,
+          "x-client-signature": request_b.signature,
         })
-        .send(body)
+        .send(request_b.body)
         .end((err, res) => {
           res.should.have.status(409);
           done();
         });
     });
-    it("PREVENTS DUPLICATE PROFILE DECRYPTION KEY ENTRY", function (done) {
-      endpoint = "/api/v2/profile/keys";
-      // client must first parse through all_badges and find who trusts them
-      // here we assume knowledge of trust givers
-      let shared_sercret = bitcoin.calculate_shared_secret({
-        private_key: b_key_set.identity_private,
-        public_key: c_key_set.identity_public
-      }) as string;
-
-      const b_decryption_key = s5crypto.encryptAESMessageWithIV(b_profile_set.encryption_key, shared_sercret);
-      body = {
-        decryption_keys: [{ decryption_key: b_decryption_key, reciever: c_key_set.identity_xpub }],
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
-      chai
-        .request(server)
-        .put(endpoint)
-        .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
-        })
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(409);
-          done();
-        });
-
-    })
     it("PREVENTS DUPLICATE POSTS DECRYPTION KEY ENTRY", function (done) {
-      endpoint = "/api/v2/posts/keys";
-      // client must first parse through all_badges and find who trusts them
-      // here we assume knowledge of trust givers
-      let shared_sercret = bitcoin.calculate_shared_secret({
-        private_key: b_key_set.identity_private,
-        public_key: c_key_set.identity_public
-      }) as string;
-
-      const b_decryption_key = s5crypto.encryptAESMessageWithIV(b_post_set.encryption_key, shared_sercret);
-      body = {
-        decryption_keys: [{ decryption_key: b_decryption_key, reciever: c_key_set.identity_xpub }],
-        id: b_post_set.post_id
-      };
-      nonce = Date.now();
-      request_signature = bitcoin.sign(`PUT ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
       chai
         .request(server)
-        .put(endpoint)
+        .put(request_c.endpoint)
         .set({
-          "x-client-xpub": b_key_set.identity_xpub,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_c.pubkey,
+          "x-nonce": request_c.nonce,
+          "x-client-signature": request_c.signature,
         })
-        .send(body)
+        .send(request_c.body)
         .end((err, res) => {
           res.should.have.status(409);
           done();
@@ -1358,12 +1035,61 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", async function () {
   });
 
   describe.skip("GLOBAL", function () {
-    it("DELETES AN IDENTITY AND ALL ASSOCIATIONS", function () {
+    it("DELETES ALL CREATED IDENTITIES AND ALL ASSOCIATIONS", async function (done) {
+      endpoint = "/api/v2/identity";
+      body = {};
+      nonce = Date.now();
+      request_signature = await bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+      chai
+        .request(server)
+        .delete(endpoint)
+        .set({
+          "x-client-pubkey": a_key_set.identity_pubkey,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+        });
+
+      nonce = Date.now();
+      request_signature = await bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
+      chai
+        .request(server)
+        .delete(endpoint)
+        .set({
+          "x-client-pubkey": b_key_set.identity_pubkey,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+        });
+
+      nonce = Date.now();
+      request_signature = await bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
+      chai
+        .request(server)
+        .delete(endpoint)
+        .set({
+          "x-client-pubkey": c_key_set.identity_pubkey,
+          "x-nonce": nonce,
+          "x-client-signature": request_signature,
+        })
+        .send(body)
+        .end((err, res) => {
+          res.should.have.status(200);
+          done();
+        });
 
     });
+    it.skip("DUMPS ENTIRE DATABASE", function (done) {
+      done();
+    });
   });
+
 });
-
-
 
 

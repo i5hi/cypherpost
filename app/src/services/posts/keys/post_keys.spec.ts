@@ -88,7 +88,7 @@ describe("Initalizing Test: Post Key Service", function () {
     encryption_key = bitcoin.derive_hardened(xprv,2,0,0);
     if (encryption_key instanceof Error) throw encryption_key;
     encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
-    let pair = bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
+    let pair = await bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
     if(pair instanceof Error) throw pair;
     shared_secret = bitcoin.calculate_shared_secret(pair);
     decryption_key = s5crypto.encryptAESMessageWithIV(encryption_key as string,shared_secret as string);
@@ -113,7 +113,7 @@ describe("Initalizing Test: Post Key Service", function () {
       encryption_key = bitcoin.derive_hardened(xprv,2,0,1);
       if (encryption_key instanceof Error) throw encryption_key;
       encryption_key = crypto.createHash('sha256').update(encryption_key.xprv).digest('hex');
-      let pair = bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
+      let pair = await bitcoin.extract_ecdsa_pair({xprv: xprv, xpub: xpub1});
       if(pair instanceof Error) throw pair;
       shared_secret = bitcoin.calculate_shared_secret(pair);
       decryption_key = s5crypto.encryptAESMessageWithIV(encryption_key as string,shared_secret as string);
@@ -128,13 +128,13 @@ describe("Initalizing Test: Post Key Service", function () {
       const response = await postKeys.findPostDecryptionKeyByGiver(xpub);
       expect(response[0]['giver']).to.equal(xpub);
       expect(response[0]['reciever']).to.equal(xpub1);
-      expect(response[0]['post_id']).to.equal(post_id);
+      expect(response[0]['id']).to.equal(post_id);
     });
     it("FIND post decryption key BY RECIEVER", async function () {
       const response = await postKeys.findPostDecryptionKeyByReciever(xpub1);
       expect(response[0]['reciever']).to.equal(xpub1);
       expect(response[0]['giver']).to.equal(xpub);
-      expect(response[0]['post_id']).to.equal(post_id);
+      expect(response[0]['id']).to.equal(post_id);
     });
     it("DELETE post decryption key BY RECIEVER", async function () {
       const response = await postKeys.removePostDecryptionKeyByReciever(xpub, xpub1);
@@ -162,7 +162,7 @@ describe("Initalizing Test: Post Key Service", function () {
       const response = await postKeys.findPostDecryptionKeyByGiver(xpub1);
       expect(response[0]['giver']).to.equal(xpub1);
       expect(response[0]['reciever']).to.equal(xpub);
-      expect(response[0]['post_id']).to.equal(post_id_2);
+      expect(response[0]['id']).to.equal(post_id_2);
     });
     it("DELETE post decryption key BY giver SHOULD be false since no keys exist", async function () {
       const response = await postKeys.removePostDecryptionKeyByGiver(xpub1);

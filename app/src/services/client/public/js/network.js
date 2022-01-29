@@ -1,382 +1,193 @@
+const TRUST = "TRUST";
+const SCAMMER = "SCAMMER";
 
-const crypto = require("crypto");
-
-const bitcoin = require("./bitcoin");
-const { encrypt, decrypt } = require("./aes");
 const store = require("./store");
-
-const { exit } = require("./auth");
-const { apiRevoke, apiTrust, apiGetMyProfile, apiGetUsernames, apiGetUserProfile, apiGetManyProfiles, apiMuteUser } = require('./api');
-
-
+const comps = require("./composites");
+const util = require("./util");
 
 // console.log({ existing_usernames });
 // console.log({ trusting_usernames });
 // console.log({ search_usernames });
-
-async function trust(username) {
-
-  const other_profile = (store.getUserProfile(username)) ? store.getUserProfile(username) : await apiGetUserProfile(store.getToken(), username);
-  store.setUserProfile(username, other_profile);
-
-  const other_recipient_xpub = other_profile.recipient_xpub;
-  const my_recipient_xprv = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']['xprv'], 0, 0)['xprv'];
-  // console.log({ xpub: other_recipient_xpub, xprv: my_recipient_xprv });
-
-  const ecdsa_grouped = bitcoin.extract_ecdsa_pair({ xpub: other_recipient_xpub, xprv: my_recipient_xprv });
-  const shared_secret = bitcoin.calculate_shared_secret(ecdsa_grouped['private_key'], ecdsa_grouped['public_key']);
-  // console.log(shared_secret);
-  // check derivation scheme first
-  const derivation_scheme = store.getMyProfile()['derivation_scheme'];
-  const revoke = parseInt(derivation_scheme.split("/")[2].replaceAll("'", ""));
-  // console.log(revoke);
-
-  const profile_encryption_key = crypto.createHash('sha256')
-    .update(bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']['xprv'], 0, revoke)['xprv'])
-    .digest('hex');
-
-  // console.log(profile_encryption_key);
-
-  const encrypted_pek = encrypt(profile_encryption_key, shared_secret);
-  const signature = ".signLater.";
-
-  const updated = await apiTrust(store.getToken(), username, encrypted_pek, signature);
-  if (updated instanceof Error) {
-    console.error({ trusting: updated });
-    alert(`Failed to trust ${username}`);
-
-  }
-  else {
-    // do the right thing
-    store.setMyProfile(updated);
-    alert(`Trusting ${username}`);
-    window.location.reload();
-    return true;
-  }
-
+async function getUpdatedIdsAndBadges() {
+  const keys = store.getMyKeyChain();
+  const status = await comps.downloadAllIdentitiesAndBadges(keys.identity);
+  const merged = util.mergeIdentitiesWithBadges(store.getIdentities(), store.getAllBadges());
+  return merged;
 }
 
-async function revoke(username) {
-  if (confirm(`Revoke Trust for ${username}?`)) {
-    const revoke_profile = (store.getUserProfile(username)) ? store.getUserProfile(username) : await apiGetUserProfile(store.getToken(), username);
+async function displayIdentity(identity) {
+  // SCROLL TO TOP
+  document.body.scrollTop = document.documentElement.scrollTop = 0;
 
-    store.setUserProfile(username, revoke_profile);
+  document.getElementById("network_profile_username").textContent = identity.username;
+  document.getElementById("network_profile_pubkey").textContent = identity.pubkey;
 
-    // console.log(revoke_profile.profile.username);
+  const my_badges = comps.getBadgesByPubkey(store.getMyKeyChain().identity.pubkey);
 
-    const index = trusting_usernames.indexOf(username);
-    if (index > -1) {
-      trusting_usernames.splice(index, 1);
-    }
+  const my_given_pubkeys = my_badges.given.map((badge)=>badge.reciever);
+  const my_recieved_pubkeys = my_badges.recieved.map((badge)=>badge.giver);
 
-    // console.log(index);
+  const selected_id_badges = comps.getBadgesByPubkey(identity.pubkey);
+  console.log({badges: selected_id_badges});
 
-    let decryption_keys = [];
+  const given_pubkeys = selected_id_badges.given.map((badge)=>badge.reciever);// ensure  only trusted badge
+  const given_identities = store.getIdentities(identity).filter(id=>given_pubkeys.includes(id.pubkey));
 
-    const my_profile = store.getMyProfile();
-    const current_profile_ds = my_profile.derivation_scheme;
-    const revoke = parseInt(current_profile_ds.split("/")[2].replaceAll("'", ""));
-    const derivation_scheme_update = "m/0'/" + (revoke + 1) + "'";
-
-    // console.log(derivation_scheme_update);
-    // console.log(trusting_usernames);
-
-    const contact_decryption_key = bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']["xprv"], 0, revoke);
-    const contact_info = decrypt(my_profile.cipher_info, crypto.createHash('sha256').update(contact_decryption_key.xprv).digest('hex'));
-
-    const new_profile_key = bitcoin.derive_child_indexes(store.getParentKeys()['profile_parent']['xprv'], 0, revoke + 1);
-    const updated_cipher_info = encrypt(contact_info, crypto.createHash('sha256').update(new_profile_key.xprv).digest('hex'));
-
-    // console.log(updated_cipher_info)
-
-    if (trusting_usernames.length > 0) {
-      const trusting_profiles = await apiGetManyProfiles(store.getToken(), trusting_usernames);
-      const my_recipient_xprv = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']['xprv'], 0, 0)['xprv'];
-      trusting_profiles.keys.map((item) => {
-        const ecdsa_grouped = bitcoin.extract_ecdsa_pair({ xpub: item.recipient_xpub, xprv: my_recipient_xprv });
-        const shared_secret = bitcoin.calculate_shared_secret(ecdsa_grouped['private_key'], ecdsa_grouped['public_key']);
-        const encrypted_profile_key = encrypt(crypto.createHash('sha256').update(new_profile_key.xprv).digest('hex'), shared_secret);
-        decryption_keys.push({
-          key: encrypted_profile_key,
-          id: item.username
-        });
-      });
-    }
-    // console.log({ decryption_keys });
-    const updated = await apiRevoke(store.getToken(), revoke_profile.profile.username, decryption_keys, derivation_scheme_update, updated_cipher_info);
-    if (updated instanceof Error) {
-      console.error({ updated });
-      alert(`Failed to revoke trust in ${username}`);
-    }
-    else {
-      //do the right thing
-      store.setMyProfile(updated);
-      alert(`Revoked trust in ${username}`);
-      window.location.reload();
-      return true;
-    }
-  }
-  else {
-    console.log("Decided not to revoke trust!");
-  }
-}
-
-async function displayProfile(my_profile,my_keys,username) {
-  // alert(`Showing profile for ${username}`);
-  // check if user profile exists in local storage
+  const recieved_pubkeys = selected_id_badges.recieved.map((badge)=>badge.giver);// ensure  only trusted badge
+  const recieved_identities = store.getIdentities(identity).filter(id=>recieved_pubkeys.includes(id.pubkey));
   
-  const other_profile =  await apiGetUserProfile(store.getToken(), username);
-  if (other_profile instanceof Error) {
-    console.error({ other_profile });
-    return false;
-  };
+  console.log({given_identities,recieved_identities})
+  document.getElementById("network_badges_given").textContent = selected_id_badges.given.length;
+  
+  const hover_given = selected_id_badges.given.length===0
+    ?"None"
+    :`${given_identities.map((id)=>id.username).toString()}`;
+  document.getElementById("list_of_trusting").innerHTML = `Trusting: <span class="contact_info">${hover_given}</span>`
 
 
-  store.setUserProfile(username, other_profile);
+  document.getElementById("network_badges_recieved").textContent = selected_id_badges.recieved.length;
 
-  // console.log(other_profile);
-  const my_trusted_by = my_profile.trusted_by.map((item) => item.username);
-  const my_trusting = my_profile.trusting.map((item) => item.username);
-  const other_trusting = other_profile.profile.trusting.map((item) => item.username);
-  const other_trusted_by = other_profile.profile.trusted_by.map((item) => item.username);
-  const trust_intersection = my_trusting.filter(username => { if (other_trusted_by.includes(username)) return username });
+  const hover_recieved = selected_id_badges.recieved.length===0
+    ?"None"
+    :`${recieved_identities.map((id)=>id.username).toString()}`;
 
-  // populate
-  document.getElementById("network_profile_nickname").textContent = other_profile.profile.nickname;
-  document.getElementById("network_profile_username").textContent = other_profile.profile.username;
-  document.getElementById("network_profile_status").textContent = other_profile.profile.status;
-  document.getElementById("network_profile_trust_intersection").textContent = trust_intersection.length;
-  (other_trusting.length>0)?
-  document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">${other_trusting.toString().replaceAll("," , ", ")}.</span>` :
-  document.getElementById("network_profile_trusting_list").innerHTML = `Trusting : <span class="contact_info">None</span>`;
-  (other_trusted_by.length>0)?
-  document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">${other_trusted_by.toString().replaceAll("," , ", ")}.</span>` :
-  document.getElementById("network_profile_trusted_by_list").innerHTML = `Trusted By : <span class="contact_info">None</span>`;
+  document.getElementById("list_of_trusted_by").innerHTML = `Trusted By: <span class="contact_info">${hover_recieved}</span>`;
 
-
-  document.getElementById('trust_intersection_list').innerHTML = `Trust Intersection: <span class="contact_info">${trust_intersection.toString().replaceAll("," , ", ")}.</span>`;
-
-  // trust_intersection.map((username, i, array) => {
-  //   if (array.length - 1 < 0) return;
-  //   if (i === 0) document.getElementById('trust_intersection_list').textContent += "Trusted By ";
-  //   else if (array.length - 1 === i) document.getElementById('trust_intersection_list').textContent += `${username}.`
-  //   else if (array.length - 2 === i) document.getElementById('trust_intersection_list').textContent += `${username} & `
-  //   else document.getElementById('trust_intersection_list').textContent += `${username}, `
-  // });
-
-  console.log({my_trusted_by:my_profile.trusted_by});
-  if (my_trusted_by.includes(username)) {
-
-    const encrypted_contact_decryption_key_array = my_keys.profile_keys.filter((item) => {
-      if (item.id === username)
-        return item
-    });
-    const encrypted_contact_decryption_key = (encrypted_contact_decryption_key_array.length > 0) ? encrypted_contact_decryption_key_array[0]['key'] : null;
-
-    console.log({ encrypted_contact_decryption_key })
-
-    const my_recipient_xprv = bitcoin.derive_child_indexes(store.getParentKeys()['recipient_parent']['xprv'], 0, 0)['xprv'];
-    const other_recipient_xpub = other_profile.recipient_xpub;
-
-    const ecdsa_grouped = bitcoin.extract_ecdsa_pair({ xpub: other_recipient_xpub, xprv: my_recipient_xprv });
-    const shared_secret = bitcoin.calculate_shared_secret(ecdsa_grouped.private_key, ecdsa_grouped.public_key);
-
-    // console.log({ shared_secret })
-
-    const decryption_key = (encrypted_contact_decryption_key) ? decrypt(encrypted_contact_decryption_key, shared_secret) : null;
-    // console.log({ decryption_key })
-    const contact_info = (decryption_key && other_profile.profile.cipher_info) ? decrypt(other_profile.profile.cipher_info, decryption_key) : other_profile.profile.cipher_info | "Not Set";
-    // console.log({shared_secret})
-    document.getElementById("network_profile_contact").textContent = contact_info;
-
-    const trusted_by_item = my_profile.trusted_by.filter((item) => {
-      if (item.username === username)
-        return item;
-    });
-    const is_muted = trusted_by_item[0].mute;
-    if (is_muted) {
-      document.getElementById("network_profile_mute_button").innerHTML = `<div class="col-8"></div><div class="col-4"><button id="unmute_${username}" class="btn-sm centerme" type="button">Unmute</button></div>`
-      document.getElementById(`unmute_${username}`).addEventListener("click", async (event) => {
-        event.preventDefault();
-        const updated = await apiMuteUser(store.getToken(),username,!is_muted);
-        console.log({updated})
-
-        alert("Unmuted")
-        displayProfile(updated,store.getMyKeys(),username);
-      });
-    }
-    else {
-      document.getElementById("network_profile_mute_button").innerHTML = `<div class="col-8"></div><div class="col-4"><button id="mute_${username}" class="btn-sm centerme" type="button">Mute</button></div>`
-      document.getElementById(`mute_${username}`).addEventListener("click", async (event) => {
-        event.preventDefault();
-        const updated = await apiMuteUser(store.getToken(),username,!is_muted);
-        console.log({updated})
-
-        alert("Muted")
-        displayProfile(updated,store.getMyKeys(),username);
-      });
-    }
-
-
-  }
-  else {
-    document.getElementById("network_profile_contact").textContent = other_profile.profile.cipher_info;
-  }
-
-}
-
-function filterUsernamesByTrust(my_profile, existing_usernames) {
-  const index = existing_usernames.indexOf(store.getUsername());
-  if (index > -1) {
-    existing_usernames.splice(index, 1);
-  };
-
-  trusting_usernames = my_profile["trusting"].map((item) => item.username);
-  trusted_by_usernames = my_profile["trusted_by"].map((item) => item.username);
-  search_usernames = existing_usernames.filter(username => {
-    if (!trusting_usernames.includes(username)) {
-      return username;
-    }
+  const trust_intersection = recieved_identities.filter((trusted_by)=>{
+    my_given_pubkeys.includes(trusted_by.pubkey);
   });
-  return {
-    trusting_usernames,
-    trusted_by_usernames,
-    search_usernames
-  }
+
+  const hover_trust_intersect = trust_intersection.length===0?"None.":`${trust_intersection.map((id)=>id.username).toString()}`;
+
+  document.getElementById("trust_intersection").innerHTML = `Trust Intersection: <span class="contact_info">${hover_trust_intersect}</span>`;
+
 }
+
+function displaySearchIdBs(idbs) {
+  document.getElementById('search_userlist').innerHTML = "";
+  idbs.map((id_and_badges) => {
+    let trusted_badges = [];
+    let in_person_badges = [];
+    let scammer_badges = [];
+    id_and_badges.badges.recieved.map((badge) => {
+      if (badge.type === TRUST)
+        trusted_badges.push(badge);
+      if (badge.type === SCAMMER)
+        scammer_badges.push(badge);
+    });
+    document.getElementById('search_userlist').innerHTML += `<div id="search_item_${id_and_badges.pubkey}" class="row"><div class="col-6 outline leftme">${id_and_badges.username}</div><div id="trust_${id_and_badges.pubkey}" class="col-3 outline"><i class="fas fa-shield-alt n_badges" aria-hidden="true"></i>${trusted_badges.length}</div><div class="col-3 outline"><i class="fas fa-ban n_badges" aria-hidden="true"></i>${scammer_badges.length}</div></div><hr>`
+  });
+  return;
+}
+
 
 async function loadNetworkEvents() {
 
-  /**
-   * 
-   * 
-   * check if my profile exists.
-   * check if existing_usuernames exists
-   * populate network with trusted, trusted by and remaining users
-   * 
-   */
-  document.getElementById("exit").addEventListener("click", (event) => {
-    event.preventDefault();
-    exit();
+
+  const all_idbs = await getUpdatedIdsAndBadges();
+  console.log({ merged_idbs: all_idbs });
+  if (all_idbs instanceof Error) {
+    alert("Error initializing Network.");
+  }
+  const keys = store.getMyKeyChain();
+  let selected_identity = store.getSelectedIdentity();
+  if (!selected_identity)
+    selected_identity = store
+      .getIdentities()
+      .find((identity) => identity.pubkey === keys.identity.pubkey);
+
+  displayIdentity(selected_identity);
+  displaySearchIdBs(all_idbs);
+
+  store.getIdentities().map((identity) => {
+    document.getElementById(`search_item_${identity.pubkey}`).addEventListener("click", (event) => {
+      event.preventDefault();
+      store.updateSelectedIdentity(identity);
+      displayIdentity(identity);
+    });
   });
 
-  const my_profile = await apiGetMyProfile(store.getToken());
-  if (my_profile instanceof Error) {
-    console.error(my_profile);
-    return;
-  }
-  const existing_usernames = await apiGetUsernames(true, store.getToken());
-  if (existing_usernames instanceof Error) {
-    console.error(existing_usernames);
-    return;
-  }
-  store.setMyProfile(my_profile.profile);
-  store.setMyKeys(my_profile.keys);
-
-  store.setExistingUsernames(existing_usernames);
-
-
-  const { trusting_usernames, trusted_by_usernames, search_usernames } = filterUsernamesByTrust(store.getMyProfile(), store.getExistingUsernames());
 
   document.getElementById("network_page_spinner").classList.add("hidden");
   document.getElementById("network_page").classList.remove("hidden");
 
-  search_usernames.map((username) => {
-    document.getElementById('search_userlist').innerHTML += `<div id="search_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trust_${username}" class="btn-sm centerme" type="submit">Trust</button></div></div><hr>`
-  });
-
-  search_usernames.map((username) => {
-    document.getElementById(`trust_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      trust(username);
+  document.getElementById(`issue_trust`).addEventListener("click", async (event) => {
+    event.preventDefault();
+    //if already trusting then revoke
+    const selected_identity = store.getSelectedIdentity();
+    let is_trusted = false;
+    comps.getBadgesByPubkey(selected_identity.pubkey).recieved.map((badge) => {
+      if (badge.type === TRUST && badge.giver === keys.identity.pubkey) {
+        is_trusted = true;
+      }
     });
-    document.getElementById(`search_item_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      displayProfile(store.getMyProfile(),store.getMyKeys(),username);
-    });
+    console.log({ is_trusted });
+
+    if (!is_trusted) {
+      const confirmation = confirm(`Trusting ${selected_identity.username}`);
+      if (!confirmation) return false;
+
+      const trust_result = await comps.trustPubkey(store.getMyKeyChain().identity, selected_identity.pubkey);
+      if (trust_result instanceof Error) {
+        console.error({ trust_result })
+      }
+      document.location.reload();
+    }
+    else {
+      const confirmation = confirm(`Revoking Trust in ${selected_identity.username}`);
+      if (!confirmation) return false;
+
+      const revoke_result = await comps.revokeTrustPubkey(store.getMyKeyChain().identity, selected_identity.pubkey);
+      if (revoke_result instanceof Error) {
+        console.error({ revoke_result })
+      }
+      document.location.reload();
+    }
+    return;
   });
-
-  trusting_usernames.map((username) => {
-    document.getElementById('trusting_userlist').innerHTML += `<div id="trusting_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusting_revoke_${username}" class="btn-sm centerme" type="submit">Trusting</button></div></div><hr>`
+  document.getElementById(`issue_scammer`).addEventListener("click", (event) => {
+    event.preventDefault();
+    alert("Not supported Yet.")
   });
-
-  trusting_usernames.map((username) => {
-    document.getElementById(`trusting_revoke_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      revoke(username);
-    });
-    document.getElementById(`trusting_item_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      displayProfile(store.getMyProfile(),store.getMyKeys(),username);
-    });
-  });
-
-  trusted_by_usernames.map((username) => {
-    /**
-     * 
-     * Check if the user is already trusted by the current user
-     * Accordingly change button text
-     * 
-     */
-
-    if (trusting_usernames.includes(username))
-      document.getElementById('trusted_by_userlist').innerHTML += `<div id="trusted_by_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusted_by_revoke_${username}" class="btn-sm centerme" type="submit">Trusting</button></div></div><hr>`
-    else
-      document.getElementById('trusted_by_userlist').innerHTML += `<div id="trusted_by_item_${username}" class="row"><div class="col-8 outline leftme">${username}</div><div class="col-4 outline"><button id="trusted_by_${username}" class="btn-sm centerme" type="submit">Trust</button></div></div><hr>`
-  });
-
-  trusted_by_usernames.map((username) => {
-    if (trusting_usernames.includes(username))
-      document.getElementById(`trusted_by_revoke_${username}`).addEventListener("click", (event) => {
-        event.preventDefault();
-        revoke(username);
+  document.getElementById(`network_search_button`).addEventListener("click", (event) => {
+    event.preventDefault();
+    const username = document.getElementById("network_search_username").value;
+    if (username === "") {
+      displaySearchIdBs(all_idbs);
+      store.getIdentities().map((identity) => {
+        document.getElementById(`search_item_${identity.pubkey}`).addEventListener("click", (event) => {
+          event.preventDefault();
+          store.updateSelectedIdentity(identity);
+          displayIdentity(identity);
+        });
       });
-    else
-      document.getElementById(`trusted_by_${username}`).addEventListener("click", (event) => {
-        event.preventDefault();
-        trust(username);
+      return;
+    }
+    else {
+      const remnants = all_idbs.filter(identity => identity.username.startsWith(username));
+        if(remnants.length===0) {
+          return;
+        };
+
+      displaySearchIdBs(remnants);
+      remnants.map((identity) => {
+        document.getElementById(`search_item_${identity.pubkey}`).addEventListener("click", (event) => {
+          event.preventDefault();
+          store.updateSelectedIdentity(identity);
+          displayIdentity(identity);
+        });
       });
-
-    document.getElementById(`trusted_by_item_${username}`).addEventListener("click", (event) => {
-      event.preventDefault();
-      displayProfile(store.getMyProfile(),store.getMyKeys(),username);
-    });
-  });
-
-  document.getElementById(`network_trusting_menu`).addEventListener("click", (event) => {
-    event.preventDefault();
-    document.getElementById("network_trusting").classList.remove("hidden");
-    document.getElementById("network_trusted_by").classList.add("hidden");
-    document.getElementById("network_search").classList.add("hidden");
-    // document.getElementById("network_trust_intersection").classList.add("hidden");
-
+    }
 
   });
-
-  document.getElementById(`network_trusted_by_menu`).addEventListener("click", (event) => {
+  document.getElementById("exit").addEventListener("click", (event) => {
     event.preventDefault();
-    document.getElementById("network_trusting").classList.add("hidden");
-    document.getElementById("network_trusted_by").classList.remove("hidden");
-    document.getElementById("network_search").classList.add("hidden");
-    // document.getElementById("network_trust_intersection").classList.add("hidden");
-
-
-  });
-
-  document.getElementById(`network_search_menu`).addEventListener("click", (event) => {
-    event.preventDefault();
-    document.getElementById("network_trusting").classList.add("hidden");
-    document.getElementById("network_trusted_by").classList.add("hidden");
-    document.getElementById("network_search").classList.remove("hidden");
-    // document.getElementById("network_trust_intersection").classList.add("hidden");
-
-
+    util.exit();
   });
 
 }
 
 window.onload = loadNetworkEvents();
-
 
 
 

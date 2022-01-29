@@ -5,22 +5,27 @@ Developed @ Stackmate India
 import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
-import { CypherpostPreference } from "../preference/preference";
-import { CypherpostProfile } from "../profile/profile";
+import { CypherpostBadges } from "../badges/badges";
+import { CypherpostPostKeys } from "../posts/keys/post_keys";
+import { CypherpostPosts } from "../posts/posts";
 import { CypherpostIdentity } from "./identity";
 
 const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
-const profile =  new CypherpostProfile();
-const preference = new CypherpostPreference();
+const badges = new CypherpostBadges();
+const posts = new CypherpostPosts();
+const posts_keys = new CypherpostPostKeys();
+
 const bitcoin = new CypherpostBitcoinOps();
 
 export async function identityMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
     const signature = request.headers['x-client-signature'];
-    const xpub = request.headers['x-client-xpub'];
+    const pubkey = request.headers['x-client-pubkey'];
+    // CHECK SIG AND PUBKEY FORMAT - RETURNS 500 IF NOT VALID
+
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
@@ -28,10 +33,11 @@ export async function identityMiddleware(req, res, next) {
     const message = `${method} ${resource} ${body} ${nonce}`;
 
     // console.log({message});
-    const pubkey = bitcoin.extract_ecdsa_pub(xpub);
-    if(pubkey instanceof Error) return pubkey;
+    // console.log({signature});
+    // console.log({pubkey});
     
-    let verified = bitcoin.verify(message, signature, pubkey);
+    let verified = await bitcoin.verify(message, signature, pubkey);
+    // console.log({verified})
     if (verified instanceof Error) throw verified;
     if (!verified) throw{
       code: 401,
@@ -57,15 +63,9 @@ export async function handleRegistration(req, res) {
       }
     }
 
-    let status = await identity.register(request.body.username, request.headers['x-client-xpub']);
+    let status = await identity.register(request.body.username, request.headers['x-client-pubkey']);
     if (status instanceof Error) throw status;
-
-    status = await profile.initialize(request.headers['x-client-xpub']);
-    if (status instanceof Error) throw status;
-
-    status = await preference.initialize(request.headers['x-client-xpub']);
-    if (status instanceof Error ) throw status;
-
+    
     const response = {
       status
     };
@@ -96,6 +96,50 @@ export async function handleGetAllIdentities(req, res) {
 
     const response = {
       identities
+    };
+
+    respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+}
+
+export async function handleDeleteIdentity(req, res) {
+  const request = parseRequest(req);
+
+  try {
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        code: 400,
+        message: errors.array()
+      }
+    }
+
+    // remove identity xpub from :
+    // profile + keys
+    // posts + keys
+    // preferences 
+    // badges
+    // identities
+
+    const rm_posts = await posts.removeAllByOwner(request.headers['x-client-pubkey']);
+    if(rm_posts instanceof Error) throw rm_posts;
+
+    const rm_post_keys = await posts_keys.removeAllPostDecryptionKeyOfUser(request.headers['x-client-pubkey']);
+    if (rm_post_keys instanceof Error) throw rm_post_keys;
+
+    const rm_badges = await badges.removeAllOfUser(request.headers['x-client-pubkey'])
+    if (rm_badges instanceof Error) throw rm_badges;
+
+    const rm_identity = await identity.remove(request.headers['x-client-pubkey']);
+    if (rm_identity instanceof Error) throw rm_identity;
+    
+    const response = {
+      status: true
     };
 
     respond(200, response, res, request);

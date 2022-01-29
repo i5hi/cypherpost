@@ -48,6 +48,20 @@ const post_key_schema = new mongoose.Schema(
 const postKeyStore = mongoose.model("post_key", post_key_schema);
 // ------------------ '(◣ ◢)' ---------------------
 export class MongoPostKeyStore implements PostDecryptionKeyStore {
+  async removeAllReciever(reciever: string): Promise<boolean | Error> {
+    try {
+      const query = { reciever };
+
+      const status = await postKeyStore.deleteMany(query)
+      if (status instanceof mongoose.Error) {
+        return handleError(status);
+      }
+      if (status.deletedCount >= 1) return true;
+      else return false;
+    } catch (e) {
+      return handleError(e);
+    }
+  }
 
   async createMany(keys: PostDecryptionKey[]): Promise<boolean | Error> {
     try {
@@ -73,7 +87,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       const query = { giver: { $in: giver } };
 
       const docs = await postKeyStore.find(query).sort({ "genesis": -1 }).exec();
-      if (docs.length>0) {
+      if (docs.length > 0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);
         }
@@ -101,7 +115,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       const query = { reciever: { $in: reciever } };
 
       const docs = await postKeyStore.find(query).sort({ "genesis": -1 }).exec();
-      if (docs.length>0) {
+      if (docs.length > 0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);
         }
@@ -130,7 +144,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       const query = { post_id: { $in: post_id } };
 
       const docs = await postKeyStore.find(query).sort({ "genesis": -1 }).exec();
-      if (docs.length>0) {
+      if (docs.length > 0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);
         }
@@ -161,8 +175,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       if (status instanceof mongoose.Error) {
         return handleError(status);
       }
-      if (status.deletedCount >= 1) return true;
-      else return false;
+      return true;
     } catch (e) {
       return handleError(e);
     }
@@ -181,7 +194,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async removeAll(giver: string): Promise<boolean | Error> {
+  async removeAllGiver(giver: string): Promise<boolean | Error> {
     try {
       const query = { giver };
 
@@ -218,7 +231,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
     } catch (e) {
       return handleError(e);
     }
-  }  
+  }
 
 }
 

@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
   <link rel="stylesheet" type='text/css' href="/css/mdb.min.css" />
-  <link rel="stylesheet" type='text/css' href="/css/light.css" />
+  <link rel="stylesheet" type='text/css' href="/css/dark.css" />
 
 
 
@@ -23,14 +23,12 @@
   <header>
     <div class='row'>
       <nav class="navbar fixed-top navbar-expand-lg navbar-light pink scrolling-navbar">
-        <div class="col-6 outline">
+        <div class="col-7 outline">
           <img class="sats-ico" loading="lazy" src='/img/owl.png' href="https://cypherpost.io">
         </div>
-
         <div class="col-5 outline">
           <a id="exit" class="container rightme outline">Exit</a>
         </div>
-        <div class="col-1"></div>
       </nav>
     </div>
   </header>
@@ -48,31 +46,36 @@
     <div class="container outline">
       <div class="row outline">
 
-        <ul class="nav nav-tabs outline">
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme outline" href="posts.html">Posts</a>
-            </li>
+        <ul class="nav nav-tabs">
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="posts.html">
+                  Trades
+                </a>
+              </li>
+            </div>
           </div>
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="profile.html">Profile</a>
-            </li>
-          </div>
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="network.html">Network</a>
-            </li>
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="preferences.html">
+                  Settings
+                </a>
+              </li>
+            </div>
           </div>
 
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link centerme" href="network.html">
+                  Network
+                </a>
+              </li>
+            </div>
+          </div>
         </ul>
-
-
 
       </div>
 
@@ -81,99 +84,68 @@
       <div id="profile_bio" class="container outline bio">
 
         <div class="row">
-          <div id="profile_nickname" class="col-12 outline nickname">
-            Welcome
-          </div>
-        </div>
-
-        <div class="row outline username">
-          <div id="profile_username" class="col-12">
+          <div id="profile_username" class="col-12 outline nickname leftme">
 
           </div>
         </div>
 
+        <div class="row outline">
+          <div id="profile_pubkey" class="col-12 pubkey cypherpost-color">
 
-        <div class="row outline contact_info">
-          <div id="profile_contact" class="col-12">
-            Add contact info.
           </div>
         </div>
-        <div class="row outline status">
-          <div id="profile_status" class="col-12">
-            Add status.
-          </div>
-        </div>
-
 
         <br>
-        <div class="row outline">
-          <div id="profile_trusting_list" class="col-12">
-            Trust List
+      </div>
+
+      <br>
+      <div id="profile_badges" class="container outline bio">
+        <h3 class="leftme">Badges</h3>
+        <div class="row outline trusting">
+          <div class="col-3">
+            <div class="row outline centerme trusting_title">Given</div>
+          </div>
+          <div class="col-3">
+            <div id="profile_badges_given" class="row outline centerme trust_value">0</div>
+          </div>
+          <div class="col-3">
+            <div class="row outline centerme trusted_by_title">Recieved</div>
+          </div>
+          <div class="col-3">
+            <div id="profile_badges_recieved" class="row outline centerme trust_value">0</div>
           </div>
         </div>
-
-        <div class="row outline">
-          <div id="profile_trusted_by_list" class="col-12">
-
-          </div>
-        </div>
-      </div>
-      
-      <br>
-
-      <div class="row outline trusting">
-        <div class="col-3">
-          <div class="row outline centerme trusting_title">Trusting</div>
-        </div>
-        <div class="col-3">
-          <div id="profile_trusting" class="row outline centerme trust_value"></div>
-        </div>
-        <div class="col-3">
-          <div class="row outline centerme trusted_by_title">Trusted By</div>
-        </div>
-        <div class="col-3">
-          <div id="profile_trusted_by" class="row outline centerme trust_value"></div>
-        </div>
       </div>
 
-      <br>
-      <div class="row">
-        <div class="col-sm-6 col-md-6 col-lg-12 outline">
-        </div>
-        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
-          <button id="edit_button" type="button" class="btn" data-toggle="modal" data-target="#edit_profile">
-            Edit
-          </button>
-        </div>
+      <div class="row username outline">
+        <div id="profile_list_of_trusting"></div>
+        <div id="profile_list_of_trusted_by"></div>
+        <div id="profile_trust_intersection"></div>
       </div>
-      <br>
+    </div>
+
+<hr>
+
+    <div class="container">
+      <h3 class="leftme">Mute List</h3>
+      <div id="profile_mute_list" class="row">
+        <div class="col-4 outline centerme warning-color">1</div>
+      </div>
+    </div>
+
+    <br>
+    <div class="container">
+
       <div class="row">
         <div class="col-sm-6 col-md-6 col-lg-12 outline">
         </div>
         <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
           <!-- Button trigger modal -->
-          <button id="import_keys_button" type="button" class="btn" data-toggle="modal" data-target="#import_keys">
-            Import
+          <button id="peek_seed_button" type="button" class="btn" data-toggle="modal" data-target="#peek_seed">
+            Peek
           </button>
         </div>
       </div>
-      <br>
-
-      <div class="row invite">
-        <div class="col-sm-6 col-md-6 col-lg-12 outline">
-        </div>
-        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
-          <button id="invite_button" class="btn" type="submit">Invite</button>
-        </div>
-      </div>
-      <br>
-      <div class="row outline invite">
-        <div id="invite_link_space" class="col-12 contact_info">
-
-        </div>
-
-      </div>
-
       <br>
       <div class="row">
         <div class="col-sm-6 col-md-6 col-lg-12 outline">
@@ -184,7 +156,7 @@
       </div>
       <br>
 
-
+    </div>
     </div>
     <br>
   </main>
@@ -192,23 +164,21 @@
 
 
   <!-- Import Modal -->
-  <div class="modal container fade" id="import_keys" tabindex="-1" role="dialog"
-    aria-labelledby="importKeysFromMnemonic" aria-hidden="true">
+  <div class="modal container fade" id="peek_seed" tabindex="-1" role="dialog" aria-labelledby="importKeysFromMnemonic"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLongTitle">Import Encryption Keys</h5>
-          <button id="close_import_keys_modal" type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <h5 class="modal-title" id="exampleModalLongTitle">View Mnemonic Seed Words</h5>
+          <button id="close_peek_seed_modal" type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          <input type="text" id="import_keys_input" class="" placeholder="12 mnemonic words">
-          <br>
-          <input type="password" id="import_keys_password_input" class="" placeholder="Password">
+          <input type="password" id="peek_seed_password_input" class="" placeholder="Password">
         </div>
         <div class="modal-footer">
-          <button id="import_keys_execute" type="button" class="btn">Import</button>
+          <button id="peek_seed_execute" type="button" class="btn">Peek</button>
         </div>
       </div>
     </div>
@@ -226,11 +196,11 @@
           </button>
         </div>
         <div class="modal-body">
-          <input type="text" id="nickname_input" class="" placeholder="Nickname (Public)">
+          <input type="text" id="nickname_input" class="" placeholder="Nickname">
           <br>
-          <input type="text" id="status_input" class="" placeholder="Status (Public)">
+          <input type="text" id="status_input" class="" placeholder="Status">
           <br>
-          <input type="textx" id="contact_input" class="" placeholder="Contact Info (Private)">
+          <input type="text" id="contact_input" class="" placeholder="Contact Info">
         </div>
         <div class="modal-footer">
           <button id="edit_profile_execute" type="button" class="btn">Update</button>
@@ -267,7 +237,7 @@
 
   <!-- Custom scripts -->
 
-  <script type="text/javascript" src="/js/bundles/profile_bundle.js"></script>
+  <script type="text/javascript" src="/js/bundles/preferences_bundle.js"></script>
 
 </body>
 

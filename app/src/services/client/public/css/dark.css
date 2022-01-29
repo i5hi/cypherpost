@@ -1,13 +1,21 @@
  
 @import url("https://fonts.googleapis.com/css2?family=Aldrich&family=Lato&display=swap");
 
+
+html, body {
+  overflow-x: hidden;
+}
+body {
+  position: relative
+}
+
 .receipt-header{
-background-color:  #D0C8CD;
+  background-color:#0A0A0A !important;
 height: 69px;
 
 }
 .outline{
-  border: 0px solid #D0C8CD;
+  border: 1px solid #151414;
 }
 .logo{
   margin-top: 17px !important;
@@ -24,12 +32,18 @@ height: 69px;
   /* margin-top: -6px; */
 }
 
+.close{
+  color: #8900A7 !important;
 
+}
 .bitcoin-ico{
   width:56px;
   height:56px;
 }
 
+.footer-copyright{
+  font-size: 0.8rem;
+}
 
 .end-line {
   position: fixed;
@@ -52,11 +66,9 @@ input {
   border-top: 0px;
   border-radius: 0px;
   border-bottom: 0px solid #dadada;     /* oranges! yey */
-
 }
 input[type=text]:focus{
   background-color: #0A0A0A !important;
-
   outline: none !important;
   border-bottom: 5px solid #8900A7;     /* oranges! yey */
 }
@@ -67,9 +79,11 @@ input[type=password]:focus{
   border-bottom: 5px solid #8900A7;     /* oranges! yey */
 }
 input {
+  background-color: #0A0A0A !important;
   min-height: auto;
-  padding-top: 5.28px;
-  padding-bottom: 3.28px;
+  padding-top: 6.28px;
+  padding-bottom: 0.28px;
+  font-size: 17px !important;
 }
 input {
   background-color: #0A0A0A !important;
@@ -127,7 +141,7 @@ input {
 
 }
 .btn-block:info {
-  background-color: #D0C8CD !important; /* Green */
+  background-color:#0A0A0A !important;
   color: #8900A7 !important;
   border: 1px solid #8900A7 !important;
   border-radius: 0px !important;
@@ -139,29 +153,41 @@ input {
 }
 
 button {
-  background-color:transparent !important;
+  background-color:#0A0A0A !important;
   color: #D0C8CD;
   border: 1px solid #8900A7;
   border-radius: 0px !important;
 
 }
 .btn {
-  background-color:transparent !important;
+  background-color:#0A0A0A !important;
   color: #D0C8CD !important;
   border: 1px solid #8900A7;
   border-radius: 0px !important;
   height: 2.3rem;
-  width: 6rem;
+  width: 6.9rem;
+  margin: 0 auto;
+  text-align: center;
+}
 
+.btn-md {
+  background-color:#0A0A0A !important;
+  color: #D0C8CD !important;
+  border: 1px solid #8900A7;
+  border-radius: 0px !important;
+  height: 2.3rem;
+  width: 9.0rem;
+  margin: 0 auto;
+  text-align: center;
 }
 .btn-block {
-  background-color:transparent !important;
+  background-color:#0A0A0A !important;
   color: #D0C8CD !important;
   border-radius: 0px !important;
 
 }
 .btn-info {
-  background-color:transparent !important;
+  background-color:#0A0A0A !important;
   color: #D0C8CD !important;
   border-radius: 0px !important;
   font-size:15px;
@@ -191,7 +217,7 @@ button {
 
 .btn-sm{
   color: #8900A7;
-  background-color: #D0C8CD;
+  background-color:#0A0A0A !important;
   border: 2px solid #8900A7 !important;
   height: 42px;
   width: 52px;
@@ -239,14 +265,42 @@ table.dataTable thead .sorting_desc_disabled:before {
 }
 
 
-
-
 .alt-back{
 background-color: #D0C8CD  ;
 }
 
 .nickname{
-  font-size:2.1rem;
+  font-size:1.5rem;
+}
+
+.post_order{
+  font-size:1.5rem;
+}
+
+.post_price{
+  font-size:1rem;
+}
+
+.post_message{
+  font-size:0.7rem;
+}
+
+.post_minmax{
+  font-size:0.7rem;
+}
+
+.post_payment_method{
+  font-size:0.7rem;
+}
+.post_networks{
+  font-size:0.7rem;
+}
+.post_reference_percent{
+  font-size:0.7rem;
+}
+
+.post_genesis{
+  font-size:0.5rem;
 }
 
 .usename{
@@ -255,6 +309,9 @@ background-color: #D0C8CD  ;
 
 .contact_info{
   font-size:0.7rem;
+}
+.pubkey{
+  font-size:0.5rem;
 }
 .trust_value{
   font-size:1.8rem;
@@ -277,12 +334,20 @@ background-color: #D0C8CD  ;
   font-size:19px;
 }
 
+.delete-color{
+  color:#8f3b30;
+}
 .incoming-color{
   color:#30B0AA !important;
 }
 .warning-color{
+  color:#d80c50dd !important;
+}
+
+.fa-trash-alt{
   color:#d80c50 !important;
 }
+
 .cold-color{
  color: #1F5673 !important; 
 }
@@ -296,13 +361,13 @@ background-color: #D0C8CD  ;
 }
 
 .border-light{
-  border-width: 0px !important;
+  border-width: 1px !important;
 }
 .p5{
   border-width: 0px !important;
 }
 .border{
-  border: 0px solid #222222 !important;
+  border: 1px solid #151414 !important;
 }
 
 .reg{
@@ -325,7 +390,7 @@ background-color: #D0C8CD  ;
 .active {
   background-color: #8900A7;
 
-  color:#8900A7;
+  color:#998d9c;
 
 }
 
@@ -355,11 +420,121 @@ color:#0A0A0A;
   background-color: #0A0A0A !important;
 }
 
+.nav-tabs:hover .nav-link:hover {
+  background-color:  #151414 !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  -webkit-transition: all .3s linear;
+  transition: all .3s linear;
+}
+
+.modal, .modal-dialog{
+  background-color: #0A0A0A !important;
+}
+
+
+.modal-header{
+  background-color: #0A0A0A !important;
+}
 
 .modal-footer, .modal-body{
-  background-color: #0A0A0A !important;
+  background-color:#0A0A0A !important;
 
 }
 .modal-title{
-  color: #0A0A0A !important;
+  color: #ebebeb !important;
+}
+
+.spinner-grow{
+  color: #151414;
+  border: 3px solid #8900A7 !important;
+}
+
+.post_select_input{
+  background-color: #0A0A0A !important;
+  color:#ebebeb;
+
+  padding: 12px;
+  border: 0px !important;
+}
+
+#serach_userlist{
+  overflow: scroll;
+}
+
+input[type=checkbox] {
+  font-size: 15px;
+  color: #8900A7;
+  height: 1.625em;
+  width: 1.625em;
+}
+
+input[type=checkbox]:checked {
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+  font-size: 15px;
+  color: #0a0a0a !important;
+  border-color: #8900A7 !important;
+  text-align: center;
+  line-height: 15px;
+}
+
+.form-check-input{
+  color: #8900A7 !important;
+  border: 0px;
+  padding: 10px;
+  height: 1.625em;
+  width: 1.625em;
+}
+.form-check-label{
+  color: #ebebeb !important;
+  border: 0px;
+  margin-top: 12px;
+
+}
+
+#found_userlist{
+  height: 256px !important;
+  overflow-y: scroll;
+}
+#selected_userlist{
+  height: 256px !important;
+  overflow-y: scroll;
+}
+
+.modal-body{
+  height: 70vh !important;
+  overflow-y: scroll;
+  /* overflow: hidden; */
+  /* margin: 0 auto;  */
+}
+
+.hovertext {
+  position: relative;
+  color: #fff !important;
+  display: inline-block;
+}
+
+.hovertext:before {
+  content: attr(value);
+  visibility: hidden;
+  opacity: 0;
+  width: max-content;
+  background-color: transparent !important;
+  color: #fff;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px 5px; 
+  transition: opacity 1s ease-in-out;
+
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  overflow-x: hidden;
+  top: 110%;
+}
+
+.hovertext:hover:before {
+  opacity: 1;
+  visibility: visible;
 }

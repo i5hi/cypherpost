@@ -17,7 +17,7 @@ const identity_schema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    xpub: {
+    pubkey: {
       type: String,
       unique: true,
       required: true,
@@ -55,9 +55,9 @@ export class MongoIdentityStore implements IdentityStore {
       return handleError(e);
     }
   }
-  async removeOne(xpub: string): Promise<boolean | Error> {
+  async removeOne(pubkey: string): Promise<boolean | Error> {
     try {
-      const query = { xpub };
+      const query = { pubkey };
       const status = await identityStore.deleteMany(query)
       if (status instanceof mongoose.Error) {
         return handleError(status);
@@ -71,7 +71,7 @@ export class MongoIdentityStore implements IdentityStore {
   }
   async readOne(index: string, indexType: IdentityIndex): Promise<UserIdentity | Error> {
     try {
-      const query = (indexType === IdentityIndex.Username) ? { username: index } : { xpub: index };
+      const query = (indexType === IdentityIndex.Username) ? { username: index } : { pubkey: index };
       const doc = await identityStore.findOne(query).exec();
 
       if (doc) {
@@ -82,7 +82,7 @@ export class MongoIdentityStore implements IdentityStore {
         const out: UserIdentity = {
           genesis: doc["genesis"],
           username: doc["username"],
-          xpub: doc["xpub"],
+          pubkey: doc["pubkey"],
         };
 
         return out;
@@ -107,7 +107,7 @@ export class MongoIdentityStore implements IdentityStore {
         return {
           genesis: doc["genesis"],
           username: doc["username"],
-          xpub: doc["xpub"],
+          pubkey: doc["pubkey"],
         };
       });
       return identities;
@@ -134,7 +134,7 @@ export class MongoIdentityStore implements IdentityStore {
 //           "Username Exists"
 //       });
 //     } else {
-//       const doc = await identityStore.findOne({ xpub: identity.xpub }).exec();
+//       const doc = await identityStore.findOne({ pubkey: identity.pubkey }).exec();
 //       if (doc === null) return true;
 
 //       if (doc) {

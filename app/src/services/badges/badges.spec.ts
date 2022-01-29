@@ -65,10 +65,10 @@ describe("Initalizing Test: Badge Service", function () {
     };
     await db.connect(connection);
 
-    const key_pair = bitcoin.extract_ecdsa_pair({xpub,xprv});
+    const key_pair = await bitcoin.extract_ecdsa_pair({xpub,xprv});
     if(key_pair instanceof Error) return key_pair;
     const message = `${xpub}:${xpub1}:${BadgeType.Trusted.toString()}:${nonce}`;
-    signature = bitcoin.sign(message,key_pair.private_key);
+    signature = await bitcoin.sign(message,key_pair.private_key);
   });
 
   describe("BADGE SERVICE OPERATIONS:", async function () {
@@ -94,7 +94,8 @@ describe("Initalizing Test: Badge Service", function () {
     });
     it("FIND 0 badges post revoke", async function () {
       const response = await badges.findByReciever(xpub1);
-      expect(response['name']).to.equal("404");
+      if (response instanceof Error) throw response
+      expect(response.length === 0).to.equal(true);
     });
     it("CREATE new TRUST from xpub to xpub1", async function () {
       const response = await badges.create(xpub, xpub1, BadgeType.Trusted,nonce, signature);
@@ -106,7 +107,8 @@ describe("Initalizing Test: Badge Service", function () {
     });
     it("FIND 0 badges post revoke", async function () {
       const response = await badges.getAll();
-      expect(response['name']).to.equal("404");
+      if (response instanceof Error) throw response
+      expect(response.length === 0).to.equal(true);
     });
   });
 });

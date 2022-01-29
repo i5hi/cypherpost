@@ -21,111 +21,50 @@ const { encrypt, decrypt } = require("./aes");
 const crypto = require("crypto");
 const bitcoin = require("./bitcoin");
 
-function setSeed256(seed256) {
-  sessionStorage.setItem("seed256", seed256);
-  return true;
-};
 
-function getSeed256() {
-  return sessionStorage.getItem("seed256");
-}
-
-function setTriplePass256(passowrd){
-  const round1 = crypto.createHash("sha256").update(passowrd).digest("hex");
-  const round2 = crypto.createHash("sha256").update(round1).digest("hex");
-  const round3 = crypto.createHash("sha256").update(round2).digest("hex");
-  sessionStorage.setItem("triple_pass256",round3);
-  return true;
-}
-function getTriplePass256(passowrd){
-  return sessionStorage.getItem("triple_pass256");
-}
-
-function setToken(token) {
-  sessionStorage.setItem("token", token);
-  return true;
-};
-
-function getToken() {
-  return sessionStorage.getItem("token");
-}
-
-function setUsername(username) {
-  sessionStorage.setItem("username", username);
-  return true;
-}
-
-function getUsername() {
-  return sessionStorage.getItem("username");
-}
-
-function setInvitation(invited_by, invite_code) {
-  sessionStorage.setItem("invitation", JSON.stringify({ invite_code, invited_by }));
-  return true;
-}
-
-function getInvitation() {
-  const invitation = sessionStorage.getItem("invitation");
-  return (invitation) ? JSON.parse(invitation) : null;
-}
-
-function setExistingUsernames(usernames) {
-  sessionStorage.setItem("existing_usernames", JSON.stringify(usernames));
+function setIdentities(identities) {
+  sessionStorage.setItem("all_identities", JSON.stringify(identities));
   return true;
 
 }
-function getExistingUsernames() {
-  const existing_usernames = sessionStorage.getItem("existing_usernames");
-  return (existing_usernames) ? JSON.parse(existing_usernames) : null
+function getIdentities() {
+  const identities = sessionStorage.getItem("all_identities");
+  return (identities) ? JSON.parse(identities) : null
 }
 
-function setParent128(parent_128, username, password) {
+
+function setAllBadges(all_badges) {
+  sessionStorage.setItem("all_badges", JSON.stringify(all_badges));
+  return true;
+}
+function getAllBadges() {
+  const all_badges = sessionStorage.getItem("all_badges");
+  return (all_badges) ? JSON.parse(all_badges) : null
+}
+
+function setMyBadges(my_badges) {
+  sessionStorage.setItem(`my_badges`, JSON.stringify(my_badges));
+  return true;
+}
+
+function setMnemonic(mnemonic, password) {
   const encryption_key = crypto.createHash("sha256")
-    .update(`${username}:${password}`)
+    .update(password)
     .digest("hex");
-
-  localStorage.setItem(`${username}_parent_128`, encrypt(JSON.stringify(parent_128), encryption_key));
+  localStorage.setItem(`my_mnemonic`, encrypt(mnemonic, encryption_key));
   return true;
-
 }
 
-function getParent128(username, password) {
-  const decryption_key = crypto.createHash("sha256")
-    .update(`${username}:${password}`)
+function getMnemonic(password) {
+  const encryption_key = crypto.createHash("sha256")
+    .update(`${password}`)
     .digest("hex");
-
-  const cipher_parent_128 = localStorage.getItem(`${username}_parent_128`);
-  return cipher_parent_128 ? JSON.parse(decrypt(cipher_parent_128, decryption_key)) : null;
-
-}
-
-function setParentKeys(parent_128_xprv) {
-  const recipient_parent = bitcoin.derive_parent_usecase(parent_128_xprv, 0);
-  const profile_parent = bitcoin.derive_parent_usecase(parent_128_xprv, 1);
-  const posts_parent = bitcoin.derive_parent_usecase(parent_128_xprv, 2);
-
-  sessionStorage.setItem("recipient_parent", JSON.stringify(recipient_parent));
-  sessionStorage.setItem("profile_parent", JSON.stringify(profile_parent));
-  sessionStorage.setItem("posts_parent", JSON.stringify(posts_parent));
-
-  return true;
-
-}
-
-function getParentKeys() {
-  const recipient_parent = sessionStorage.getItem("recipient_parent");
-  const profile_parent = sessionStorage.getItem("profile_parent");
-  const posts_parent = sessionStorage.getItem("posts_parent");
-
-  if (recipient_parent && profile_parent && posts_parent) {
-    return {
-      recipient_parent: JSON.parse(recipient_parent),
-      profile_parent: JSON.parse(profile_parent),
-      posts_parent: JSON.parse(posts_parent)
-    };
+  const mnemonic_crypt = localStorage.getItem(`my_mnemonic`);
+  try {
+    return mnemonic_crypt ? decrypt(mnemonic_crypt, encryption_key) : null;
   }
-  else {
-    return null;
+  catch (e) {
+    return new Error(e);
   }
 }
 
@@ -133,95 +72,199 @@ function setMyProfile(profile) {
   sessionStorage.setItem(`my_profile`, JSON.stringify(profile));
   return true;
 }
-
 function getMyProfile() {
   const profile = sessionStorage.getItem("my_profile");
   return (profile) ? JSON.parse(profile) : null
 }
 
-function setMyKeys(keys) {
-  sessionStorage.setItem(`my_keys`, JSON.stringify(keys));
+
+function setMyPreferences(preferences) {
+  sessionStorage.setItem(`my_preferences`, JSON.stringify(preferences));
   return true;
 }
 
-function getMyKeys() {
-  const keys = sessionStorage.getItem("my_keys");
-  return (keys) ? JSON.parse(keys) : null;
+function getMyPreferences() {
+  const preferences = sessionStorage.getItem("my_preferences");
+  return (preferences) ? JSON.parse(preferences) : null;
+
 }
 
-function setUserProfile(username, profile) {
-  sessionStorage.setItem(`${username}_profile`, JSON.stringify(profile));
-  return true;
-}
-
-function getUserProfile(username) {
-  return sessionStorage.getItem(`${username}_profile`) ? JSON.parse(sessionStorage.getItem(`${username}`)) : null;
-}
-
-function setUserKeys(username, keys) {
-  sessionStorage.setItem(`${username}_keys`, JSON.stringify(keys));
-  return true;
-}
-
-function getUserKeys(username) {
-  return sessionStorage.getItem(`${username}_keys`) ? JSON.parse(sessionStorage.getItem(`${username}`)) : null;
-}
-
-function setMyPosts(posts) {
+function setMyTrades(posts) {
   sessionStorage.setItem(`my_posts`, JSON.stringify(posts));
   return true;
 }
 
-function getMyPosts() {
+function getMyTrades() {
   const posts = sessionStorage.getItem("my_posts");
   return (posts) ? JSON.parse(posts) : null;
 
 }
 
-function setOthersPosts(posts) {
-  sessionStorage.setItem(`others_posts`, JSON.stringify(posts));
+// function setMyProfileKeys(keys) {
+//   sessionStorage.setItem(`profile_keys`, JSON.stringify(keys));
+//   return true;
+// }
+// function getMyProfileKeys() {
+//   const keys = sessionStorage.getItem("profile_keys");
+//   return (keys) ? JSON.parse(keys) : null
+// }
+
+function setMyKeyChain(keys) {
+  sessionStorage.setItem(`my_keys`, JSON.stringify(keys));
   return true;
 }
 
-function getOthersPosts() {
-  const posts = sessionStorage.getItem("others_posts");
-  return (posts) ? JSON.parse(posts) : null;
+function getMyKeyChain() {
+  const keys = sessionStorage.getItem("my_keys");
+  return (keys) ? JSON.parse(keys) : null;
+}
+
+function setOthersTrades(trades) {
+  sessionStorage.setItem(`others_trades`, JSON.stringify(trades));
+  return true;
+}
+
+function getOthersTrades() {
+  const trades = sessionStorage.getItem("others_trades");
+  return (trades) ? JSON.parse(trades) : null;
+
+}
+function setOthersProfiles(profiles) {
+  sessionStorage.setItem(`others_profiles`, JSON.stringify(profiles));
+  return true;
+}
+
+function getOthersProfiles() {
+  const profiles = sessionStorage.getItem("others_profiles");
+  return (profiles) ? JSON.parse(profiles) : null;
 
 }
 
-module.exports = {
-  setSeed256,
-  getSeed256,
-  setToken,
-  getToken,
-  setUsername,
-  getUsername,
-  setInvitation,
-  getInvitation,
-  setExistingUsernames,
-  getExistingUsernames,
+function checkMnemonic() {
+  if (localStorage.getItem("my_mnemonic")) return true;
+  else return false;
+}
 
-  setParent128,
-  getParent128,
-  setParentKeys,
-  getParentKeys,
+function updateSelectedIdentity(identity) {
+  sessionStorage.setItem("selected_identity", JSON.stringify(identity));
+  return true;
+}
+
+function getSelectedIdentity() {
+  const selected_identity = sessionStorage.getItem("selected_identity");
+  return (selected_identity) ? JSON.parse(selected_identity) : null;
+}
+
+function addSelectedIdentity(identity) {
+  let selected_ids = sessionStorage.getItem("selected_identities");
+  if (selected_ids) {
+    selected_ids = JSON.parse(selected_ids);
+    const exists = selected_ids.find((id) => id.pubkey === identity.pubkey);
+    if (exists) {
+      alert("Identity Already Selected");
+    }
+    else {
+      selected_ids.push(identity);
+    }
+  }
+  else {
+    selected_ids = [];
+    selected_ids.push(identity);
+  }
+
+  sessionStorage.setItem("selected_identities", JSON.stringify(selected_ids));
+  return true;
+}
+
+function removeSelectedIdentity(identity) {
+  let selected_ids = sessionStorage.getItem("selected_identities");
+  if (selected_ids) {
+    selected_ids = JSON.parse(selected_ids);
+    selected_ids = selected_ids.filter(selected_id => selected_id.pubkey !== identity.pubkey);
+  }
+  else {
+    selected_ids = [];
+  }
+
+  sessionStorage.setItem("selected_identities", JSON.stringify(selected_ids));
+  return true;
+}
+function getSelectedIdentities() {
+  const selected_identities = sessionStorage.getItem("selected_identities");
+  return (selected_identities) ? JSON.parse(selected_identities) : [];
+}
+function removeSelectedIdentities() {
+  sessionStorage.setItem(`selected_identities`, JSON.stringify([]));
+  return true;
+}
+function setLatestPost(plain_post) {
+  sessionStorage.setItem(`latest_post`, JSON.stringify(plain_post));
+  return true;
+}
+
+function getLatestPost() {
+  const plain_post = sessionStorage.getItem("latest_post");
+  return (plain_post) ? JSON.parse(plain_post) : null;
+}
+
+function removeLatestPost() {
+  sessionStorage.setItem(`latest_post`, null);
+  return true;
+}
+
+function setMyUsername(username) {
+  sessionStorage.setItem(`my_username`, username);
+  return true;
+}
+
+function getMyUsername() {
+  const username = sessionStorage.getItem("my_username");
+  return (username) ? username : null;
+}
+
+function setLocalPrice(price) {
+  sessionStorage.setItem("local_price", price);
+  return true;
+}
+
+function getLocalPrice() {
+  return (sessionStorage.getItem("local_price"))
+    ? parseInt(sessionStorage.getItem("local_price"))
+    : 30000000;
+}
+
+module.exports = {
+  setIdentities,
+  getIdentities,
+  setAllBadges,
+  getAllBadges,
   setMyProfile,
   getMyProfile,
-  setMyKeys,
-  getMyKeys,
-
-  setUserKeys,
-  getUserKeys,
-
-  setUserProfile,
-  getUserProfile,
-  setMyPosts,
-  getMyPosts,
-  setOthersPosts,
-  getOthersPosts,
-
-  setTriplePass256,
-  getTriplePass256
-
-
+  setMyKeyChain,
+  getMyKeyChain,
+  setOthersProfiles,
+  getOthersProfiles,
+  setMyTrades,
+  getMyTrades,
+  setOthersTrades,
+  getOthersTrades,
+  setMnemonic,
+  getMnemonic,
+  setMyPreferences,
+  getMyPreferences,
+  setMyBadges,
+  checkMnemonic,
+  updateSelectedIdentity,
+  getSelectedIdentity,
+  addSelectedIdentity,
+  removeSelectedIdentity,
+  getSelectedIdentities,
+  removeSelectedIdentities,
+  setLatestPost,
+  getLatestPost,
+  removeLatestPost,
+  setMyUsername,
+  getMyUsername,
+  getLocalPrice,
+  setLocalPrice
 }

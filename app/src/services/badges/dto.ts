@@ -6,7 +6,6 @@ import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostIdentity } from "../identity/identity";
 import { CypherpostPostKeys } from "../posts/keys/post_keys";
-import { CypherpostProfileKeys } from "../profile/keys/profile_keys";
 import { CypherpostBadges } from "./badges";
 import { BadgeType } from "./interface";
 
@@ -14,14 +13,14 @@ const { validationResult } = require('express-validator');
 
 const identity = new CypherpostIdentity();
 const badges = new CypherpostBadges();
-const profileKeys = new CypherpostProfileKeys();
 const postKeys = new CypherpostPostKeys();
 
 export async function badgesMiddleware(req, res, next) {
   const request = parseRequest(req);
   try {
     const signature = request.headers['x-client-signature'];
-    const xpub = request.headers['x-client-xpub'];
+    const pubkey = request.headers['x-client-pubkey'];
+    // CHECK SIG AND PUBKEY FORMAT - RETURNS 500 IF NOT VALID
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
@@ -29,7 +28,7 @@ export async function badgesMiddleware(req, res, next) {
     const message = `${method} ${resource} ${body} ${nonce}`;
 
     // console.log({message});
-    const status = await identity.verify(xpub, message, signature);
+    const status = await identity.verify(pubkey, message, signature);
     if (status instanceof Error) throw status;
     else next();
   }
@@ -50,9 +49,9 @@ export async function handleGetMyBadges(req, res) {
       }
     }
 
-    const given = await badges.findByGiver(request.headers['x-client-xpub']);
+    const given = await badges.findByGiver(request.headers['x-client-pubkey']);
     if (given instanceof Error) throw given;
-    const recieved = await badges.findByReciever(request.headers['x-client-xpub']);
+    const recieved = await badges.findByReciever(request.headers['x-client-pubkey']);
     if (recieved instanceof Error) throw recieved;
 
     const response = {
@@ -110,7 +109,7 @@ export async function handleTrust(req, res) {
         message: "Trust in self implied."
       }
     }
-    let status = await badges.create(request.headers['x-client-xpub'], request.body.trusting, BadgeType.Trusted, request.headers['x-nonce'], request.body.signature);
+    let status = await badges.create(request.headers['x-client-pubkey'], request.body.trusting, BadgeType.Trusted, request.body.nonce, request.body.signature);
     if (status instanceof Error) throw status;
 
     const response = {
@@ -137,13 +136,10 @@ export async function handleRevokeTrust(req, res) {
       }
     }
 
-    let status = await badges.revoke(request.headers['x-client-xpub'], request.body.revoking, BadgeType.Trusted);
+    let status = await badges.revoke(request.headers['x-client-pubkey'], request.body.revoking, BadgeType.Trusted);
     if (status instanceof Error) throw status;
     // REMOVE ALL RELATED KEYS
-    status = await profileKeys.removeProfileDecryptionKeyByReciever(request.headers['x-client-xpub'],request.body.revoking);
-    if (status instanceof Error) throw status;
-
-    status = await postKeys.removePostDecryptionKeyByReciever(request.headers['x-client-xpub'],request.body.revoking);
+    status = await postKeys.removePostDecryptionKeyByReciever(request.headers['x-client-pubkey'],request.body.revoking);
     if (status instanceof Error) throw status;
     
     const response = {
