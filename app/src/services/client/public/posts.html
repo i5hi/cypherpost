@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" href="/img/owl.png" />
   <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
   <link rel="stylesheet" type='text/css' href="/css/mdb.min.css" />
-  <link rel="stylesheet" type='text/css' href="/css/light.css" />
+  <link rel="stylesheet" type='text/css' href="/css/dark.css" />
 
 
   <!-- <script type="text/javascript" src="/js/mdb.min.js"></script> -->
@@ -34,7 +34,7 @@
   </header>
 
   <div id="posts_page_spinner" class="container">
-    <br/>
+    <br />
     <div class="spinner-grow centerme" role="status">
       <span class="sr-only">Loading...</span>
     </div>
@@ -46,34 +46,35 @@
     <div class="container outline">
       <div class="row outline">
 
-        <ul class="nav nav-tabs outline">
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme outline" href="posts.html">
-                <i class="fa fa-envelope fa-2x" aria-hidden="true"></i> 
-              </a>
-            </li>
+        <ul class="nav nav-tabs">
+          <div class="col-4 centerme outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="posts.html">
+                  Trades
+                </a>
+              </li>
+            </div>
           </div>
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="profile.html">
-                <i class="fa fa-user fa-2x"></i> 
-              </a>
-            </li>
-          </div>
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="network.html">
-                <i class="fa fa-users fa-2x"></i> 
-              </a>
-            </li>
+          <div class="col-4 centerme outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="preferences.html">
+                  Settings
+                </a>
+              </li>
+            </div>
           </div>
 
+          <div class="col-4 centerme outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link centerme" href="network.html">
+                  Network
+                </a>
+              </li>
+            </div>
+          </div>
         </ul>
 
 
@@ -102,128 +103,83 @@
           <div class="container">
             <!-- Containers here are just to  create alignment. Better grid than padding. -->
             <div class="row outline">
-
-              <div class="col-8">
-              </div>
-
-              <div class="col-4 outline">
-                <button id="new_post_button" class="btn-sm centerme" type="submit" data-toggle="modal"
-                  data-target="#create_post"><i class="fas fa-plus-circle"></i>
-                </button>
+              <div id="new_post_button" class="btn centerme" data-toggle="modal" data-target="#create_post">Create
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <br>
+        <br>
 
-      <div id="others_posts_list" class="container outline">
-        <!-- <div class="container border outline">
-            <br>
-            <div class="container">
-              <div class="row">
-                <div class="col-9">
-                  <div id=`my_post_nickname_${post_id}` class="row post_nickname">Nickname</div>
-                  <div id=`my_post_message_${post_id}` class="row post_message">This is a test other post</div>
-              
-                  <div id=`my_post_contact_${post_id}` class="row contact_info">
-                    Contact me on Signal @ 898798723
-                  </div>
-                  <hr>
-                  <div id=`my_post_genesis_${post_id}` class="row contact_info">Saturday, 2nd January. 10:30 PM.</div>
-                  <div id=`my_post_expiry_${post_id}` class="row post_message">Exipres in 2 hours</div>
-                </div>
-                <div class="col-3">
-                  
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-8">
-
-                </div>
-                <div class="col-4">
-                  
-                </div>
-              </div>
-              <br>
+        <div id="others_posts_list" class="container outline">
+          <!-- <div class="container">
+          <div class="row">
+            <div class="col-9">
+              <div id=`post_nickname_${post.id}` class="row post_nickname">@${username}</div>
+              <div id=`post_message_${post.id}` class="row post_message">${post.message}</div>
+              <div id=`post_message_${post.id}` class="row post_minmax">${post.minimum}-${post.maximum}</div>
+              <div id=`post_payment_method_${post.id}` class="row post_payment_method">${post.payment_methods.toString()}</div>
+              <div id=`post_price_${post.id}` class="row post_price">1 BTC = ${post.price} INR</div>
+              <hr>
+              <div id=`post_genesis_${post.id}` class="row contact_info">${new Date(post.genesis)}</div>
+              <div id=`post_expiry_${post.id}` class="row post_message">${expiry_time}</div>
             </div>
-          </div> -->
-        <!-- <br> -->
-      </div>
+            <div class="col-3">
+              <div id=`post_type_${post.id}` class="row post_type">${post.type.toUpperCase()}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-9">
 
-      <div id="my_posts_list" class="container outline hidden">
-        <!-- <div class="container border outline">
+            </div>
+            <div class="col-3">
+              <button id=`mute_post_${post.id}` class="btn-lg centerme" type="submit">Mute
+              </button>
+            </div>
+          </div>
+          <br>
+        </div> -->
+        </div>
+
+        <div id="my_posts_list" class="container outline hidden">
+          <!-- <div class="container border outline">
             <br>
             <div class="container">
               <div class="row">
                 <div class="col-9">
-                  <div id=`my_post_nickname_${post_id}` class="row post_nickname">Nickname</div>
-                  <div id=`my_post_message_${post_id}` class="row post_message">This is a test MY post</div>
-              
-                  <div id=`my_post_contact_${post_id}` class="row contact_info">
-                    Contact me on Signal @ 898798723
-                  </div>
+                  <div id="post_nickname_${post.id}" class="row post_nickname">@${username}</div>
+                  <div id="post_message_${post.id}" class="row post_message">${post.message}</div>
+                  <div id="post_message_${post.id}" class="row post_minmax">${post.minimum}-${post.maximum}</div>
+                  <div id="post_payment_method_${post.id}" class="row post_payment_method">${post.payment_methods.toString()}</div>
+                  <div id="post_price_${post.id}" class="row post_price">1 BTC = ${post.price} INR</div>
                   <hr>
-                  <div id=`my_post_genesis_${post_id}` class="row contact_info">Saturday, 2nd January. 10:30 PM.</div>
-                  <div id=`my_post_expiry_${post_id}` class="row post_message">Exipres in 2 hours</div>
+                  <div id="post_genesis_${post.id}" class="row contact_info">${new Date(post.genesis)}</div>
+                  <div id="post_expiry_${post.id}" class="row post_message">${expiry_time}</div>
                 </div>
                 <div class="col-3">
-                  
+                  <div id="post_type_${post.id}" class="row post_type">${post.type.toUpperCase()}</div>
                 </div>
               </div>
               <div class="row">
-                <div class="col-8">
+                <div class="col-9">
 
                 </div>
-                <div class="col-4">
-                  <button id=`delete_post_${post_id}` class="btn-sm centerme" type="submit"><i
-                      class="far fa-trash-alt"></i>
+                <div class="col-3">
+                  <button id="delete_post_${post.id}" class="btn-lg centerme" type="submit">Delete
+                  </button>
                   </button>
                 </div>
               </div>
               <br>
             </div>
           </div>
-          <br> -->
-      </div>
+          <br>
+      </div> -->
 
 
 
-    </div>
+        </div>
   </main>
-
-
-  <div class="modal container fade" id="create_post" tabindex="-1" role="dialog" aria-labelledby="createPost"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLongTitle">Create Post</h5>
-          <button id="close_create_post_modal" type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <input type="text" id="post_message_input" class="" placeholder="Message">
-          <br>
-          <select name="expiry" id="post_expiry_input">
-            <option value="1hr">1 hour</option>
-            <option value="12hr">12 hours</option>
-            <option value="1d">1 day</option>
-            <option value="1w">1 week</option>
-            <option value="1m">1 month</option>
-            <option value="never">Never</option>
-          </select>
-          <br>
-        </div>
-        <div class="modal-footer">
-          <button id="create_post_execute" type="button" class="btn">Post</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 
 
   <!-- Footer -->
@@ -247,6 +203,152 @@
 
   </footer>
   <!-- Footer -->
+
+  <div class="modal container fade" id="create_post" tabindex="-1" role="dialog" aria-labelledby="createPost"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <!--- CREATE POST -->
+      <div id="create_post_modal" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Create Post</h5>
+          <button id="close_create_post_modal" type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="post_message_input" class="" placeholder="Message">
+          <br>
+          Network:
+          <br>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" value="Bitcoin" id="bitcoin" checked />
+            <label class="form-check-label" for="bitcoin">Bitcoin</label>
+            <br>
+
+            <br>
+            <input class="form-check-input" type="checkbox" value="Lightning" id="lightning" />
+            <label class="form-check-label" for="lightning">Lightning</label>
+
+            <br>
+            <br>
+            <input class="form-check-input" type="checkbox" value="Liquid" id="liquid" />
+            <label class="form-check-label" for="liquid">Liquid</label>
+
+            <br>
+            <br>
+          </div>
+          <br>
+          Order:
+          <br>
+          <select name="order" id="post_order_input" class="btn post_select_input">
+            <option value="BUY">Buy</option>
+            <option value="SELL">Sell</option>
+          </select>
+
+          <input type="text" id="post_minimum_input" class="" placeholder="Minimum">
+          <input type="text" id="post_maximum_input" class="" placeholder="Maximum">
+
+          <br>
+          Payment Method:
+          <br>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" value="Cash" id="cash" />
+            <label class="form-check-label" for="cash">Cash</label>
+            <br>
+
+            <br>
+            <input class="form-check-input" type="checkbox" value="Aangadiya" id="aangadiya" />
+            <label class="form-check-label" for="aangadiya">Aangadiya</label>
+
+            <br>
+            <br>
+            <input class="form-check-input" type="checkbox" value="UPI" id="upi" />
+            <label class="form-check-label" for="upi">UPI</label>
+            <br>
+            <br>
+            <input class="form-check-input" type="checkbox" value="IMPS" id="imps" />
+            <label class="form-check-label" for="imps">IMPS</label>
+            <br>
+            <br>
+
+          </div>
+          <br>
+          <br>
+          Refefrence Exchange Rate:
+          <br>
+          LocalBitcoins
+          <br>
+          <br>
+          <input type="text" id="post_percentage_input" class="" placeholder="Percentage On Rate (default 0)">
+
+          <br>
+          <br>
+          Expiry:
+          <br>
+          <select name="expiry" id="post_expiry_input" class="btn post_select_input">
+            <option value="1hr">1 hour</option>
+            <option value="12hr">12 hours</option>
+            <option value="1d">1 day</option>
+            <option value="1w">1 week</option>
+            <option value="1m">1 month</option>
+            <option value="never">Never</option>
+          </select>
+          <br>
+        </div>
+        <div class="modal-footer">
+          <button id="create_post_next" type="button" class="btn">Next</button>
+        </div>
+      </div>
+
+      <!--- SET VISIBILITY -->
+      <div id="set_visibility_modal" class="modal-content hidden">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Set Visibility</h5>
+          <button id="close_create_post_modal" type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="post_visibility_space" class="container outline">
+            <div class="container outline">
+              <div class="container outline">
+
+                <div class="row outline">
+
+                  <div class="col-8">
+                    <input id="post_visibility_space_username" type="text" class="" placeholder="Username"
+                      aria-label="Username" aria-describedby="basic-addon1">
+                  </div>
+
+                  <div class="col-4 outline">
+                    <div id="identity_search_button" class="centerme" style="margin-top:7px;">Find
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <hr>
+              <div id="found_userlist" class="container outline modal_search_user">
+
+
+              </div>
+              <hr>
+              <hr>
+              <h5 class="modal-title centerme" id="exampleModalLongTitle">Selected Viewers</h5>
+
+              <div id="selected_userlist" class="container outline">
+
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="create_post_execute" type="button" class="btn">Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MDB -->
 
   <script type="text/javascript" src="/js/bundles/mdb.min.js"></script>

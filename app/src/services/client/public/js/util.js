@@ -5,6 +5,8 @@ const TRADE = "BITCOIN-TRADE";
 const crypto = require("crypto");
 const bitcoin = require("./bitcoin");
 
+const { encrypt, decrypt } = require("./aes");
+
 function verifyBadges(badges) {
   const bad_badges = badges.filter((badge) => {
     const message = `${badge.giver}:${badge.reciever}:${badge.type}:${badge.nonce}`;
@@ -23,31 +25,30 @@ function mergeIdentitiesWithBadges(identities, badges) {
     const recieved = badges.filter(badge => badge.reciever === identity.pubkey);
     const given = badges.filter(badge => badge.giver === identity.pubkey);
 
-    return { ...identity, badges:  {given, recieved}  };
+    return { ...identity, badges: { given, recieved } };
   });
 }
 
 function decryptCypherPostsFromOthers(identity_parent, posts_from_others) {
   let plain_json_posts = [];
   posts_from_others.map((post) => {
-    const my_ecdsa = bitcoin.extract_ecdsa_pair(identity_parent);
     const shared_ecdsa_pair = {
-      privkey: my_ecdsa.private_key,
+      privkey: identity_parent.privkey,
       pubkey: post.owner
     };
-    const shared_secret = bitcoin.calculate_shared_secret(shared_ecdsa_pair);
-    // ASSUMING post.decryption_key is valid aes 256 cipher text.
+    const shared_secret = bitcoin.calculate_shared_secret(shared_ecdsa_pair); 
+
     const primary_key = decrypt(post.decryption_key, shared_secret);
-    const plain_json = decrypt(primary_key, post.cypher_json);
-    JSON.parse(plain_json) ? plain_json_posts.push({ ...post, plain_json: JSON.parse(plain_json_string) })
+    const plain_json_string = decrypt(post.cypher_json, primary_key);
+    JSON.parse(plain_json_string) ? plain_json_posts.push({ ...post, plain_json: JSON.parse(plain_json_string) })
       : null;
   });
   return plain_json_posts;
 }
 function segregatePlainPostsForMe(plain_json_posts) {
   return {
-    profiles: plain_json_posts.filter(post => post.type === PROFILE),
-    trades: plain_json_posts.filter(post => post.type === TRADE),
+    profiles: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
+    trades: plain_json_posts.filter(post => post.plain_json.type === TRADE),
   }
 }
 
@@ -57,7 +58,9 @@ function decryptMyCypherPosts(cypherpost_parent, my_posts) {
     const decryption_key = crypto.createHash("sha256")
       .update(bitcoin.derive_hardened_str(cypherpost_parent, post.derivation_scheme).xprv)
       .digest("hex");
-    const plain_json_string = decrypt(decryption_key, post.cypher_json);
+    console.log({ds: post.derivation_scheme,key: decryption_key})
+
+    const plain_json_string = decrypt(post.cypher_json, decryption_key);
     JSON.parse(plain_json_string)
       ? plain_json_posts.push({ ...post, plain_json: JSON.parse(plain_json_string) })
       : null;
@@ -68,16 +71,16 @@ function decryptMyCypherPosts(cypherpost_parent, my_posts) {
 
 function segregateMyPlainPosts(plain_json_posts) {
   return {
-    profiles: plain_json_posts.filter(post => post.type === PROFILE),
-    trades: plain_json_posts.filter(post => post.type === TRADE),
-    preferences: plain_json.filter(post => post.type === PREFERENCES),
+    profile: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
+    trades: plain_json_posts.filter(post => post.plain_json.type === TRADE),
+    preferences: plain_json_posts.filter(post => post.plain_json.type === PREFERENCES),
   }
 }
 
 async function createRootKeyChain(mnemonic) {
   try {
     const seed_root = await bitcoin.seed_root(mnemonic);
-    console.log({seed_root})
+    console.log({ seed_root })
     const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
     const keys = {
       cypherpost: cypherpost_parent.xprv,
@@ -92,15 +95,18 @@ async function createRootKeyChain(mnemonic) {
 }
 
 // IF PROFILE IS NOT ROTATED, SERVER MUST ALLOW UPDATING POST_ID for KEYS
-function createCypherJSON(cypherpost_parent, derivation_scheme, rotate, json) {
+function createCypherJSON(cypherpost_parent, derivation_scheme, plain_json) {
   try {
-    const updated_ds = (rotate)
-      ? rotatePath(derivation_scheme)
-      : derivation_scheme;
+ 
+    console.log({ plain_json });
+    const primary_key = createPrimaryKey(cypherpost_parent, derivation_scheme);
+    if(primary_key instanceof Error) return primary_key;
 
-    const primary_key = createPrimaryKey(cypherpost_parent, updated_ds);
-    const cypher_json = encrypt(primary_key, JSON.stringify(json));
-    return cypher_json;
+    console.log({ primary_key })
+
+    const cypher_json = encrypt(JSON.stringify(plain_json),primary_key);
+    console.log({ primary_key, cypher_json })
+    return { primary_key, cypher_json };
   }
   catch (e) {
     console.error({ e });
@@ -109,7 +115,7 @@ function createCypherJSON(cypherpost_parent, derivation_scheme, rotate, json) {
 };
 
 function rotatePath(derivation_scheme) {
-  if (!derivation_scheme.startsWith("m/")){
+  if (!derivation_scheme.startsWith("m/")) {
     return new Error("Derivation scheme must start with m/");
   }
   if (!derivation_scheme.endsWith("/")) derivation_scheme += "/";
@@ -126,17 +132,21 @@ function rotatePath(derivation_scheme) {
 }
 
 function createPrimaryKey(cypherpost_parent, derivation_scheme) {
-  crypto.createHash("sha256")
-    .update(bitcoin.derive_hardened_str(cypherpost_parent, derivation_scheme).xprv)
+  const xkeys = bitcoin.derive_hardened_str(cypherpost_parent, derivation_scheme);
+  if(xkeys instanceof Error) {
+    console.error({xkeys})
+    return xkeys;
+  }
+  return crypto.createHash("sha256")
+    .update(xkeys.xprv)
     .digest("hex");
 }
 
 function createDecryptionKeys(identity_parent, primary_key, pubkeys) {
   let decryption_keys = [];
   pubkeys.map((pubkey) => {
-    const my_ecdsa = bitcoin.extract_ecdsa_pair(identity_parent);
     const shared_ecdsa_pair = {
-      privkey: my_ecdsa.private_key,
+      privkey: identity_parent.privkey,
       pubkey
     };
     const shared_secret = bitcoin.calculate_shared_secret(shared_ecdsa_pair);
@@ -150,11 +160,44 @@ function createDecryptionKeys(identity_parent, primary_key, pubkeys) {
   return decryption_keys;
 }
 
-function usernamesToPubkeys(usernames, identities){
-  return usernames.map((username)=>{
+function usernamesToPubkeys(usernames, identities) {
+  return usernames.map((username) => {
     const identity = identities.find(identity => identity.username === username);
     return identity.pubkey;
   });
+}
+
+// GLOBAL
+function exit() {
+  const web_url = (document['domain'] === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
+  sessionStorage.clear();
+  window.location.href = web_url;
+}
+
+function sortObjectByProperty(obj, sortedBy, isNumericSort, reverse) {
+  sortedBy = sortedBy || 1; // by default first key
+  isNumericSort = isNumericSort || false; // by default text sort
+  reverse = reverse || false; // by default no reverse
+
+  var reversed = (reverse) ? -1 : 1;
+
+  var sortable = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      sortable.push([key, obj[key]]);
+    }
+  }
+  if (isNumericSort)
+    sortable.sort(function (a, b) {
+      return reversed * (a[1][sortedBy] - b[1][sortedBy]);
+    });
+  else
+    sortable.sort(function (a, b) {
+      var x = a[1][sortedBy].toLowerCase(),
+        y = b[1][sortedBy].toLowerCase();
+      return x < y ? reversed * -1 : x > y ? reversed : 0;
+    });
+  return sortable; // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
 }
 
 module.exports = {
@@ -169,6 +212,8 @@ module.exports = {
   rotatePath,
   createPrimaryKey,
   createDecryptionKeys,
-  usernamesToPubkeys
+  usernamesToPubkeys,
+  exit,
+  sortObjectByProperty
 
 }

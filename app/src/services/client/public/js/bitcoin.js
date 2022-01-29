@@ -5,7 +5,7 @@ const bip39 = require("bip39");
 
 const crypto = require("crypto");
 
-function generate_mnemonic() {
+function generateMnemonic() {
   return bip39.generateMnemonic();
 }
 
@@ -43,16 +43,17 @@ function derive_hardened_str(parent, derivation_scheme){
   try {
     if (!derivation_scheme.endsWith("/"))
     derivation_scheme+="/";
+
     derivation_scheme = derivation_scheme.replace("'",  "h").replace("'",  "h").replace("'",  "h");
     derivation_scheme = derivation_scheme.replace("m/",  "");
-    // console.log(derivation_scheme);
+    // (derivation_scheme);
     const parent_key = bip32.fromBase58(parent);
     if ( derivation_scheme.split("h/").length < 3 ) return new Error({
       code: 400,
       message: "Derivation scheme must contain 3 sub paths."
     });
     
-    // console.log(derivation_scheme.split("h/"),derivation_scheme.split("h/").length);
+    // (derivation_scheme.split("h/"),derivation_scheme.split("h/").length);
     const use_case = parseInt(derivation_scheme.split("h/")[0]);
     const index = parseInt(derivation_scheme.split("h/")[1]);
     const revoke = parseInt(derivation_scheme.split("h/")[2]);
@@ -63,6 +64,7 @@ function derive_hardened_str(parent, derivation_scheme){
     };
     return extended_keys;
   } catch (error) {
+    
     return new Error(error);
   }
 }
@@ -89,23 +91,21 @@ function extract_ecdsa_pair(extended_keys) {
 
 
 function calculate_shared_secret(ecdsa_keys) {
-  ecdsa_keys.pubkey = (ecdsa_keys.pubkey.startsWith("02" || "03"))?ecdsa_keys.pubkey: "02" + ecdsa_keys.pubkey;
+  ecdsa_keys.pubkey = (ecdsa_keys.pubkey.length===64)
+    ? "02" + ecdsa_keys.pubkey
+    : ecdsa_keys.pubkey;
   const type = "secp256k1";
   let curve = crypto.createECDH(type);
-  // console.log({ecdsa_keys});
+  // ({ecdsa_keys});
   curve.setPrivateKey(ecdsa_keys.privkey, "hex");
-  const shared_secret = curve.computeSecret(crypto.ECDH.convertKey(
-    ecdsa_keys.pubkey,
-    type,
-    "hex",
-    "hex",
-    "uncompressed").toString("hex"), "hex");
+ 
+  const shared_secret = curve.computeSecret(ecdsa_keys.pubkey, "hex");
   return shared_secret.toString("hex");
 }
 
 async function sign(message, privkey) {
   try {
-    console.log({privkey})
+    ({privkey})
     const signature = await secp256k1.schnorr.sign(
       crypto.createHash('sha256').update(message).digest('hex'), 
       privkey
@@ -128,7 +128,7 @@ async function verify(message,signature, pubkey){
 }
 
 module.exports = {
-  generate_mnemonic,
+  generateMnemonic,
   seed_root,
   derive_parent_128,
   derive_identity_parent,

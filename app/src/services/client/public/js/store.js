@@ -42,8 +42,8 @@ function getAllBadges() {
   return (all_badges) ? JSON.parse(all_badges) : null
 }
 
-function setMyBadges(my_badges){
-  sessionStorage.setItem(`my_badges`, JSON.stringify(profile));
+function setMyBadges(my_badges) {
+  sessionStorage.setItem(`my_badges`, JSON.stringify(my_badges));
   return true;
 }
 
@@ -60,11 +60,11 @@ function getMnemonic(password) {
     .update(`${password}`)
     .digest("hex");
   const mnemonic_crypt = localStorage.getItem(`my_mnemonic`);
-  try{
+  try {
     return mnemonic_crypt ? decrypt(mnemonic_crypt, encryption_key) : null;
   }
-  catch(e){
-    return new  Error(e);
+  catch (e) {
+    return new Error(e);
   }
 }
 
@@ -130,7 +130,7 @@ function getOthersTrades() {
 
 }
 function setOthersProfiles(profiles) {
-  sessionStorage.setItem(`others_profiles`, JSON.stringify(profile));
+  sessionStorage.setItem(`others_profiles`, JSON.stringify(profiles));
   return true;
 }
 
@@ -140,6 +140,98 @@ function getOthersProfiles() {
 
 }
 
+function checkMnemonic() {
+  if (localStorage.getItem("my_mnemonic")) return true;
+  else return false;
+}
+
+function updateSelectedIdentity(identity) {
+  sessionStorage.setItem("selected_identity", JSON.stringify(identity));
+  return true;
+}
+
+function getSelectedIdentity() {
+  const selected_identity = sessionStorage.getItem("selected_identity");
+  return (selected_identity) ? JSON.parse(selected_identity) : null;
+}
+
+function addSelectedIdentity(identity) {
+  let selected_ids = sessionStorage.getItem("selected_identities");
+  if (selected_ids) {
+    selected_ids = JSON.parse(selected_ids);
+    const exists = selected_ids.find((id) => id.pubkey === identity.pubkey);
+    if (exists) {
+      alert("Identity Already Selected");
+    }
+    else {
+      selected_ids.push(identity);
+    }
+  }
+  else {
+    selected_ids = [];
+    selected_ids.push(identity);
+  }
+
+  sessionStorage.setItem("selected_identities", JSON.stringify(selected_ids));
+  return true;
+}
+
+function removeSelectedIdentity(identity) {
+  let selected_ids = sessionStorage.getItem("selected_identities");
+  if (selected_ids) {
+    selected_ids = JSON.parse(selected_ids);
+    selected_ids = selected_ids.filter(selected_id => selected_id.pubkey !== identity.pubkey);
+  }
+  else {
+    selected_ids = [];
+  }
+
+  sessionStorage.setItem("selected_identities", JSON.stringify(selected_ids));
+  return true;
+}
+function getSelectedIdentities() {
+  const selected_identities = sessionStorage.getItem("selected_identities");
+  return (selected_identities) ? JSON.parse(selected_identities) : [];
+}
+function removeSelectedIdentities() {
+  sessionStorage.setItem(`selected_identities`, JSON.stringify([]));
+  return true;
+}
+function setLatestPost(plain_post) {
+  sessionStorage.setItem(`latest_post`, JSON.stringify(plain_post));
+  return true;
+}
+
+function getLatestPost() {
+  const plain_post = sessionStorage.getItem("latest_post");
+  return (plain_post) ? JSON.parse(plain_post) : null;
+}
+
+function removeLatestPost() {
+  sessionStorage.setItem(`latest_post`, null);
+  return true;
+}
+
+function setMyUsername(username) {
+  sessionStorage.setItem(`my_username`, username);
+  return true;
+}
+
+function getMyUsername() {
+  const username = sessionStorage.getItem("my_username");
+  return (username) ? username : null;
+}
+
+function setLocalPrice(price) {
+  sessionStorage.setItem("local_price", price);
+  return true;
+}
+
+function getLocalPrice() {
+  return (sessionStorage.getItem("local_price"))
+    ? parseInt(sessionStorage.getItem("local_price"))
+    : 30000000;
+}
 
 module.exports = {
   setIdentities,
@@ -160,5 +252,19 @@ module.exports = {
   getMnemonic,
   setMyPreferences,
   getMyPreferences,
-  setMyBadges
+  setMyBadges,
+  checkMnemonic,
+  updateSelectedIdentity,
+  getSelectedIdentity,
+  addSelectedIdentity,
+  removeSelectedIdentity,
+  getSelectedIdentities,
+  removeSelectedIdentities,
+  setLatestPost,
+  getLatestPost,
+  removeLatestPost,
+  setMyUsername,
+  getMyUsername,
+  getLocalPrice,
+  setLocalPrice
 }

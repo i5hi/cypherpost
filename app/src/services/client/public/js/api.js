@@ -10,11 +10,6 @@ const { request } = require('./request');
 const VERSION_PREFIX = "/api/v2";
 const api_url = ((document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`) + VERSION_PREFIX;
 
-async function createRequestSignature(method, resource, body, identity_parent, nonce) {
-  const message = `${method} ${VERSION_PREFIX}${resource} ${JSON.stringify(body)} ${nonce}`;
-  console.log({ message })
-  return await bitcoin.sign(message, identity_parent.privkey);
-};
 
 function createRequestHeaders(identity_parent, nonce, signature) {
   return {
@@ -23,6 +18,19 @@ function createRequestHeaders(identity_parent, nonce, signature) {
     "x-client-signature": signature,
   };
 }
+
+async function createRequestSignature(method, resource, body, identity_parent, nonce) {
+  const request_message = `${method} ${VERSION_PREFIX}${resource} ${JSON.stringify(body)} ${nonce}`;
+  console.log({ request_message })
+  return await bitcoin.sign(request_message, identity_parent.privkey);
+};
+
+async function createBadgeSignature(identity_parent, reciever_pubkey, type, nonce) {
+  const badge_message = `${identity_parent.pubkey}:${reciever_pubkey}:${type}:${nonce}`;
+  console.log({ badge_message })
+  return await bitcoin.sign(badge_message, identity_parent.privkey);
+}
+
 
 
 async function registerIdentity(identity_parent, username) {
@@ -106,16 +114,11 @@ async function getMyBadges(identity_parent){
 
   return response;
 }
-async function createBadgeSignature(identity_parent, reciever_pubkey, type, nonce) {
-  const ecdsa_keys = bitcoin.extract_ecdsa_pair(identity_parent);
-  const message = `${ecdsa_keys.pubkey}:${reciever_pubkey}${type}:${nonce}`;
-  console.log({ message })
-  return await bitcoin.sign(message, ecdsa_keys.privkey);
-}
+
 async function giveBadge(identity_parent, reciever, badge_type) {
   let nonce = Date.now();
-  const badge_signature = await createBadgeSignature(key_set.identity_private, reciever, badge_type.toUpperCase(), nonce);
-  const resource = "/badges" + badge_type;
+  const badge_signature = await createBadgeSignature(identity_parent, reciever, badge_type.toUpperCase(), nonce);
+  const resource = "/badges/" + badge_type.toLowerCase();
   const url = api_url + resource;
   const method = "POST";
 
@@ -125,6 +128,7 @@ async function giveBadge(identity_parent, reciever, badge_type) {
     signature: badge_signature
   };
 
+  console.log({body});
   nonce = Date.now();
   const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
   const headers = createRequestHeaders(identity_parent, nonce, signature);
@@ -134,6 +138,29 @@ async function giveBadge(identity_parent, reciever, badge_type) {
 
   return response.status;
 }
+
+async function revokeBadge(identity_parent, reciever, badge_type) {
+  let nonce = Date.now();
+  const resource = "/badges/" + badge_type.toLowerCase() + "/revoke";
+  const url = api_url + resource;
+  const method = "POST";
+
+  const body = {
+    revoking: reciever,
+  };
+
+  console.log({body});
+  nonce = Date.now();
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response.status;
+}
+
+
 async function createPost(identity_parent, cypher_json, derivation_scheme, expiry, reference) {
   const nonce = Date.now();
   const resource = "/posts";
@@ -208,15 +235,12 @@ async function deletePost(identity_parent, post_id) {
   const resource = "/posts/" + post_id;
   const url = api_url + resource;
   const method = "DELETE";
-  const body = {
-    post_id,
-    decryption_keys
-  };
 
-  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const signature = await createRequestSignature(method, resource, {}, identity_parent, nonce);
   const headers = createRequestHeaders(identity_parent, nonce, signature);
 
-  const response = await request(method, url, headers, body);
+  console.log({method,url,headers});
+  const response = await request(method, url, headers, {});
   if (response instanceof Error) return response;
 
   return response.status;
@@ -234,5 +258,6 @@ module.exports = {
   createPost,
   setPostVisibility,
   deletePost,
-  getMyBadges
+  getMyBadges,
+  revokeBadge
 }

@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
   <link rel="stylesheet" type='text/css' href="/css/mdb.min.css" />
-  <link rel="stylesheet" type='text/css' href="/css/light.css" />
+  <link rel="stylesheet" type='text/css' href="/css/dark.css" />
 
 
 
@@ -46,37 +46,36 @@
     <div class="container outline">
       <div class="row outline">
 
-        <ul class="nav nav-tabs outline">
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme outline" href="posts.html">
-                <i class="fa fa-envelope fa-2x" aria-hidden="true"></i>
-              </a>
-            </li>
+        <ul class="nav nav-tabs">
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="posts.html">
+                  Trades
+                </a>
+              </li>
+            </div>
           </div>
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="profile.html">
-                <i class="fa fa-user fa-2x"></i>
-              </a>
-            </li>
-          </div>
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="network.html">
-                <i class="fa fa-users fa-2x"></i>
-              </a>
-            </li>
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="preferences.html">
+                  Settings
+                </a>
+              </li>
+            </div>
           </div>
 
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link centerme" href="network.html">
+                  Network
+                </a>
+              </li>
+            </div>
+          </div>
         </ul>
-
-
 
       </div>
 
@@ -85,29 +84,16 @@
       <div id="profile_bio" class="container outline bio">
 
         <div class="row">
-          <div id="profile_nickname" class="col-12 outline nickname leftme">
-            Welcome
-          </div>
-        </div>
-
-        <div class="row outline username">
-          <div id="profile_username" class="col-12 cypherpost-color">
+          <div id="profile_username" class="col-12 outline nickname leftme">
 
           </div>
         </div>
 
+        <div class="row outline">
+          <div id="profile_pubkey" class="col-12 pubkey cypherpost-color">
 
-        <div class="row outline contact_info">
-          <div id="profile_contact" class="col-12">
-            Add contact info.
           </div>
         </div>
-        <div class="row outline status">
-          <div id="profile_status" class="col-12">
-            Add status.
-          </div>
-        </div>
-
 
         <br>
       </div>
@@ -120,67 +106,57 @@
             <div class="row outline centerme trusting_title">Given</div>
           </div>
           <div class="col-3">
-            <div id="profile_trusting" class="row outline centerme trust_value">0</div>
+            <div id="profile_badges_given" class="row outline centerme trust_value">0</div>
           </div>
           <div class="col-3">
             <div class="row outline centerme trusted_by_title">Recieved</div>
           </div>
           <div class="col-3">
-            <div id="profile_trusted_by" class="row outline centerme trust_value">0</div>
+            <div id="profile_badges_recieved" class="row outline centerme trust_value">0</div>
           </div>
         </div>
       </div>
-      <div id="profile_badges_list" class='container'>
-        <div class="row outline leftme badge_links">
-          <div class="col-6" id="profile_badges_given">
-            Example-Trust<br>
-            Example1-Scammer
-          </div>
-          <div class="col-6" id="profile_badges_recieved">
-            Example-Trust<br>
-            Example2-Scammer
-          </div>
 
+      <div class="row username outline">
+        <div id="profile_list_of_trusting"></div>
+        <div id="profile_list_of_trusted_by"></div>
+        <div id="profile_trust_intersection"></div>
+      </div>
+    </div>
+
+<hr>
+
+    <div class="container">
+      <h3 class="leftme">Mute List</h3>
+      <div id="profile_mute_list" class="row">
+        <div class="col-4 outline centerme warning-color">1</div>
+      </div>
+    </div>
+
+    <br>
+    <div class="container">
+
+      <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-12 outline">
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
+          <!-- Button trigger modal -->
+          <button id="peek_seed_button" type="button" class="btn" data-toggle="modal" data-target="#peek_seed">
+            Peek
+          </button>
         </div>
       </div>
-
+      <br>
+      <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-12 outline">
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
+          <button id="profile_delete_button" class="btn delete_button" type="submit">Delete</button>
+        </div>
+      </div>
+      <br>
 
     </div>
-
-    <br>
-    <div class="row">
-      <div class="col-sm-6 col-md-6 col-lg-12 outline">
-      </div>
-      <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
-        <button id="edit_button" type="button" class="btn" data-toggle="modal" data-target="#edit_profile">
-          Edit
-        </button>
-      </div>
-    </div>
-    <br>
-    <div class="row">
-      <div class="col-sm-6 col-md-6 col-lg-12 outline">
-      </div>
-      <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
-        <!-- Button trigger modal -->
-        <button id="peek_seed_button" type="button" class="btn" data-toggle="modal" data-target="#peek_seed">
-          Peek
-        </button>
-      </div>
-    </div>
-    <br>
-
-    <br>
-    <div class="row">
-      <div class="col-sm-6 col-md-6 col-lg-12 outline">
-      </div>
-      <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
-        <button id="profile_delete_button" class="btn delete_button" type="submit">Delete</button>
-      </div>
-    </div>
-    <br>
-
-
     </div>
     <br>
   </main>
@@ -261,7 +237,7 @@
 
   <!-- Custom scripts -->
 
-  <script type="text/javascript" src="/js/bundles/profile_bundle.js"></script>
+  <script type="text/javascript" src="/js/bundles/preferences_bundle.js"></script>
 
 </body>
 

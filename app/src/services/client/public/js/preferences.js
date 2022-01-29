@@ -1,27 +1,85 @@
 const crypto = require("crypto");
-const axios = require('axios');
-const bitcoin = require("./bitcoin");
-const { encrypt, decrypt } = require("./aes");
-const { exit } = require("./auth");
 const store = require("./store");
-const {
-  createPost, setPostVisibility, deleteMyIdentity
-} = require("./api");
+const comps = require("./composites");
+const util = require("./util");
+const api = require("./api");
+
 
 
 const INIT_DERIVATION_PATH = "m/1h/0h/0h";
 
 
 // DISPLAY
-function displayProfile(plain_json) {
-  document.getElementById("profile_nickname").textContent = plain_json.nickname;
-  document.getElementById("profile_status").textContent = plain_json.status;
-  document.getElementById("profile_contact").textContent = plain_json.contact;
+function displayProfile() {
 
 
-  // document.getElementById("profile_trusting").textContent = plain_json.trusting.length;
-  // document.getElementById("profile_trusted_by").textContent = plain_json.trusted_by.length;
+  document.getElementById("profile_username").textContent = store.getMyUsername();
+  document.getElementById("profile_pubkey").textContent = store.getMyKeyChain().identity.pubkey;
+ 
+  const my_badges = comps.getBadgesByPubkey(store.getMyKeyChain().identity.pubkey);
 
+  const my_given_pubkeys = my_badges.given.map((badge)=>badge.reciever);
+  const my_given_identities = my_given_pubkeys.map((pubkey)=>store.getIdentities().find(id=>id.pubkey===pubkey));
+  const my_recieved_pubkeys = my_badges.recieved.map((badge)=>badge.giver);
+  const my_recieved_identities = my_recieved_pubkeys.map((pubkey)=>store.getIdentities().find(id=>id.pubkey===pubkey));
+  
+  console.log({my_recieved_identities,my_given_pubkeys})
+  // document.getElementById("profile_badges_given").textContent = my_given_pubkeys.length;
+  
+  const hover_given = my_given_pubkeys.length===0
+    ?"None"
+    :`${my_given_identities.map((id)=>id.username).toString()}`;
+  document.getElementById("profile_list_of_trusting").innerHTML = `Trusting: <span class="contact_info">${hover_given}</span>`
+
+
+  // document.getElementById("profile_badges_recieved").textContent = selected_id_badges.recieved.length;
+
+  const hover_recieved = my_recieved_pubkeys.length===0
+    ?"None"
+    :`${my_recieved_identities.map((id)=>id.username).toString()}`;
+
+  document.getElementById("profile_list_of_trusted_by").innerHTML = `Trusted By: <span class="contact_info">${hover_recieved}</span>`;
+
+  const trust_intersection_pubkeys = my_given_pubkeys.filter((pubkey)=>my_recieved_pubkeys.includes(pubkey));
+
+  console.log({trust_intersection_pubkeys});
+  const trust_intersection_ids = my_recieved_identities.filter((trusted_by)=>
+    trust_intersection_pubkeys.includes(trusted_by.pubkey));
+
+  console.log({trust_intersection_ids});
+
+  const populate_trust_intersection = trust_intersection_ids.length === 0
+  ? "None"
+  :`${trust_intersection_ids.map((id)=>id.username).toString()}`;
+
+  document.getElementById("profile_trust_intersection").innerHTML = `Trust Intersection: <span class="contact_info">${populate_trust_intersection}</span>`;
+
+  const mute_list = store.getMyPreferences()['plain_json']['mute_list'];
+  document.getElementById("profile_mute_list").innerHTML = "";
+
+  if(!mute_list || mute_list.length===0){
+    document.getElementById("profile_mute_list").innerHTML = `<div id="muted_none" class="col-4 outline centerme liquid-color">No users muted.</div>`;
+    return;
+  }
+
+  else
+  mute_list.map((muted)=>{
+    const muted_id = store.getIdentities().find((id)=>id.pubkey===muted);
+    document.getElementById("profile_mute_list").innerHTML += `<div id="muted_${muted}" class="col-4 outline centerme warning-color">${muted_id.username}</div>`;
+    document.getElementById(`muted_${muted}`).addEventListener("click", async (event) => {
+      event.preventDefault();
+      const confirmation = confirm(`Unmute ${muted_id.username}?`);
+      if (!confirmation) return false;
+
+      const new_mute_list = mute_list.filter((pubkey)=>pubkey!==muted);
+      const status = await comps.createCypherPreferencePost(new_mute_list,store.getMyPreferences().plain_json.last_trade_derivation_scheme);
+      if(status instanceof Error) console.error({status});
+
+      document.location.reload();
+    });
+  })
+
+  return;
   // const my_trusting = profile.trusting.map((item) => (item.username));
   // const my_trusted_by = profile.trusted_by.map((item) => (item.username));
 
@@ -51,67 +109,10 @@ function displayProfile(plain_json) {
 async function initProfileState() {
   const keys = store.getMyKeyChain();
   console.log({keys});
-
-  const my_profile_and_keys = await apiProfileSelf(keys.identity);
-  if (my_profile_and_keys instanceof Error) return my_profile_and_keys;
-
-  store.setMyProfile(my_profile_and_keys);
-
-  console.log({my_profile_and_keys})
-  if (my_profile_and_keys.profile.cypher_json) {
-    const decryption_key = crypto
-    .createHash("sha256")
-    .update(
-      bitcoin.derive_hardened_str(keys.cypherpost.xprv, my_profile_and_keys.profile.derivation_scheme)['xprv']
-    )
-    .digest('hex');
-    const plain_json = JSON.parse(decrypt(my_profile_and_keys.profile.cypher_json, decryption_key));
-    document.getElementById("nickname_input").value = plain_json.nickname || null;
-    document.getElementById("status_input").value = plain_json.status || null;
-    document.getElementById("contact_input").value = plain_json.contact || null;
-    console.log(plain_json);
-    displayProfile(plain_json);
-  }
-  else {
-    alert("Add profile data.")
-  }
-
+  displayProfile();
   return true;
 }
-async function editComposite() {
-  const keys = store.getMyKeyChain();
-  const derivation_scheme = store.getMyProfile().profile['derivation_scheme'] || INIT_DERIVATION_PATH;
 
-  console.log({derivation_scheme})
-  const nickname = document.getElementById("nickname_input").value;
-  const status = document.getElementById("status_input").value;
-  const contact = document.getElementById("contact_input").value;
-  const plain_json = {
-    nickname,
-    status,
-    contact
-  };
-
-  const bitcoin_ekey = bitcoin.derive_hardened_str(keys.cypherpost.xprv, derivation_scheme)['xprv'];
-  console.log({bitcoin_ekey})
-
-  const encryption_key = crypto
-    .createHash("sha256")
-    .update(
-      bitcoin_ekey
-    )
-    .digest('hex');
-
-  const cypher_json = encrypt(JSON.stringify(plain_json), encryption_key);
-  
-  const new_profile = await createPost(keys.identity, cypher_json, derivation_scheme);
-  if (new_profile instanceof Error) {
-    console.error({ e: new_profile })
-  }
-  else { 
-    window.location.reload()
-  }
-}
 
 function peekSeed() {
   const pass = document.getElementById("peek_seed_password_input").value;
@@ -130,42 +131,21 @@ async function loadProfileEvents() {
   else endpoint = endpoint.split(".")[0];
 
   switch (endpoint) {
-    case "profile":
+    case "preferences":
 
       document.getElementById("exit").addEventListener("click", (event) => {
         event.preventDefault();
-        exit();
+        util.exit();
       });
 
-      const my_identity = store.getIdentities().identities.filter(identity => {
-        if (identity.xpub === store.getMyKeyChain().identity.xpub) {
-          return identity;
-        }
-      });
-
-      document.getElementById("profile_username").textContent = `@${my_identity[0].username}`;
+      const reload = await comps.downloadAllMyPosts(store.getMyKeyChain().identity);
+      if(reload instanceof Error) console.error({reload});
 
       const init_profile = await initProfileState();
       if (init_profile instanceof Error) {
         console.error({ init_profile });
         alert("Error initializing profile state")
       }
-      // store.setMyProfile(init_profile['profile']);
-      // store.setMyKeys(init_profile['keys']);
-
-      // const contact_info = (store.getParentKeys() && init_profile['profile']['cipher_info']) ? 
-      //   createContactInfo(init_profile['profile']['cipher_info'], init_profile['profile']['derivation_scheme'], store.getParentKeys()['profile_parent']['xprv']) :
-      //   (init_profile['profile']['cipher_info']) ? 
-      //     init_profile['profile']['cipher_info'] : 
-      //     "No contact info added.";
-
-      // displayProfile(init_profile['profile'], contact_info);
-
-      // if (contact_info === "No contact info added.") {
-      //   alert("Add come cypher contact info!")
-      //   document.getElementById("edit_button").click();
-      // }
-
 
       /***
        * 
@@ -175,10 +155,6 @@ async function loadProfileEvents() {
        * 
        * 
        */
-      document.getElementById("edit_profile_execute").addEventListener("click", async (event) => {
-        event.preventDefault();
-        editComposite();
-      });
 
       document.getElementById("peek_seed_button").addEventListener("click", async (event) => {
         event.preventDefault();
@@ -187,8 +163,8 @@ async function loadProfileEvents() {
 
       document.getElementById("peek_seed_execute").addEventListener("click", async (event) => {
         event.preventDefault();
-        alert("Peeking into seed w/peek_seed_password_input");
         alert(peekSeed());
+        document.getElementById("close_peek_seed_modal").click();
       });
       /**
        * MODAL EXECUTE BUTTON
@@ -197,7 +173,7 @@ async function loadProfileEvents() {
       document.getElementById("profile_delete_button").addEventListener("click", async (event) => {
         event.preventDefault();
         if (confirm(`Deleting your identity is irreversible!\nYou will lose all data associated with this identity.\nAre you sure?`)) {
-          const status = await deleteMyIdentity(store.getMyKeyChain().identity);
+          const status = await api.deleteMyIdentity(store.getMyKeyChain().identity);
           if(status instanceof Error)
           console.log({status});
           else

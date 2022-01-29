@@ -109,7 +109,7 @@ export async function handleTrust(req, res) {
         message: "Trust in self implied."
       }
     }
-    let status = await badges.create(request.headers['x-client-pubkey'], request.body.trusting, BadgeType.Trusted, request.headers['x-nonce'], request.body.signature);
+    let status = await badges.create(request.headers['x-client-pubkey'], request.body.trusting, BadgeType.Trusted, request.body.nonce, request.body.signature);
     if (status instanceof Error) throw status;
 
     const response = {

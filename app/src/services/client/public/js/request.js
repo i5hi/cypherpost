@@ -7,7 +7,7 @@ async function request(method, url, headers, body) {
     method: method.toUpperCase(),
     headers,
     data:body,
-    json: true
+    json:true
   };
 
   try {
@@ -21,6 +21,7 @@ async function request(method, url, headers, body) {
       return err;
     }
     else {
+      console.error({e})
       return new Error("BAD NEWS!");
     }
   }

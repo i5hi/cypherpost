@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" href="/img/owl.png" />
   <!-- <link rel="stylesheet" type='text/css' href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" /> -->
   <link rel="stylesheet" type='text/css' href="/css/mdb.min.css" />
-  <link rel="stylesheet" type='text/css' href="/css/light.css" />
+  <link rel="stylesheet" type='text/css' href="/css/dark.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -48,85 +48,53 @@
     <br>
     <div class="container outline">
       <div class="row outline">
-        <ul class="nav nav-tabs outline">
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme outline" href="posts.html">
-                <i class="fa fa-envelope fa-2x" aria-hidden="true"></i>
-              </a>
-            </li>
+        <ul class="nav nav-tabs">
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="posts.html">
+                  Trades
+                </a>
+              </li>
+            </div>
           </div>
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="profile.html">
-                <i class="fa fa-user fa-2x"></i>
-              </a>
-            </li>
-          </div>
-
-          <div class="col-4">
-
-            <li class="nav-item outline">
-              <a class="nav-link centerme " href="network.html">
-                <i class="fa fa-users fa-2x"></i>
-              </a>
-            </li>
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link" href="preferences.html">
+                  Settings
+                </a>
+              </li>
+            </div>
           </div>
 
+          <div class="col-4 outline">
+            <div class="centerme outline">
+              <li class="centerme nav-item">
+                <a class="centerme nav-link centerme" href="network.html">
+                  Network
+                </a>
+              </li>
+            </div>
+          </div>
         </ul>
-
       </div>
 
       <hr>
-      <div class="container outline">
-        <div class="row outline">
-
-          <div class="col-4">
-            <button id="network_trusting_menu" class="btn-lg centerme outline">Trusting</a>
-          </div>
-
-          <div class="col-4">
-            <button id="network_trusted_by_menu" class="btn-lg centerme outline">Trusted By</a>
-          </div>
-
-          <div class="col-4">
-            <button id="network_search_menu" class="btn-lg centerme outline">All</a>
-          </div>
-
-        </div>
-      </div>
-      <br>
-
-
 
       <div id="network_profile_bio" class="container outline bio">
 
         <div class="row">
-          <div id="network_profile_nickname" class="col-12 outline nickname">
-            Nickname
+          <div id="network_profile_username" class="col-12 outline nickname">
+            @username
+          </div>
+        </div>
+        <div class="row">
+          <div id="network_profile_pubkey" class="col-12 outline pubkey">
+            IdentityPubkey
           </div>
         </div>
 
-        <div class="row outline username">
-          <div id="network_profile_username" class="col-12">
-            Username
-          </div>
-        </div>
-
-
-        <div class="row outline contact_info">
-          <div id="network_profile_contact" class="col-12">
-            Contact Info
-          </div>
-        </div>
-        <div class="row outline status">
-          <div id="network_profile_status" class="col-12">
-            Status
-          </div>
-        </div>
         <br>
 
 
@@ -135,49 +103,59 @@
 
       <br>
 
-      <div id="network_profile_badges" class="container outline bio">
+      <div id="network_badges" class="container outline bio">
         <h3 class="leftme">Badges</h3>
 
         <div class="row outline trusting">
           <div class="col-3">
-            <div class="row outline centerme trusting_title">Given</div>
+            <div class="row outline centerme trusting_title" id="network_given_badges">Given           </div>
           </div>
           <div class="col-3">
-            <div id="network_profile_given" class="row outline centerme trust_value">0</div>
+            <div id="network_badges_given" class="row outline centerme trust_value">0</div>
           </div>
           <div class="col-3">
-            <div class="row outline centerme trusted_by_title">Recieved</div>
+            <div class="row outline centerme trusted_by_title" id="network_recieved_badges" >
+              Recieved
+            </div>
           </div>
           <div class="col-3">
-            <div id="network_profile_recieved" class="row outline centerme trust_value">0</div>
+            <div id="network_badges_recieved" class="row outline centerme trust_value">0</div>
           </div>
         </div>
         <br>
 
         <div class="row badges outline trusting">
+
           <div class="col-4 centerme outline">
-            <div class="row outline centerme trust_title">Trust</div>
-            <div class="row outline badge_links leftme">ExampleIdentity</div>
+            <div id="issue_trust" class="row outline centerme trust_title"><i class="fas fa-shield-alt n_badges"
+                aria-hidden="true"></i></div>
+            <div class="row outline badge_links leftme"></div>
           </div>
+
           <div class="col-4 centerme outline">
-            <div class="row outline centerme vip">VerifiedInPerson</div>
-            <div class="row outline badge_links leftme">ExampleIdentity</div>
+            <div id="issue_scammer" class="row outline centerme scammer_title"><i class="fas fa-ban n_badges"
+                aria-hidden="true"></i></div>
+            <div class="row outline badge_links leftme"></div>
           </div>
+
           <div class="col-4 centerme outline">
-            <div class="row outline centerme scammer_title">Scammer</div>
-            <div class="row outline badge_links leftme">ExampleIdentity</div>
+            <div id="issue_inperson" class="row outline centerme vip"><i class="far fa-handshake n_badges"
+                aria-hidden="true"></i></div>
+            <div class="row outline badge_links leftme"></div>
           </div>
+
         </div>
 
+        <div class="row username  outline">
+          <div id="list_of_trusting"></div>
+          <div id="list_of_trusted_by"></div>
+          <div id="trust_intersection"></div>
+        </div>
       </div>
 
       <br>
 
       <hr>
-
-
-
-
 
       <div id="network_search" class="container outline">
         <div class="container-fluid outline">
@@ -185,11 +163,11 @@
           <div class="row outline">
 
             <div class="col-8">
-              <input type="text" class="" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1"
-                disabled>
+              <input id="network_search_username" type="text" class="" placeholder="Username" aria-label="Username"
+                aria-describedby="basic-addon1">
             </div>
 
-            <div class="col-4 outline"><button id="network_search_button" class="btn-sm centerme" type="submit"><i
+            <div class="col-4 outline"><button id="network_search_button" class="btn centerme" type="submit"><i
                   class="fa fa-search" aria-hidden="true" disabled></i></button>
             </div>
           </div>

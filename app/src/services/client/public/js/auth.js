@@ -1,15 +1,13 @@
-const crypto = require("crypto");
-const { loadInitialState } = require('./init');
-const store = require("./store");
-const bitcoin = require("./bitcoin");
+const INIT_TRADE_DS = "m/3h/0h/0h";
+const {
+  generateMnemonic
+} = require("./bitcoin");
 const {
   registerIdentity,
-  getAllIdentities,
 } = require("./api");
-
+const store = require("./store");
 const util = require("./util");
-
-const web_url = (document['domain'] === 'localhost') ? "http://localhost" : `https://cypherpost.io`;
+const comps = require("./composites");
 
 function displayMnemonic(mnemonic) {
   document.getElementById("welcome").classList.add("hidden");
@@ -23,21 +21,20 @@ function displayRegistration() {
   return true;
 }
 
-
-// COMPOSITES
-async function registerComposite() {
+// Final Action Button Handlers
+async function completeRegistration() {
   const username = document.getElementById("register_username").value.toLowerCase();
-  const result = store.getIdentities().filter((identity) => {
+  const username_availability = store.getIdentities().filter((identity) => {
     if (identity.username === username) {
       alert("Username already exists!");
       return username;
     }
   });
-  if (result.length > 0) return false;
+  if (username_availability.length > 0) return false;
   const keys = store.getMyKeyChain();
   const response = await registerIdentity(keys.identity, username.toLowerCase());
   if (response instanceof Error) {
-    alert(response.message);
+    console.error(response.message);
     return false;
   }
   else {
@@ -45,7 +42,7 @@ async function registerComposite() {
     return true;
   }
 }
-async function resetComposite() {
+async function completeReset() {
   const mnemonic = document.getElementById("reset_seed").value;
   const password = document.getElementById("reset_pass").value;
   const confirm = document.getElementById("reset_confirm_pass").value;
@@ -56,10 +53,13 @@ async function resetComposite() {
 
   if (password === confirm) {
     const keys = await initKeyChain(mnemonic);
-    if (keys instanceof Error) return keys;
-    const identities = await downloadAllIdentities(keys.identity);
-    if (identities instanceof Error) {
-      alert("Error getting identities!")
+    if (keys instanceof Error) {
+      console.error({status: keys});
+      return false;
+    }
+    const status = await comps.downloadAllIdentities(keys.identity);
+    if (status instanceof Error) {
+      console.error({status});
       return false;
     };
     const identity_matches = store
@@ -78,17 +78,21 @@ async function resetComposite() {
     return false;
   }
 }
-
-async function loginComposite() {
+async function completeLogin() {
   const password = document.getElementById("login_pass").value;
   document.getElementById("login_pass").value = "";
   const mnemonic = store.getMnemonic(password);
   if (mnemonic instanceof Error) {
-    alert("Incorrect password!");
+    console.error({status: mnemonic});
     return false;
   }
   if (mnemonic) {
     const keys = await initKeyChain(mnemonic);
+    if (keys instanceof Error) {
+      console.error({status: keys});
+      return false;
+    }
+    return true;
   }
   else {
     alert("No encrypted mnemonic found. Import mnemonic through reset.");
@@ -97,18 +101,6 @@ async function loginComposite() {
 }
 
 // HELPERS
-async function downloadAllIdentities(identity_parent) {
-  const response = await getAllIdentities(identity_parent);
-  if (response instanceof Error) {
-    alert(response.message);
-    return false;
-  }
-  else {
-    store.setIdentities(response);
-    console.log(store.getIdentities());
-    return true;
-  }
-}
 async function initKeyChain(mnemonic) {
   const keys = await util.createRootKeyChain(mnemonic);
   if (keys instanceof Error)
@@ -124,16 +116,17 @@ async function confirmAndStoreMnemonic() {
   console.log({ mnemonic, password, confirm });
   document.getElementById("mnemonic_pass").value = "";
   document.getElementById("mnemonic_confirm_pass").value = "";
-  document.getElementById("mnemonic").textContent = "";
   if (password === confirm) {
     const keys = await initKeyChain(mnemonic);
     store.setMnemonic(mnemonic, password);
+    document.getElementById("mnemonic").textContent = "";
     return keys;
   } else {
     alert("Passwords do not match!");
     return false;
   }
 }
+
 // EVENT LISTENERS
 async function loadAuthEvents() {
   const path = window.location.href.split("/");
@@ -159,7 +152,8 @@ async function loadAuthEvents() {
       });
       break;
     case "login":
-      const status = store.getMnemonic();
+      // this has to go outside
+      const status = store.checkMnemonic();
       if (!status) {
         alert("COULD NOT FIND LOCALLY ENCRYPTED MNEMONIC.\nREDIRECTING TO RESET PAGE.")
         window.location.href = "reset";
@@ -167,9 +161,8 @@ async function loadAuthEvents() {
 
       document.getElementById("login_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        const status = await loginComposite();
+        const status = await completeLogin();
         if (status) {
-          await loadInitialState();
           window.location.href = "notifications"
         }
         else alert("Login failed!");
@@ -178,8 +171,9 @@ async function loadAuthEvents() {
     case "registration":
       document.getElementById("show_mnemonic_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        displayMnemonic(bitcoin.generate_mnemonic());
+        displayMnemonic(generateMnemonic());
       });
+      
       document.getElementById("mnemonic_confirm_button").addEventListener("click", async (event) => {
         event.preventDefault();
         const keys = await confirmAndStoreMnemonic();
@@ -187,7 +181,7 @@ async function loadAuthEvents() {
           return false;
         }
         else {
-          const status = await downloadAllIdentities(keys.identity);
+          const status = await comps.downloadAllIdentities(keys.identity);
           if (status instanceof Error) {
             alert("Error getting identities!")
             return false;
@@ -195,11 +189,13 @@ async function loadAuthEvents() {
           displayRegistration();
         }
       });
+
       document.getElementById("register_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        const status = await registerComposite();
+        const status = await completeRegistration();
         if (status) {
-          await loadInitialState();
+          const preference_update = await comps.createCypherPreferencePost([],INIT_TRADE_DS);
+          if(preference_update instanceof Error) return preference_update;
           window.location.href = "notifications"
         }
         else alert("Registration failed!");
@@ -209,9 +205,8 @@ async function loadAuthEvents() {
     case "reset":
       document.getElementById("reset_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        const status = await resetComposite();
+        const status = await completeReset();
         if (status) {
-          await loadInitialState();
           window.location.href = "notifications"
         }
         else alert("Reset failed!");
@@ -222,17 +217,8 @@ async function loadAuthEvents() {
   }
 }
 
-// GLOBAL
-async function exit() {
-  sessionStorage.clear();
-  window.location.href = web_url;
-}
-
 window.onload = loadAuthEvents();
 
-module.exports = {
-  exit
-}
 /**
  * test user
  * ishi9

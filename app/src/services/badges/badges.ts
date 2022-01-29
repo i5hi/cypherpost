@@ -25,11 +25,11 @@ export class CypherpostBadges implements BadgeInterface {
     try{
   
       const trust_message = `${from}:${to}:${type.toString()}:${nonce}`;
-      // console.log({trust_message});
+      console.log({trust_message});
       const verify = await bitcoin.verify(trust_message, signature,from);
       if (verify instanceof Error) return verify;
       if (!verify) return handleError({
-        code: 401,
+        code: 400,
         message: "Invalid badge signature"
       });
       const badge: Badge = {
