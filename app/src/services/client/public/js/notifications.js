@@ -142,7 +142,6 @@ async function checkInitialState() {
     if(badge.reciever === keys.identity.pubkey) 
     return badge.giver;
   })
-  console.log({ my_network })
 
   const my_profile = store.getMyProfile();
   const my_trades = store.getMyTrades();
@@ -158,7 +157,7 @@ async function checkInitialState() {
       msg: "You are using default settings.",
     },
     network: {
-      msg: `You have trusted ${my_network.length} users.`,
+      msg: `You are connected to ${my_network.length} users.`,
     },
     trades: {
       msg: `You have ${others_trades.length} live posts.`,
