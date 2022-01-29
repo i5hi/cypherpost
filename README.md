@@ -9,9 +9,7 @@
 - ECDSA Shared Secrets are used per identity, to encrypt decryption keys in transit.
 - Badges form a reputation system and help build a trusted network.
 - Value of badges are subjective and based on who the givers are.
-- Badges include: Trusted, VerifiedInPerson & Scammer
-- Your identity, badges given & recieved and number of live posts are public.
-- At any point in time, a dump of the entire server can be taken and continued with new history by anyone.
+=======
 
 ### Server LIVE at https://cypherpost.io/api/v2
 
