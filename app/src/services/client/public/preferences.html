@@ -33,53 +33,52 @@
     </div>
   </header>
 
-  <div id="profile_page_spinner" class="container">
-    <br />
-    <div class="spinner-grow centerme" role="status">
-      <span class="sr-only">Loading...</span>
+  <br>
+  <div class="container outline">
+    <div class="row outline">
+      <ul class="nav nav-tabs">
+        <div class="col-4 outline">
+          <div class="centerme outline">
+            <li class="centerme nav-item">
+              <a class="centerme nav-link" href="posts.html">
+                <i class="fa fa-envelope"></i>
+              </a>
+            </li>
+          </div>
+        </div>
+        <div class="col-4 outline">
+          <div class="centerme outline">
+            <li class="centerme nav-item">
+              <a class="centerme nav-link" href="preferences.html">
+                <i class="fa fa-user"></i>
+              </a>
+            </li>
+          </div>
+        </div>
+
+        <div class="col-4 outline">
+          <div class="centerme outline">
+            <li class="centerme nav-item">
+              <a class="centerme nav-link centerme" href="network.html">
+                <i class="fa fa-users"></i>
+              </a>
+            </li>
+          </div>
+        </div>
+      </ul>
     </div>
-    <br>
-  </div>
 
-  <main id="profile_page" class="hidden">
-    <br>
-    <div class="container outline">
-      <div class="row outline">
+    <hr>
 
-        <ul class="nav nav-tabs">
-          <div class="col-4 outline">
-            <div class="centerme outline">
-              <li class="centerme nav-item">
-                <a class="centerme nav-link" href="posts.html">
-                  Trades
-                </a>
-              </li>
-            </div>
-          </div>
-          <div class="col-4 outline">
-            <div class="centerme outline">
-              <li class="centerme nav-item">
-                <a class="centerme nav-link" href="preferences.html">
-                  Settings
-                </a>
-              </li>
-            </div>
-          </div>
-
-          <div class="col-4 outline">
-            <div class="centerme outline">
-              <li class="centerme nav-item">
-                <a class="centerme nav-link centerme" href="network.html">
-                  Network
-                </a>
-              </li>
-            </div>
-          </div>
-        </ul>
-
+    <div id="profile_page_spinner" class="container">
+      <br />
+      <div class="spinner-grow centerme" role="status">
+        <span class="sr-only">Loading...</span>
       </div>
+      <br>
+    </div>
 
-      <hr>
+    <main id="profile_page" class="hidden">
 
       <div id="profile_bio" class="container outline bio">
 
@@ -122,43 +121,43 @@
         <div id="profile_list_of_trusted_by"></div>
         <div id="profile_trust_intersection"></div>
       </div>
+  </div>
+
+  <hr>
+
+  <div class="container">
+    <h3 class="leftme">Mute List</h3>
+    <div id="profile_mute_list" class="row">
+      <div class="col-4 outline centerme warning-color">1</div>
     </div>
+  </div>
 
-<hr>
+  <br>
+  <div class="container">
 
-    <div class="container">
-      <h3 class="leftme">Mute List</h3>
-      <div id="profile_mute_list" class="row">
-        <div class="col-4 outline centerme warning-color">1</div>
+    <div class="row">
+      <div class="col-sm-6 col-md-6 col-lg-12 outline">
       </div>
-    </div>
-
-    <br>
-    <div class="container">
-
-      <div class="row">
-        <div class="col-sm-6 col-md-6 col-lg-12 outline">
-        </div>
-        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
-          <!-- Button trigger modal -->
-          <button id="peek_seed_button" type="button" class="btn" data-toggle="modal" data-target="#peek_seed">
-            Peek
-          </button>
-        </div>
+      <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
+        <!-- Button trigger modal -->
+        <button id="peek_seed_button" type="button" class="btn" data-toggle="modal" data-target="#peek_seed">
+          Peek
+        </button>
       </div>
-      <br>
-      <div class="row">
-        <div class="col-sm-6 col-md-6 col-lg-12 outline">
-        </div>
-        <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
-          <button id="profile_delete_button" class="btn delete_button" type="submit">Delete</button>
-        </div>
-      </div>
-      <br>
-
-    </div>
     </div>
     <br>
+    <div class="row">
+      <div class="col-sm-6 col-md-6 col-lg-12 outline">
+      </div>
+      <div class="col-sm-6 col-md-6 col-lg-12 outline rightme">
+        <button id="profile_delete_button" class="btn delete_button" type="submit">Delete</button>
+      </div>
+    </div>
+    <br>
+
+  </div>
+  </div>
+  <br>
   </main>
 
 

@@ -93,8 +93,9 @@ async function loadNetworkEvents() {
   let selected_identity = store.getSelectedIdentity();
   if (!selected_identity)
     selected_identity = store
-      .getIdentities()
-      .find((identity) => identity.pubkey === keys.identity.pubkey);
+      .getIdentities()[0];
+    
+  store.updateSelectedIdentity(selected_identity);
 
   displayIdentity(selected_identity);
   displaySearchIdBs(all_idbs);
