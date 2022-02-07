@@ -152,7 +152,7 @@ export async function handleGetMyPosts(req, res) {
         };
       });
 
-      const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
+      const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
 
     const my_posts = await posts.findAllByOwner(req.headers['x-client-pubkey'], genesis_filter);
     if (my_posts instanceof Error) throw my_posts;
@@ -186,7 +186,7 @@ export async function handleGetOthersPosts(req, res) {
     // find my trusted_by list of xpubs
     // find their posts
 
-    const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
+    const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
 
     const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-pubkey'], genesis_filter);
     if (reciever_keys instanceof Error) throw reciever_keys;

@@ -21,7 +21,7 @@ const revokeTrustBadgeCheck = [
 ];
 
 const checkGetBadges = [
-  val.check('filter').exists()
+  val.check('genesis_filter').optional()
 ]
 // ------------------ '(◣ ◢)' ---------------------
 router.use(badgesMiddleware);

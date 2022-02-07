@@ -49,7 +49,7 @@ export async function handleGetMyBadges(req, res) {
       }
     }
 
-    const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
+    const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
 
     const given = await badges.findByGiver(request.headers['x-client-pubkey'], genesis_filter);
     if (given instanceof Error) throw given;
@@ -80,7 +80,7 @@ export async function handleGetAllBadges(req, res) {
       }
     }
 
-    const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
+    const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
 
     const result = await badges.getAll(genesis_filter);
     if (result instanceof Error) throw result;

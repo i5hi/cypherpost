@@ -91,7 +91,7 @@ export async function handleGetAllIdentities(req, res) {
       }
     }
 
-    const genesis_filter = req.body['filter']['genesis']?req.body['filter']['genesis']: 0;
+    const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
     const identities = await identity.all(genesis_filter);
     if (identities instanceof Error) throw identities;
 
