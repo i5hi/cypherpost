@@ -71,6 +71,7 @@ async function downloadAllPostsForMe(identity_parent) {
   const plain_json_posts = util.decryptCypherPostsFromOthers(identity_parent, posts);
   if (plain_json_posts instanceof Error) return plain_json_posts;
 
+  // find and remove posts by muted users
   const segregated = util.segregatePlainPostsForMe(plain_json_posts);
   const profiles = store.setOthersProfiles(segregated.profiles);
   const trades = store.setOthersTrades(segregated.trades);

@@ -12,12 +12,12 @@ const store = new MongoPostStore();
 const uuid = new S5UID();
 
 export class CypherpostPosts implements PostInterface {
-  findByDate(after: number): Promise<UserPost[] | Error> {
-    return store.readMany([after.toString()],PostStoreIndex.Genesis);
-  }
+  // findByDate(after: number): Promise<UserPost[] | Error> {
+  //   return store.readMany([after.toString()],PostStoreIndex.Genesis);
+  // }
 
-  findAllByOwner(owner: string): Promise<UserPost[] | Error> {
-    return store.readMany([owner],PostStoreIndex.Owner);
+  findAllByOwner(owner: string, genesis_filter: Number): Promise<UserPost[] | Error> {
+    return store.readMany([owner],PostStoreIndex.Owner, genesis_filter);
   }
 
   async create(owner: string, expiry: number, cypher_json: string, derivation_scheme: string): Promise<string | Error>
@@ -35,8 +35,8 @@ export class CypherpostPosts implements PostInterface {
     if (status instanceof Error) return status;
     return post.id;
   }
-  async findManyById(ids: Array<string>): Promise<Array<UserPost> | Error>{
-    return store.readMany(ids,PostStoreIndex.PostId);
+  async findManyById(ids: Array<string>, genesis_filter): Promise<Array<UserPost> | Error>{
+    return store.readMany(ids,PostStoreIndex.PostId, genesis_filter);
   }
 
   async removeOneById(id: string, owner: string): Promise<boolean | Error> {
@@ -47,17 +47,17 @@ export class CypherpostPosts implements PostInterface {
 
   }
   async removeAllByOwner(owner: string): Promise<Array<string> | Error> {
-    const user_posts = await store.readMany([owner],PostStoreIndex.Owner);
+    const user_posts = await store.readMany([owner],PostStoreIndex.Owner, 0);
     if (user_posts instanceof Error) return user_posts;
 
     const status = await store.removeMany([ owner ], PostStoreIndex.Owner);
     if (status instanceof Error) return status;
-
+    
     return user_posts.map(post=>post.id);
   }
   async removeAllExpiredByOwner(owner: string): Promise<Array<string> | Error> {
     try {
-      const user_posts = await store.readMany([owner],PostStoreIndex.Owner);
+      const user_posts = await store.readMany([owner],PostStoreIndex.Owner, 0);
       if (user_posts instanceof Error) return user_posts;
       let expired_ids=[]; 
       
@@ -80,7 +80,7 @@ export class CypherpostPosts implements PostInterface {
   }
   async removeAllExpired():Promise<Array<string> | Error>{
     try {
-      const user_posts = await store.readAll();
+      const user_posts = await store.readAll(0);
       if (user_posts instanceof Error) return user_posts;
       let expired_ids=[]; 
       

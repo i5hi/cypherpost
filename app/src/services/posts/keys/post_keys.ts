@@ -58,12 +58,12 @@ export class CypherpostPostKeys implements PostKeyInterface {
       handleError(e);
     }
   }
-  async findPostDecryptionKeyByReciever(receiver: string): Promise<Error | PostDecryptionKey[]> {
-    return store.readByReciever(receiver);
+  async findPostDecryptionKeyByReciever(receiver: string, genesis_filter: Number): Promise<Error | PostDecryptionKey[]> {
+    return store.readByReciever(receiver, genesis_filter);
   }
   
-  async findPostDecryptionKeyByGiver(giver: string): Promise<Error | PostDecryptionKey[]> {
-    return store.readByGiver(giver);
+  async findPostDecryptionKeyByGiver(giver: string, genesis_filter: Number): Promise<Error | PostDecryptionKey[]> {
+    return store.readByGiver(giver, genesis_filter);
   }
   async removePostDecryptionKeyById(giver: string, id: string): Promise<boolean | Error> {
     return store.removeManyByPostId(giver, id);

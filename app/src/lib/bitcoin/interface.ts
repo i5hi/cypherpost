@@ -21,7 +21,7 @@ export interface ExtendedKeys{
 }
 
 export interface ECDSAKeys{
-  public_key: string;
-  private_key: string; 
+  pubkey: string;
+  privkey: string; 
 }
 

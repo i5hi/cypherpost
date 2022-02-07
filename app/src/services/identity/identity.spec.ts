@@ -35,6 +35,8 @@ let userIdentity: UserIdentity = {
   genesis: Date.now(),
   pubkey:xpub,
 };
+
+let genesis_filter = 0;
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 describe("Initalizing Test: Identity Service", function () {
   before(async function () {
@@ -49,28 +51,33 @@ describe("Initalizing Test: Identity Service", function () {
       xpub,xprv
     });
     if (ecdsa_keys instanceof Error) throw ecdsa_keys;
-    signature = await bitcoin.sign(message,ecdsa_keys.private_key);
+    signature = await bitcoin.sign(message,ecdsa_keys.privkey);
   });
   describe("IDENTITY SERVICE OPERATIONS:", async function () {
     it("should REGISTER a new user identity", async function () {
-      const response = await identity.register(username, ecdsa_keys.public_key);
+      const response = await identity.register(username, ecdsa_keys.pubkey);
       expect(response).to.equal(true);
     });
     it("should NOT ALLOW REGISTER of DUPLICATE User", async function () {
-      const response = await identity.register(username2, ecdsa_keys.public_key);
+      const response = await identity.register(username2, ecdsa_keys.pubkey);
       expect(response["name"]).to.equal("409");
     });
     it("should VERIFY a user signature", async function () {
-      const response = await identity.verify(ecdsa_keys.public_key,message,signature);
+      const response = await identity.verify(ecdsa_keys.pubkey,message,signature);
       expect(response).to.equal(true);
     });
     it("should GET ALL identities", async function () {
-      const response = await identity.all();
+      const response = await identity.all(genesis_filter);
       if (response instanceof Error) throw response;
       expect(response.length).to.equal(1);
     });
+    it("should GET ALL identities with upto date genesis filter", async function () {
+      const response = await identity.all(Date.now());
+      if (response instanceof Error) throw response;
+      expect(response.length).to.equal(0);
+    });
     it("should REMOVE a user identity and verify", async function () {
-      const response = await identity.remove(ecdsa_keys.public_key);
+      const response = await identity.remove(ecdsa_keys.pubkey);
       expect(response).to.equal(true);
     });
   });

@@ -10,7 +10,7 @@ import { S5Crypto } from "../../lib/crypto/crypto";
 import { DbConnection } from "../../lib/storage/interface";
 import { MongoDatabase } from "../../lib/storage/mongo";
 import { CypherpostBadges } from "./badges";
-import { BadgeType } from "./interface";
+import { Badge, BadgeType } from "./interface";
 const sinon = require("sinon");
 
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
@@ -53,7 +53,10 @@ let xpub1 =  "xpub6CQuhNszNuSHTvynoBjh8d3wmYqkvTY9jLmvobQ8AFq67xEYgWRjQYELAXM5UC
 let xprv1 =  "xprv9yRZHsM6YXszFSuKhACgmV7DDX1GWzpJN7rL1CzWbvJ7F9uQ8y7UrjurKGdCSteFhKPrytgtVLNdkLTUR3hksooDan6AUg8ACQqcApeu1sk";
 let nonce = Date.now().toString();
 let hash;
+let ecdsa_keys;
+let ecdsa_keys1;
 let signature;
+let genesis_filter = 0;
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 describe("Initalizing Test: Badge Service", function () {
   before(async function () {
@@ -65,48 +68,68 @@ describe("Initalizing Test: Badge Service", function () {
     };
     await db.connect(connection);
 
-    const key_pair = await bitcoin.extract_ecdsa_pair({xpub,xprv});
-    if(key_pair instanceof Error) return key_pair;
-    const message = `${xpub}:${xpub1}:${BadgeType.Trusted.toString()}:${nonce}`;
-    signature = await bitcoin.sign(message,key_pair.private_key);
+    ecdsa_keys = await bitcoin.extract_ecdsa_pair({xpub,xprv});
+    if(ecdsa_keys instanceof Error) return ecdsa_keys;
+
+    console.log({ecdsa_keys})
+    ecdsa_keys1 = await bitcoin.extract_ecdsa_pair({xpub:xpub1,xprv:xprv1});
+    if(ecdsa_keys instanceof Error) return ecdsa_keys;
+
+    console.log({ecdsa_keys1})
+    
+    const message = `${ecdsa_keys.pubkey}:${ecdsa_keys1.pubkey}:${BadgeType.Trusted.toString()}:${nonce}`;
+    signature = await bitcoin.sign(message,ecdsa_keys.privkey);
   });
 
   describe("BADGE SERVICE OPERATIONS:", async function () {
     it("CREATE new TRUST from xpub to xpub1", async function () {
-      const response = await badges.create(xpub, xpub1, BadgeType.Trusted,nonce, signature);
+      const response = await badges.create(ecdsa_keys.pubkey, ecdsa_keys1.pubkey, BadgeType.Trusted,nonce, signature);
       expect(response).to.equal(true);
     });
     it("409 for CREATE duplicate TRUST from xpub to xpub1", async function () {
-      const response = await badges.create(xpub, xpub1, BadgeType.Trusted,nonce, signature);
+      const response = await badges.create(ecdsa_keys.pubkey, ecdsa_keys1.pubkey, BadgeType.Trusted,nonce, signature);
       expect(response['name']).to.equal("409");
     });
     it("FIND badges by giver", async function () {
-      const response = await badges.findByGiver(xpub);
-      expect(response[0]['giver']===xpub).to.equal(true);
+      const response = await badges.findByGiver(ecdsa_keys.pubkey,genesis_filter);
+      expect(response[0]['giver']===ecdsa_keys.pubkey).to.equal(true);
     });
     it("FIND badges by reciever", async function () {
-      const response = await badges.findByReciever(xpub1);
-      expect(response[0]['giver']===xpub).to.equal(true);
+      const response = await badges.findByReciever(ecdsa_keys1.pubkey,genesis_filter);
+      expect(response[0]['reciever']===ecdsa_keys1.pubkey).to.equal(true);
     });
-    it("REVOKE badge", async function () {
-      const response = await badges.revoke(xpub, xpub1, BadgeType.Trusted);
-      expect(response).to.equal(true);
+    it("FIND badges by giver w/ upto date genesis_filter", async function () {
+      const response = await badges.findByGiver(xpub,Date.now()) as Badge[];
+      expect(response.length).to.equal(0);
     });
-    it("FIND 0 badges post revoke", async function () {
-      const response = await badges.findByReciever(xpub1);
+    it("FIND badges by reciever w/ upto date genesis_filter", async function () {
+      const response = await badges.findByReciever(ecdsa_keys1.pubkey,Date.now()) as Badge[];;
+      expect(response.length).to.equal(0);
+    });
+    it("FIND 0 badges w/ upto data genesis_filter", async function () {
+      const response = await badges.getAll(Date.now());
       if (response instanceof Error) throw response
       expect(response.length === 0).to.equal(true);
     });
-    it("CREATE new TRUST from xpub to xpub1", async function () {
-      const response = await badges.create(xpub, xpub1, BadgeType.Trusted,nonce, signature);
-      expect(response).to.equal(true);
-    });
-    it("REMOVE ALL by xpub", async function () {
-      const response = await badges.removeAllOfUser(xpub);
+    it("REVOKE badge", async function () {
+      const response = await badges.revoke(ecdsa_keys.pubkey, ecdsa_keys1.pubkey, BadgeType.Trusted);
       expect(response).to.equal(true);
     });
     it("FIND 0 badges post revoke", async function () {
-      const response = await badges.getAll();
+      const response = await badges.findByReciever(ecdsa_keys1.pubkey,genesis_filter);
+      if (response instanceof Error) throw response
+      expect(response.length === 0).to.equal(true);
+    });
+    it("CREATE new TRUST from pubkey to pubkey1", async function () {
+      const response = await badges.create(ecdsa_keys.pubkey, ecdsa_keys1.pubkey, BadgeType.Trusted,nonce, signature);
+      expect(response).to.equal(true);
+    });
+    it("REMOVE ALL by pubkey", async function () {
+      const response = await badges.removeAllOfUser(ecdsa_keys.pubkey);
+      expect(response).to.equal(true);
+    });
+    it("FIND 0 badges post revoke", async function () {
+      const response = await badges.getAll(0);
       if (response instanceof Error) throw response
       expect(response.length === 0).to.equal(true);
     });

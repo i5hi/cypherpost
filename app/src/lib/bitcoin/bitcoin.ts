@@ -108,8 +108,8 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
 
       const pubkey = await secp256k1.schnorr.getPublicKey(parent_key.privateKey.toString("hex"));
       const ecdsa_keys: ECDSAKeys = {
-        private_key: parent_key.privateKey.toString("hex"),
-        public_key: Buffer.from(pubkey).toString('hex')
+        privkey: parent_key.privateKey.toString("hex"),
+        pubkey: Buffer.from(pubkey).toString('hex')
       };
       return ecdsa_keys;
 
@@ -132,18 +132,18 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
 
   calculate_shared_secret(ecdsa_keys: ECDSAKeys): string | Error {
 
-    ecdsa_keys.public_key= (ecdsa_keys.public_key.startsWith("02" || "03"))?ecdsa_keys.public_key: "02" + ecdsa_keys.public_key;
+    ecdsa_keys.pubkey= (ecdsa_keys.pubkey.startsWith("02" || "03"))?ecdsa_keys.pubkey: "02" + ecdsa_keys.pubkey;
     const type = "secp256k1";
 
     let curve = crypto.createECDH(type);
 
     // console.log({ecdsa_keys});
 
-    curve.setPrivateKey(ecdsa_keys.private_key, "hex");
+    curve.setPrivateKey(ecdsa_keys.privkey, "hex");
     // let cpub = curve.getPublicKey("hex","compressed");
 
     const shared_secret = curve.computeSecret(crypto.ECDH.convertKey(
-      ecdsa_keys.public_key,
+      ecdsa_keys.pubkey,
       type,
       "hex",
       "hex",

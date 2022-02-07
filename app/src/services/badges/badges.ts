@@ -15,8 +15,8 @@ const uuid = new S5UID();
 const bitcoin = new CypherpostBitcoinOps();
 
 export class CypherpostBadges implements BadgeInterface {
-  getAll(): Promise<Badge[] | Error> {
-    return store.readAll();
+  getAll(genesis_filter: Number): Promise<Badge[] | Error> {
+    return store.readAll(genesis_filter);
   }
   removeAllOfUser(xpub: string): Promise<boolean | Error> {
     return store.removeAll(xpub);
@@ -26,6 +26,7 @@ export class CypherpostBadges implements BadgeInterface {
   
       const trust_message = `${from}:${to}:${type.toString()}:${nonce}`;
       console.log({trust_message});
+      console.log({signature});
       const verify = await bitcoin.verify(trust_message, signature,from);
       if (verify instanceof Error) return verify;
       if (!verify) return handleError({
@@ -37,20 +38,22 @@ export class CypherpostBadges implements BadgeInterface {
         giver: from,
         reciever: to,
         type: type,
-        hash:crypto.createHash("sha256").update(`${from}:${to}:${type}`).digest("hex"),
+        hash:crypto.createHash("sha256").update(`${from}:${to}:${type.toString()}`).digest("hex"),
         nonce,
         signature,
       };
+
+      console.log({badge})
       return store.create(badge);
     }catch(e){
       handleError(e);
     }
   }
-  findByGiver(from: string): Promise<Error | Badge[]> {
-    return store.readByGiver(from);
+  findByGiver(from: string, genesis_filter: Number): Promise<Error | Badge[]> {
+    return store.readByGiver(from,genesis_filter);
   }
-  findByReciever(to: string): Promise<Error | Badge[]> {
-    return store.readByReciever(to);
+  findByReciever(to: string,genesis_filter: Number): Promise<Error | Badge[]> {
+    return store.readByReciever(to,genesis_filter);
   }
   revoke(from: string, to: string, type: BadgeType): Promise<boolean | Error> {
     return store.removeByReciever(from,to, type);

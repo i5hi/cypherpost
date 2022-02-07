@@ -97,9 +97,10 @@ export class MongoIdentityStore implements IdentityStore {
       return handleError(e);
     }
   }
-  async readAll(): Promise<Array<UserIdentity> | Error> {
+  async readAll(genesis_filter: Number): Promise<Array<UserIdentity> | Error> {
     try {
-      const docs = await identityStore.find().exec();
+      
+      const docs = await identityStore.find({ genesis: { $gte: genesis_filter } }).exec();
       if (docs instanceof mongoose.Error) {
         return handleError(docs);
       }

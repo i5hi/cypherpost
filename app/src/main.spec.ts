@@ -189,8 +189,8 @@ async function createTestKeySet(): Promise<TestKeySet | Error> {
       root_xprv,
       cypherpost_parent,
       identity_xpub: identity_parent.xpub,
-      identity_private: identity_ecdsa.private_key,
-      identity_pubkey: identity_ecdsa.public_key
+      identity_private: identity_ecdsa.privkey,
+      identity_pubkey: identity_ecdsa.pubkey
     };
     return set;
   }
@@ -370,8 +370,8 @@ async function createKeyStoreUpdate(post_set: TestPostSet, trusted_list: string[
   trusted_list.map(async (trusted_pubkey) => {
 
     const shared_sercret = bitcoin.calculate_shared_secret({
-      private_key: key_set.identity_private,
-      public_key: trusted_pubkey
+      privkey: key_set.identity_private,
+      pubkey: trusted_pubkey
     }) as string;
 
     const decryption_key = s5crypto.encryptAESMessageWithIV(post_set.encryption_key, shared_sercret);
@@ -891,8 +891,8 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
           expect(res.body['posts'].length).to.equal(1);
 
           const shared_sercret = bitcoin.calculate_shared_secret({
-            private_key: a_key_set.identity_private,
-            public_key: c_key_set.identity_pubkey
+            privkey: a_key_set.identity_private,
+            pubkey: c_key_set.identity_pubkey
           }) as string;
 
           const c_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
@@ -916,8 +916,8 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
           expect(res.body['posts'].length).to.equal(1);
 
           const shared_sercret = bitcoin.calculate_shared_secret({
-            private_key: b_key_set.identity_private,
-            public_key: a_key_set.identity_pubkey
+            privkey: b_key_set.identity_private,
+            pubkey: a_key_set.identity_pubkey
           }) as string;
 
           const a_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
@@ -940,8 +940,8 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
           res.should.have.status(200);
           expect(res.body['posts'].length).to.equal(1);
           const shared_sercret = bitcoin.calculate_shared_secret({
-            private_key: c_key_set.identity_private,
-            public_key: b_key_set.identity_pubkey
+            privkey: c_key_set.identity_private,
+            pubkey: b_key_set.identity_pubkey
           }) as string;
 
           const b_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;

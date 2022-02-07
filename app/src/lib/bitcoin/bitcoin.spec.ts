@@ -135,13 +135,13 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
     it("should extract_ecdsa_pair from extended key pair", async function () {
       let key_pair = await bitcoin.extract_ecdsa_pair(xkeys);
       if (key_pair instanceof Error) throw key_pair;
-      expect(key_pair.public_key).to.equal(expected_ecdsa_pair.public_key);
-      expect(key_pair.private_key).to.equal(expected_ecdsa_pair.private_key);
+      expect(key_pair.pubkey).to.equal(expected_ecdsa_pair.public_key);
+      expect(key_pair.privkey).to.equal(expected_ecdsa_pair.private_key);
     });
     it("should generate_shared_secret from alice public_key and bob private_key", async function () {
       
-      let shared_secret_0 = bitcoin.calculate_shared_secret({private_key: alice_pair.private_key, public_key: bob_pair.public_key});
-      let shared_secret_1 = bitcoin.calculate_shared_secret({private_key: bob_pair.private_key, public_key: alice_pair.public_key});
+      let shared_secret_0 = bitcoin.calculate_shared_secret({privkey: alice_pair.private_key, pubkey: bob_pair.public_key});
+      let shared_secret_1 = bitcoin.calculate_shared_secret({privkey: bob_pair.private_key, pubkey: alice_pair.public_key});
       console.log({shared_secret_0});
       expect(shared_secret_0).to.equal(shared_secret_1);
     

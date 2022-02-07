@@ -66,6 +66,8 @@ let user_post: UserPost = {
   derivation_scheme,
   cypher_json
 };
+let genesis_filter = 0;
+
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 describe("Initalizing Test: Profile Service", function () {
   before(async function () {
@@ -103,21 +105,24 @@ describe("Initalizing Test: Profile Service", function () {
       post3_id = response;
     });
     it("FIND new posts BY ID", async function () {
-      const response = await posts.findManyById([post1_id,post2_id,post3_id]);
+      const response = await posts.findManyById([post1_id,post2_id,post3_id], genesis_filter);
       if(response instanceof Error) throw response;
       expect(response.length ===3).to.equal(true);
     });
     it("FIND new posts BY OWNER", async function () {
-      const response = await posts.findAllByOwner(xpub);
+      const response = await posts.findAllByOwner(xpub, genesis_filter);
       if(response instanceof Error) throw response;
       expect(response.length ===3).to.equal(true);
     });
-    it("FIND new posts by Date",async function(){
-      let response = await posts.findByDate(Date.now()) as Array<UserPost>;
+    it("FIND new posts BY ID w/ upto date genesis_filter", async function () {
+      const response = await posts.findManyById([post1_id,post2_id,post3_id], Date.now());
+      if(response instanceof Error) throw response;
       expect(response.length === 0).to.equal(true);
-      response = await posts.findByDate(2) as Array<UserPost>;
-      console.log({response});
-      expect(response.length > 0).to.equal(true);
+    });
+    it("FIND new posts BY OWNER w/ upto date genesis_filter", async function () {
+      const response = await posts.findAllByOwner(xpub, Date.now());
+      if(response instanceof Error) throw response;
+      expect(response.length === 0).to.equal(true);
     });
     it("REMOVE posts by ID", async function () {
       const response = await posts.removeOneById(post1_id, xpub);
@@ -134,7 +139,7 @@ describe("Initalizing Test: Profile Service", function () {
       expect(response[0]).to.equal(post3_id);
     });
     it("FIND 0 posts BY OWNER", async function () {
-      const response = await posts.findAllByOwner(xpub);
+      const response = await posts.findAllByOwner(xpub, genesis_filter);
       if(response instanceof Error) throw response;
       expect(response.length === 0).to.equal(true);
     });

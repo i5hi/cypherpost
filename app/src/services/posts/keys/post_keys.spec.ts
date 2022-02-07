@@ -55,6 +55,7 @@ let xprv1 =  "xprv9yRZHsM6YXszFSuKhACgmV7DDX1GWzpJN7rL1CzWbvJ7F9uQ8y7UrjurKGdCSt
 let  shared_secret;
 let encryption_key;
 let decryption_key;
+let decryption_key2;
 const derivation_scheme = "m/0'/0'/0'";
 let cypher_json;
 let post1_id;
@@ -74,6 +75,7 @@ let post_key: PostDecryptionKey = {
   post_id: "5omePostID",
   decryption_key: ""
 };
+let genesis_filter = 0;
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 describe("Initalizing Test: Post Key Service", function () {
   before(async function () {
@@ -93,6 +95,8 @@ describe("Initalizing Test: Post Key Service", function () {
     shared_secret = bitcoin.calculate_shared_secret(pair);
     decryption_key = s5crypto.encryptAESMessageWithIV(encryption_key as string,shared_secret as string);
     if (decryption_key instanceof Error) throw decryption_key;
+    decryption_key2 = s5crypto.encryptAESMessageWithIV("dummy" as string,shared_secret as string);
+    if (decryption_key instanceof Error) throw decryption_key;
 
   });
 
@@ -105,7 +109,7 @@ describe("Initalizing Test: Post Key Service", function () {
     });
     it("CREATE new post decryption key from xpub1 to xpub", async function () {
       const response = await postKeys.addPostDecryptionKeys(xpub1, post_id_2,[
-        {reciever: xpub, decryption_key: decryption_key }
+        {reciever: xpub, decryption_key: decryption_key2 }
       ]);
       expect(response).to.equal(true);
     });
@@ -125,16 +129,26 @@ describe("Initalizing Test: Post Key Service", function () {
       expect(response).to.equal(true);
     });
     it("FIND post decryption key BY GIVER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByGiver(xpub);
+      const response = await postKeys.findPostDecryptionKeyByGiver(xpub, genesis_filter);
       expect(response[0]['giver']).to.equal(xpub);
       expect(response[0]['reciever']).to.equal(xpub1);
-      expect(response[0]['id']).to.equal(post_id);
+      expect(response[0]['post_id']).to.equal(post_id);
     });
     it("FIND post decryption key BY RECIEVER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByReciever(xpub1);
+      const response = await postKeys.findPostDecryptionKeyByReciever(xpub1, genesis_filter);
       expect(response[0]['reciever']).to.equal(xpub1);
       expect(response[0]['giver']).to.equal(xpub);
-      expect(response[0]['id']).to.equal(post_id);
+      expect(response[0]['post_id']).to.equal(post_id);
+    });
+
+    it("FIND post decryption key BY GIVER w/ upto date genesis_filter", async function () {
+      const response = await postKeys.findPostDecryptionKeyByGiver(xpub, Date.now()) as PostDecryptionKey[];
+      expect(response.length).to.equal(0);
+    });
+    it("FIND post decryption key BY RECIEVER w/ upto date genesis_filter", async function () {
+      const response = await postKeys.findPostDecryptionKeyByReciever(xpub1, Date.now()) as PostDecryptionKey[];
+      expect(response.length).to.equal(0);
+
     });
     it("DELETE post decryption key BY RECIEVER", async function () {
       const response = await postKeys.removePostDecryptionKeyByReciever(xpub, xpub1);
@@ -154,17 +168,17 @@ describe("Initalizing Test: Post Key Service", function () {
       const response = await postKeys.removePostDecryptionKeyByGiver(xpub);
       expect(response).to.equal(false);
     });
-    it("FIND post decryption key BY GIVER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByGiver(xpub);
-      expect(response['name']).to.equal("404");
+    it("FIND post decryption key BY GIVER 1", async function () {
+      const response = await postKeys.findPostDecryptionKeyByGiver(xpub, genesis_filter) as PostDecryptionKey[];
+      expect(response.length).to.equal(0);
     });
-    it("FIND post decryption key BY GIVER", async function () {
-      const response = await postKeys.findPostDecryptionKeyByGiver(xpub1);
+    it("FIND post decryption key BY GIVER 2", async function () {
+      const response = await postKeys.findPostDecryptionKeyByGiver(xpub1,genesis_filter);
       expect(response[0]['giver']).to.equal(xpub1);
       expect(response[0]['reciever']).to.equal(xpub);
-      expect(response[0]['id']).to.equal(post_id_2);
+      expect(response[0]['post_id']).to.equal(post_id_2);
     });
-    it("DELETE post decryption key BY giver SHOULD be false since no keys exist", async function () {
+    it("DELETE post decryption key BY giver", async function () {
       const response = await postKeys.removePostDecryptionKeyByGiver(xpub1);
       expect(response).to.equal(true);
     });

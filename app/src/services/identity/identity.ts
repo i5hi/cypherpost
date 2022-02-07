@@ -52,8 +52,8 @@ export class CypherpostIdentity implements IdentityInterface {
     return status;
   }
 
-  async all(): Promise<Array<UserIdentity> | Error> {
-    const identities = await store.readAll();
+  async all(genesis_filter: Number): Promise<Array<UserIdentity> | Error> {
+    const identities = await store.readAll(genesis_filter);
     return identities;
   }
 

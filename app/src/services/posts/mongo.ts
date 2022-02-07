@@ -94,12 +94,11 @@ export class MongoPostStore implements PostStore {
       return handleError(e);
     }
   }
-  async readMany(indexes: Array<string>, index_type: PostStoreIndex): Promise<Array<UserPost> | Error> {
+  async readMany(indexes: Array<string>, index_type: PostStoreIndex, genesis_filter: Number): Promise<Array<UserPost> | Error> {
     try {
-      const query = (index_type == PostStoreIndex.Owner) ? { owner: { $in: indexes } } 
-      : (index_type == PostStoreIndex.Ref) ? {reference: {$in: indexes}} 
-      : (index_type == PostStoreIndex.Genesis) ? {genesis: {"$gte": parseInt(indexes[0])}} 
-      : { id: { $in: indexes } } ;
+      const query = (index_type == PostStoreIndex.Owner) 
+      ? { owner: { $in: indexes }, genesis: {"$gte": genesis_filter } } 
+      : { id: { $in: indexes } , genesis: {"$gte": genesis_filter } } ;
 
       const docs = await postStore.find(query).sort({"genesis": -1}).exec();
       if (docs.length>0) {
@@ -126,9 +125,9 @@ export class MongoPostStore implements PostStore {
     }
   }
 
-  async readAll(): Promise<Array<UserPost> | Error> {
+  async readAll(genesis_filter: Number): Promise<Array<UserPost> | Error> {
     try {
-      const docs = await postStore.find({}).sort({"genesis": -1}).exec();
+      const docs = await postStore.find({genesis: {"$gte": genesis_filter} }).sort({"genesis": -1}).exec();
       if (docs.length>0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);

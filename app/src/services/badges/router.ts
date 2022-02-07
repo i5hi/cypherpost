@@ -20,10 +20,13 @@ const revokeTrustBadgeCheck = [
   val.check('revoking').exists()
 ];
 
+const checkGetBadges = [
+  val.check('filter').exists()
+]
 // ------------------ '(◣ ◢)' ---------------------
 router.use(badgesMiddleware);
 router.post("/trust",createTrustedBadgeCheck, handleTrust);
-router.get("/all",handleGetAllBadges);
+router.get("/all",checkGetBadges,handleGetAllBadges);
 router.get("/self",handleGetMyBadges);
 router.post("/trust/revoke",revokeTrustBadgeCheck, handleRevokeTrust);
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------

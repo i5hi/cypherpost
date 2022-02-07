@@ -74,6 +74,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       }
     } catch (e) {
       if (e['code'] && e['code'] == 11000) {
+        console.error({e});
         return handleError({
           code: 409,
           message: "Duplicate Index."
@@ -82,9 +83,9 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async readByGiver(giver: string): Promise<PostDecryptionKey[] | Error> {
+  async readByGiver(giver: string, genesis_filter: Number): Promise<PostDecryptionKey[] | Error> {
     try {
-      const query = { giver: { $in: giver } };
+      const query = { giver: { $in: giver } , genesis: {$gte: genesis_filter }};
 
       const docs = await postKeyStore.find(query).sort({ "genesis": -1 }).exec();
       if (docs.length > 0) {
@@ -110,9 +111,9 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       return handleError(e);
     }
   }
-  async readByReciever(reciever: string): Promise<PostDecryptionKey[] | Error> {
+  async readByReciever(reciever: string, genesis_filter: Number): Promise<PostDecryptionKey[] | Error> {
     try {
-      const query = { reciever: { $in: reciever } };
+      const query = { reciever: { $in: reciever } , genesis: {$gte: genesis_filter } };
 
       const docs = await postKeyStore.find(query).sort({ "genesis": -1 }).exec();
       if (docs.length > 0) {
@@ -141,7 +142,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
   // might not be needed
   async readByPostId(post_id: string): Promise<PostDecryptionKey[] | Error> {
     try {
-      const query = { post_id: { $in: post_id } };
+      const query = { post_id };
 
       const docs = await postKeyStore.find(query).sort({ "genesis": -1 }).exec();
       if (docs.length > 0) {

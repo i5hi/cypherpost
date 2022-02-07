@@ -6,8 +6,7 @@ import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostIdentity } from "../identity/identity";
-import { UserPost } from "./interface";
-import { PostDecryptionKey, PostKeyStoreUpdate } from "./keys/interface";
+import { PostKeyStoreUpdate } from "./keys/interface";
 import { CypherpostPostKeys } from "./keys/post_keys";
 import { CypherpostPosts } from "./posts";
 const { validationResult } = require('express-validator');
@@ -67,65 +66,67 @@ export async function handleCreatePost(req, res) {
   }
 }
 
-export async function handleGetPosts(req, res) {
-  const request = parseRequest(req);
-  try {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      throw {
-        code: 400,
-        message: errors.array()
-      }
-    }
+// export async function handleGetPosts(req, res) {
+//   const request = parseRequest(req);
+//   try {
+//     const errors = validationResult(req)
+//     if (!errors.isEmpty()) {
+//       throw {
+//         code: 400,
+//         message: errors.array()
+//       }
+//     }
 
-    const ids_removed = await posts.removeAllExpiredByOwner(req.headers['x-client-pubkey']);
-    if (ids_removed instanceof Error) throw ids_removed;
+//     const ids_removed = await posts.removeAllExpiredByOwner(req.headers['x-client-pubkey']);
+//     if (ids_removed instanceof Error) throw ids_removed;
 
-    if (ids_removed.length > 0)
-      ids_removed.map((id) => {
-        let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-pubkey'], id);
-        if (status instanceof Error) {
-          console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", { status });
-          throw status
-        };
-      });
+//     if (ids_removed.length > 0)
+//       ids_removed.map((id) => {
+//         let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-pubkey'], id);
+//         if (status instanceof Error) {
+//           console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", { status });
+//           throw status
+//         };
+//       });
 
-    let filtered_posts: UserPost[] = [];
-    let filtered_keys: PostDecryptionKey[] = [];
+//     let filtered_posts: UserPost[] = [];
+//     let filtered_keys: PostDecryptionKey[] = [];
 
-    const filters = request.body.filter;
+//     const filters = request.body.filter;
 
-    if (filters['owner']) {
-      const filtered = await posts.findAllByOwner(filters['owner']);
-      if (filtered instanceof Error) throw filtered;
-      filtered.map((post) => filtered_posts.push(post));
-    }
-    if (filters['reciever']) {
-      const filtered = await postKeys.findPostDecryptionKeyByReciever(filters['reciever']);
-      if (filtered instanceof Error) throw filtered;
-      filtered.map((post) => filtered_keys.push(post));
-    }
+//     const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
 
-    if (filters['genesis']) {
-      filtered_posts = filtered_posts.filter((post) => {
-        if (post.genesis > filters['genesis']) {
-          return post
-        }
-      });
-    }
+//     if (filters['owner']) {
+//       const filtered = await posts.findAllByOwner(filters['owner'], );
+//       if (filtered instanceof Error) throw filtered;
+//       filtered.map((post) => filtered_posts.push(post));
+//     }
+//     if (filters['reciever']) {
+//       const filtered = await postKeys.findPostDecryptionKeyByReciever(filters['reciever']);
+//       if (filtered instanceof Error) throw filtered;
+//       filtered.map((post) => filtered_keys.push(post));
+//     }
 
-    const response = {
-      posts: filtered_posts,
-      keys: filtered_keys
-    };
-    respond(200, response, res, request);
+//     if (filters['genesis']) {
+//       filtered_posts = filtered_posts.filter((post) => {
+//         if (post.genesis > filters['genesis']) {
+//           return post
+//         }
+//       });
+//     }
 
-  }
-  catch (e) {
-    const result = filterError(e, r_500, request);
-    respond(result.code, result.message, res, request);
-  }
-}
+//     const response = {
+//       posts: filtered_posts,
+//       keys: filtered_keys
+//     };
+//     respond(200, response, res, request);
+
+//   }
+//   catch (e) {
+//     const result = filterError(e, r_500, request);
+//     respond(result.code, result.message, res, request);
+//   }
+// }
 
 
 export async function handleGetMyPosts(req, res) {
@@ -151,10 +152,12 @@ export async function handleGetMyPosts(req, res) {
         };
       });
 
-    const my_posts = await posts.findAllByOwner(req.headers['x-client-pubkey']);
+      const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
+
+    const my_posts = await posts.findAllByOwner(req.headers['x-client-pubkey'], genesis_filter);
     if (my_posts instanceof Error) throw my_posts;
 
-    const my_posts_keys = await postKeys.findPostDecryptionKeyByGiver(req.headers['x-client-pubkey']);
+    const my_posts_keys = await postKeys.findPostDecryptionKeyByGiver(req.headers['x-client-pubkey'], genesis_filter);
     if (my_posts_keys instanceof Error) throw my_posts_keys;
 
     const response = {
@@ -183,10 +186,12 @@ export async function handleGetOthersPosts(req, res) {
     // find my trusted_by list of xpubs
     // find their posts
 
-    const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-pubkey']);
+    const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
+
+    const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-pubkey'], genesis_filter);
     if (reciever_keys instanceof Error) throw reciever_keys;
 
-    const posts_recieved = await posts.findManyById(reciever_keys.map(key => key.post_id));
+    const posts_recieved = await posts.findManyById(reciever_keys.map(key => key.post_id),  genesis_filter);
     if (posts_recieved instanceof Error) throw posts_recieved;
     let expired_ids = [];
 

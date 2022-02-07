@@ -1,17 +1,17 @@
 export interface BadgeInterface{
   create(from: string, to: string, type: BadgeType, nonce: string, signature: string): Promise<boolean | Error>;
-  findByGiver(from: string): Promise<Badge[] | Error>;
-  findByReciever(to:string):  Promise<Badge[] | Error>;
+  findByGiver(from: string, genesis_filter: Number): Promise<Badge[] | Error>;
+  findByReciever(to:string, genesis_filter: Number):  Promise<Badge[] | Error>;
   revoke(from: string, to: string, type: BadgeType): Promise<boolean | Error>;
   removeAllOfUser(pubkey: string): Promise<boolean | Error>;
-  getAll(): Promise<Badge[] | Error>;
+  getAll(genesis_filter: Number): Promise<Badge[] | Error>;
 }
 
 export interface BadgeStore{
   create(badge: Badge): Promise<boolean | Error>;
-  readAll():Promise<Badge[] | Error>;
-  readByGiver(giver: string): Promise<Badge[] | Error>;
-  readByReciever(reciever: string): Promise<Badge[] | Error>;
+  readAll(genesis_filter: Number):Promise<Badge[] | Error>;
+  readByGiver(giver: string, genesis_filter: Number): Promise<Badge[] | Error>;
+  readByReciever(reciever: string, genesis_filter: Number): Promise<Badge[] | Error>;
   removeByReciever(giver: string, reciever: string, type: BadgeType): Promise<boolean | Error>;
   removeAll(pubkey: string): Promise<boolean | Error>;
 }
