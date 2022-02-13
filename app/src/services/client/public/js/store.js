@@ -22,29 +22,89 @@ const crypto = require("crypto");
 const bitcoin = require("./bitcoin");
 
 
-function setIdentities(identities) {
-  sessionStorage.setItem("all_identities", JSON.stringify(identities));
-  return true;
-
-}
 function getIdentities() {
   const identities = sessionStorage.getItem("all_identities");
-  return (identities) ? JSON.parse(identities) : null
+  return (identities) ? JSON.parse(identities) : [];
 }
 
+function setIdentities(identities) {
+  const existing = getIdentities();
 
-function setAllBadges(all_badges) {
-  sessionStorage.setItem("all_badges", JSON.stringify(all_badges));
+  if (existing.length === 0)
+    sessionStorage.setItem(`all_identities`, JSON.stringify(identities));
+  else {
+    const updates = identities.filter((id => {
+      const in_existing = existing.find((existing_id) => existing_id.pubkey === id.pubkey);
+      if (!in_existing) return id;
+      else return;
+    }));
+    updates.map((update) => {
+      existing.push(update);
+    })
+    sessionStorage.setItem(`all_identities`, JSON.stringify(existing));
+  }
   return true;
 }
+
+
 function getAllBadges() {
   const all_badges = sessionStorage.getItem("all_badges");
-  return (all_badges) ? JSON.parse(all_badges) : null
+  return (all_badges) ? JSON.parse(all_badges) : []
+}
+
+function setAllBadges(all_badges) {
+  const existing = getAllBadges();
+
+  if (existing.length === 0)
+    sessionStorage.setItem(`all_badges`, JSON.stringify(all_badges));
+  else {
+    const updates = all_badges.filter((badge => {
+      const in_existing = existing.find((existing_badge) => existing_badge.hash === badge.hash);
+      if (!in_existing) return badge;
+      else return;
+    }));
+    updates.map((update) => {
+      existing.push(update);
+    })
+    sessionStorage.setItem(`all_badges`, JSON.stringify(existing));
+  }
+  return true;
+}
+
+function getMyBadges(my_badges) {
+  sessionStorage.getItem(`my_badges`, JSON.stringify(my_badges));
+  return (my_badges) ? JSON.parse(my_badges) : {given: [], recieved: []}
 }
 
 function setMyBadges(my_badges) {
-  sessionStorage.setItem(`my_badges`, JSON.stringify(my_badges));
+  const existing = getMyBadges();
+
+  if (existing.given.length===0 && existing.recieved.length === 0)
+    sessionStorage.setItem(`my_badges`, JSON.stringify(my_badges));
+  else {
+    const given_updates = my_badges.given.filter((badge => {
+      const in_existing = existing.given.find((existing_badge) => existing_badge.hash === badge.hash);
+      if (!in_existing) return badge;
+      else return;
+    }));
+
+    const recieved_updates = my_badges.recieved.filter((badge => {
+      const in_existing = existing.recieved.find((existing_badge) => existing_badge.hash === badge.hash);
+      if (!in_existing) return badge;
+      else return;
+    }));
+
+    given_updates.map((update) => {
+      existing.given.push(update);
+    });
+
+    recieved_updates.map((update) => {
+      existing.recieved.push(update);
+    });
+    sessionStorage.setItem(`my_badges`, JSON.stringify(existing));
+  }
   return true;
+
 }
 
 function setMnemonic(mnemonic, password) {
@@ -89,15 +149,53 @@ function getMyPreferences() {
 
 }
 
-function setMyTrades(posts) {
-  sessionStorage.setItem(`my_posts`, JSON.stringify(posts));
+function getMyTrades() {
+  const posts = sessionStorage.getItem("my_trades");
+  return (posts) ? JSON.parse(posts) : [];
+
+}
+
+function setMyTrades(trades) {
+  const existing = getMyTrades();
+
+  if (existing.length === 0)
+    sessionStorage.setItem(`my_trades`, JSON.stringify(trades));
+  else {
+    const updates = trades.filter((trade => {
+      const in_existing = existing.find((existing_trade) => existing_trade.id === trade.id);
+      if (!in_existing) return trade;
+      else return;
+    }));
+    updates.map((update) => {
+      existing.push(update);
+    })
+    sessionStorage.setItem(`my_trades`, JSON.stringify(existing));
+  }
   return true;
 }
 
-function getMyTrades() {
-  const posts = sessionStorage.getItem("my_posts");
-  return (posts) ? JSON.parse(posts) : null;
+function getOthersTrades() {
+  const trades = sessionStorage.getItem("others_trades");
+  return (trades) ? JSON.parse(trades) : [];
+}
 
+function setOthersTrades(trades) {
+  const existing = getOthersTrades();
+
+  if (existing.length === 0)
+    sessionStorage.setItem(`others_trades`, JSON.stringify(trades));
+  else {
+    const updates = trades.filter((trade => {
+      const in_existing = existing.find((existing_trade) => existing_trade.id === trade.id);
+      if (!in_existing) return trade;
+      else return;
+    }));
+    updates.map((update) => {
+      existing.push(update);
+    })
+    sessionStorage.setItem(`others_trades`, JSON.stringify(existing));
+  }
+  return true;
 }
 
 // function setMyProfileKeys(keys) {
@@ -119,26 +217,16 @@ function getMyKeyChain() {
   return (keys) ? JSON.parse(keys) : null;
 }
 
-function setOthersTrades(trades) {
-  sessionStorage.setItem(`others_trades`, JSON.stringify(trades));
-  return true;
-}
+// function setOthersProfiles(profiles) {
+//   sessionStorage.setItem(`others_profiles`, JSON.stringify(profiles));
+//   return true;
+// }
 
-function getOthersTrades() {
-  const trades = sessionStorage.getItem("others_trades");
-  return (trades) ? JSON.parse(trades) : null;
+// function getOthersProfiles() {
+//   const profiles = sessionStorage.getItem("others_profiles");
+//   return (profiles) ? JSON.parse(profiles) : null;
 
-}
-function setOthersProfiles(profiles) {
-  sessionStorage.setItem(`others_profiles`, JSON.stringify(profiles));
-  return true;
-}
-
-function getOthersProfiles() {
-  const profiles = sessionStorage.getItem("others_profiles");
-  return (profiles) ? JSON.parse(profiles) : null;
-
-}
+// }
 
 function checkMnemonic() {
   if (localStorage.getItem("my_mnemonic")) return true;
@@ -242,8 +330,8 @@ module.exports = {
   getMyProfile,
   setMyKeyChain,
   getMyKeyChain,
-  setOthersProfiles,
-  getOthersProfiles,
+  // setOthersProfiles,
+  // getOthersProfiles,
   setMyTrades,
   getMyTrades,
   setOthersTrades,
@@ -266,5 +354,6 @@ module.exports = {
   setMyUsername,
   getMyUsername,
   getLocalPrice,
-  setLocalPrice
+  setLocalPrice,
+  getMyBadges
 }

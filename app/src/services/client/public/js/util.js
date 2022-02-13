@@ -71,7 +71,7 @@ function decryptMyCypherPosts(cypherpost_parent, my_posts) {
 
 function segregateMyPlainPosts(plain_json_posts) {
   return {
-    profile: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
+    // profile: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
     trades: plain_json_posts.filter(post => post.plain_json.type === TRADE),
     preferences: plain_json_posts.filter(post => post.plain_json.type === PREFERENCES),
   }

@@ -152,6 +152,7 @@ function savePostContents() {
   console.log({ plain_post });
   store.setLatestPost(plain_post);
 }
+
 function displaySearchIdentities(idbs) {
   document.getElementById('found_userlist').innerHTML = "";
   idbs.map((id_and_badges) => {

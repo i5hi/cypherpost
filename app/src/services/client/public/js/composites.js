@@ -25,6 +25,7 @@ async function downloadAllIdentities(identity_parent) {
 }
 
 async function downloadAllIdentitiesAndBadges(identity_parent) {
+  
   const identities = await api.getAllIdentities(identity_parent)
   if (identities instanceof Error) return identities;
   const id_store = store.setIdentities(identities);
@@ -57,11 +58,11 @@ async function downloadAllMyPosts(identity_parent) {
 
   const latest_preference = removeDuplicatePreferences(identity_parent, segregated.preferences);
 
-  const profile = store.setMyProfile(segregated.profile);
+  // const profile = store.setMyProfile(segregated.profile);
   const trades = store.setMyTrades(segregated.trades);
   const preferences = store.setMyPreferences(latest_preference);
 
-  return profile && trades && preferences;
+  return trades && preferences;
 }
 
 async function downloadAllPostsForMe(identity_parent) {
@@ -73,10 +74,10 @@ async function downloadAllPostsForMe(identity_parent) {
 
   // find and remove posts by muted users
   const segregated = util.segregatePlainPostsForMe(plain_json_posts);
-  const profiles = store.setOthersProfiles(segregated.profiles);
+  // const profiles = store.setOthersProfiles(segregated.profiles);
   const trades = store.setOthersTrades(segregated.trades);
 
-  return profiles && trades;
+  return trades;
 }
 
 function removeDuplicatePreferences(identity_parent, prefs) {

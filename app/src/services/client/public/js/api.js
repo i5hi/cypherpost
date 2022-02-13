@@ -52,8 +52,14 @@ async function registerIdentity(identity_parent, username) {
   return response.status;
 }
 async function getAllIdentities(identity_parent) {
+  const existing = store.getIdentities();
+  console.log({existing})
+  const genesis_filter =  (existing.length>0)
+  ?existing.pop().genesis
+  :0;
+
   const nonce = Date.now();
-  const resource = "/identity/all";
+  const resource = "/identity/all?genesis_filter="+genesis_filter;
   const url = api_url + resource;
   const method = "GET";
   const body = {};
@@ -85,8 +91,12 @@ async function deleteMyIdentity(identity_parent) {
 
 }
 async function getAllBadges(identity_parent) {
+  const existing = store.getAllBadges();
+  const genesis_filter =  (existing.length>0)
+  ?existing.pop().genesis
+  :0;
   const nonce = Date.now();
-  const resource = "/badges/all";
+  const resource = "/badges/all?genesis_filter=" + genesis_filter;
   const url = api_url + resource;
   const method = "GET";
   const body = {};
@@ -100,8 +110,13 @@ async function getAllBadges(identity_parent) {
   return response.badges;
 }
 async function getMyBadges(identity_parent){
+  
+  const existing = store.getMyBadges();
+  const genesis_filter =  (existing.length>0)
+  ?existing.pop().genesis
+  :0;
   const nonce = Date.now();
-  const resource = "/badges/self";
+  const resource = "/badges/self?genesis_filter="+genesis_filter;
   const url = api_url + resource;
   const method = "GET";
   const body = {};
@@ -201,8 +216,12 @@ async function setPostVisibility(identity_parent, post_id, decryption_keys) {
   return response.status;
 }
 async function getMyPosts(identity_parent) {
+  const existing = store.getMyTrades();
+  const genesis_filter =  (existing.length>0)
+  ?existing.pop().genesis
+  :0;
   const nonce = Date.now();
-  const resource = "/posts/self";
+  const resource = "/posts/self?genesis_filter="+genesis_filter;
   const url = api_url + resource;
   const method = "GET";
   const body = {};
@@ -216,8 +235,13 @@ async function getMyPosts(identity_parent) {
   return response.posts;
 }
 async function getPostsForMe(identity_parent) {
+  const existing = store.getOthersTrades();
+  const genesis_filter =  (existing.length>0)
+  ?existing.pop().genesis
+  :0;
+
   const nonce = Date.now();
-  const resource = "/posts/others";
+  const resource = "/posts/others?genesis_filter="+genesis_filter;
   const url = api_url + resource;
   const method = "GET";
   const body = {};
