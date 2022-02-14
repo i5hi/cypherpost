@@ -29,8 +29,9 @@ async function downloadAllIdentitiesAndBadges(identity_parent) {
   const identities = await api.getAllIdentities(identity_parent)
   if (identities instanceof Error) return identities;
   const id_store = store.setIdentities(identities);
+  const local_ids = store.getIdentities();
 
-  const my_identity = identities.find((identity) => identity.pubkey == identity_parent.pubkey);
+  const my_identity = local_ids.find((identity) => identity.pubkey == identity_parent.pubkey);
   store.setMyUsername(my_identity.username);
 
   const all_badges = await api.getAllBadges(identity_parent);
