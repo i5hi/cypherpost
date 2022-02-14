@@ -46,8 +46,7 @@
       <br />
 
       <h3>Personally Identifiable Information</h3>
-      <p>Data that can be used to identify you, such as your name, ip address, email address, phone number, or other
-        information that can be used to contact you.</p>
+      <p>Data that can be used to identify you, such as your name, ip address, email address, phone number etc.</p>
       <p>All personally identifiable data is end-to-end encrypted on cypherpost servers.</p>
       <br />
 
@@ -57,21 +56,21 @@
 
       <hr>
       <h2>Implementation</h2>
-      <p>Cypherpost was built to maximize privacy.</p>
-      <p>This not only protects users, but also the admin.</p>
-      <br />
+      <p>Cypherpost servers will not accept plain-text posts.</p>
+
       <h3>Public Data</h3>
       <p>All data flowing through cypherpost clients and servers are end-to-end encrypted with the exception of:</p>
       <ul>
-        <li>Username</li>
-        <li>Identity PublicKey</li>
+        <li>Username(optional)</li>
+        <li>Identity PubKey</li>
         <li>Badges(Reputation)</li>
       </ul>
+      <p>This is the bare minimum required to allow users to discover other users and build a trusted network.</p>
 
       <h3>Private Data</h3>
       <ul>
-        <li>Profile</li>
         <li>Posts</li>
+        <li>Key Store</li>
       </ul>
 
       <h3>Data Analytics</h3>

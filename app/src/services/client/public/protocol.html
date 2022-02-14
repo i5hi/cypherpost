@@ -40,17 +40,20 @@
       <h1>Protocol</h1>
       <hr>
       
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> is an end-to-end encrypted social network protocol to selectively share posts among peers.</p>
-      <p>Its first application allows inviduals to post Bitcoin BUY/SELL advertisements in a private and pure peer-to-peer fashion.</p>
+      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> is a centralized end-to-end encrypted social network and data storage protocol to selectively share posts among peers.</p>
+      <p>Since all data is e2ee, servers have no incentive to censor or deny service to any specific user.</p>
+      <p>Its first application; implemented by this reference client, allows inviduals to discover trusted peers and post Bitcoin BUY/SELL advertisements in a private and pure peer-to-peer fashion.</p>
+      <p>Other clients can define their own use-cases enforced on the client-side while cypherpost servers are unaware of how clients are using the data being posted.</p>
       <hr>
 
       <h2>Features</h2>
       <br/>
-      <h3>Portable E2EE</h3>
+      <h3>Portable E2EE & Authentication</h3>
       
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> uses ECDSA keys and leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee.</p>
-      <p>In addition to e2ee, these keys are also used for authentication and signing the occurence of important actions - such as making a post or giving a badge.</p>
-      
+      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> uses ECDSA keys and leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee and client authentication.</p>
+      <p>Auth does not require usernames, passwords, emails or phone numbers since clients are expected to hold ECDSA keys with more entropy than a password could have. </p>
+      <p>Authentication is simply providing a signature with every request using the client's identity key.</p>
+      <p>This allows users to back-up a single mnemonic as they are used to with Bitcoin - with which they can recover their entire account on any device without complicated device registrations and old authentication methods that rely on access tokens that live beyond each individual request.</p>
       <br/>
 
       <h3>Badges</h3>
@@ -58,6 +61,7 @@
       <p>Giving someone a 'Trusted' badge, not only adds to their overall reputation but also specifically allows users to classify others into groups and more easily set visibility of their data.</p>
       <p>The value of a badge is subjective. If a user has 100 Trusted badges and only 10 of them are from users that you have given a badge to, then these 10 badges are more meaningful than the remaining 90.</p>
       <p>Cypherpost currently supports 3 badges: Trusted, Scammer & MetInPerson.</p>
+      <p>When a user gives another user a badge, a special signature is required in addition to auth, that all clients can view and verify, to ensure that network reputation is legitimate.</p>
       <br/>
 
       <h3>Muting Users</h3>
@@ -68,23 +72,28 @@
       <br/>
       <h3>ECDSA Shared Secret</h3>
       <p>At the core of the e2ee model is the ECDSA shared secret.</p>
-      <p>All users have a primary 'recipient' key pair comprised of a public key and private key.</p>
+      <p>All clients must implement a primary 'identity' key pair comprised of a public key and private key.</p>
       <p>Given two users, Alice and Bob; both can compute the same shared secret with their private key and the other's public key.</p>
       <p>This shared secret is used to encrypt the key that is used to encrypt/decrypt cypher_json posts.</p>
       <p>If a user is trusting 10 other users, they only encrypt their data with a single key; and then, encrypt this key with a shared secret computed for each of their trusted users (creating 10 copies of encrypted keys) and share the encrypted key with each of them; which they can each use to decrypt on their end and use to view the cypherdata.</p>
       <br/>
-      <h3>Revocation</h3>
-      <p>When you stop trusting a user (revoke trust) you reencrypt your cypherdata with a new key and repeat the process of computing the shared secret and encrypting the key with the shared secret for all your remaining trusted users.</p>
-      <br/>
       <h3>Bitcoin Keys</h3>
       <p>The BIP32 key derivation model is used to derive an infinite amount of child keys that are used to encrypt/decrypt all data flowing through cypherpost. This is done by deriving a new key from the user's master key which is derived from a BIP39 seed.</p>
-      <p>We use the following path standard:  <span class="" >m/purpose'/service'/services'/index'/revoke'</span>; with 3 main services:</p>
+      <p>We use the following path standard:  <span class=""><b>m/purpose'/network'/usecase'/index'/revoke'</b></span></p>
+      <p>This reference client defines 3 use-cases:</p>
       <ul>
-        <li>Identity: Used to authenticate and compute shared secrets</li>
-        <li>Preferences: Used to store client side preferences</li>
-        <li>Posts: Used to encrypt/decrypt your posts</li>
+        <li>Identity: Used to sign requests (authentication) and compute shared secrets.</li>
+        <li>Preference: Used to encrypt/decrypt preferences. We store our mute list and last_used_derivation_paths here to ensure we rotate keys consistently.</li>
+        <li>Trade: Used to encrypt/decrypt trades.</li>
       </ul>
       <p>More information can be found at <a href="https://github.com/i5hi/cypherpost/blob/main/docs/KeyManagement.md">KeyManagement in cypherpost.</a></p>
+      <h3>CypherJSON</h3>
+      <p>Users post data to cypherpost as encrypted stringified JSON.</p>
+      <p>By specifying a `type` field in this JSON, client applications can store their own data models for whatever use case they require.</p>
+      <p>Each different `type` should also use a dedicated key derivation path at the `usecase` path; to encrypt/decrypt and rotate encryption keys.</p>
+      <p>When a client decrypts cypher_json it first checks the type and then accordingly updates its state.</p>
+      <p>This makes cypherpost a dumb data store, off-loading all the computational work onto clients.</p>
+      <p></p>
     </div>
     </div>
 
