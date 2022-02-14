@@ -9,6 +9,7 @@
 - ECDSA Shared Secrets are used per identity, to encrypt decryption keys in transit.
 - Badges form a reputation system and help build a trusted network.
 - Value of badges are subjective and based on who the givers are.
+- Issuance of badges can be verified by all clients
 =======
 
 ### Server LIVE at https://cypherpost.io/api/v2
@@ -91,32 +92,11 @@ docker exec -it database mongo
 
 use cypherpost
 db.auth('cp','secret')
-db.auths.find().pretty()
-db.keys.find().pretty()
-db.profiles.find().pretty()
+db.identities.find().pretty()
+db.badges.find().pretty()
 db.posts.find().pretty()
+db.post_keys.find().pretty()
 
-# to insert a document
-let doc = {
-  "username": "ravi",
-  "pass256": "somepass256"
-};
-db.auths.insert(doc)
-
-# to update a document
-# !! ALWAYS USE $set !!
-# IF NOT, IT WILL REPLACE RATHER THAN UPDATE
-
-let query = {
-  "username": "ravi"
-}
-let update = {
-  $set:{
-    "pass256": "newPass256"
-  }
-}
-
-db.auths.updateOne(query,update)
 
 # Checkout infra/mongo/scripts for more.
 
