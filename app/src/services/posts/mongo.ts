@@ -26,7 +26,7 @@ const post_schema = new mongoose.Schema(
     },
     reference: {
       type: String,
-      required: false,
+      required: true,
       index: true,
     },
     // no filters
@@ -117,7 +117,7 @@ export class MongoPostStore implements PostStore {
             id: doc["id"],
             genesis: doc["genesis"],
             expiry: doc["expiry"],
-            reference: doc['reference'],
+            reference: doc['reference'] || "NONE",
             cypher_json: doc["cypher_json"],
             derivation_scheme: doc["derivation_scheme"],
           }
@@ -144,7 +144,7 @@ export class MongoPostStore implements PostStore {
             id: doc["id"],
             genesis: doc["genesis"],
             expiry: doc["expiry"],
-            reference: doc['reference'],
+            reference: doc['reference'] || "NONE",
             cypher_json: doc["cypher_json"],
             derivation_scheme: doc["derivation_scheme"],
           }

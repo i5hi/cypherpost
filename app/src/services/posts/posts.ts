@@ -16,8 +16,19 @@ export class CypherpostPosts implements PostInterface {
   //   return store.readMany([after.toString()],PostStoreIndex.Genesis);
   // }
 
-  findAllByOwner(owner: string, genesis_filter: Number): Promise<UserPost[] | Error> {
-    return store.readMany([owner], PostStoreIndex.Owner, genesis_filter);
+  async findAllByOwner(owner: string, genesis_filter: Number): Promise<UserPost[] | Error> {
+    try{
+      const by_owner = await store.readMany([owner], PostStoreIndex.Owner, genesis_filter);
+      if(by_owner instanceof Error) return by_owner
+
+      const include_references = await store.readMany([...by_owner.map(post => post.id)], PostStoreIndex.PostId, genesis_filter);
+      if(include_references instanceof Error) return include_references
+      
+      return include_references;
+    }
+    catch(e){
+      return handleError(e);
+    }
   }
 
   async create(
@@ -34,7 +45,7 @@ export class CypherpostPosts implements PostInterface {
       expiry,
       cypher_json,
       derivation_scheme,
-      reference
+      reference: reference || "NONE"
     }
 
     const status = await store.createOne(post);

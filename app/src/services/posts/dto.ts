@@ -92,11 +92,10 @@ export async function handleGetMyPosts(req, res) {
     const my_posts = await posts.findAllByOwner(req.headers['x-client-pubkey'], genesis_filter);
     if (my_posts instanceof Error) throw my_posts;
 
-    const my_posts_keys = await postKeys.findPostDecryptionKeyByGiver(req.headers['x-client-pubkey'], genesis_filter);
-    if (my_posts_keys instanceof Error) throw my_posts_keys;
 
     const response = {
-      posts: my_posts,
+      posts: my_posts.filter(post => post.reference? !post.reference.startsWith('s5'): false),
+      references: my_posts.filter(post => post.reference ? post.reference.startsWith('s5'): false) || []
     };
     respond(200, response, res, request);
 
@@ -148,14 +147,16 @@ export async function handleGetOthersPosts(req, res) {
 
 
     const posts_and_keys = [];
+    
     posts_recieved.filter(function (post) {
-      const key = reciever_keys.find(key => key.post_id === post.id);
+      const key = reciever_keys.find(key => key.post_id === post.id || key.post_id === post.reference);
       key ? posts_and_keys.push({ ...post, decryption_key: key.decryption_key }) : null;
     });
 
     console.log({ posts_and_keys });
     const response = {
-      posts: posts_and_keys,
+      posts: posts_and_keys.filter(post => !post.reference.startsWith('s5')),
+      references: posts_and_keys.filter(post => post.reference.startsWith('s5')) || []
     };
 
     respond(200, response, res, request);
