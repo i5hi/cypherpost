@@ -45,12 +45,6 @@ function decryptCypherPostsFromOthers(identity_parent, posts_from_others) {
   });
   return plain_json_posts;
 }
-function segregatePlainPostsForMe(plain_json_posts) {
-  return {
-    profiles: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
-    trades: plain_json_posts.filter(post => post.plain_json.type === TRADE),
-  }
-}
 
 function decryptMyCypherPosts(cypherpost_parent, my_posts) {
   let plain_json_posts = [];
@@ -69,6 +63,12 @@ function decryptMyCypherPosts(cypherpost_parent, my_posts) {
 
 }
 
+function segregatePlainPostsForMe(plain_json_posts) {
+  return {
+    profiles: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
+    trades: plain_json_posts.filter(post => post.plain_json.type === TRADE),
+  }
+}
 function segregateMyPlainPosts(plain_json_posts) {
   return {
     // profile: plain_json_posts.filter(post => post.plain_json.type === PROFILE),

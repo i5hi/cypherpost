@@ -13,9 +13,6 @@ import { handleError } from "../errors/e";
 import { BitcoinKeyOperations, ECDSAKeys, ExtendedKeys } from "./interface";
 
 
-var bitcoin = require('bitcoinjs-lib') // v4.x.x
-var bitcoinMessage = require('bitcoinjs-message')
-
 const key_path = process.env.KEY_PATH;
 
 export class CypherpostBitcoinOps implements BitcoinKeyOperations {

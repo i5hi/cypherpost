@@ -2,7 +2,6 @@
 cypherpost.io
 Developed @ Stackmate India
 */
-import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostIdentity } from "../identity/identity";
@@ -11,7 +10,6 @@ import { CypherpostPostKeys } from "./keys/post_keys";
 import { CypherpostPosts } from "./posts";
 const { validationResult } = require('express-validator');
 
-const s5crypto = new S5Crypto();
 const posts = new CypherpostPosts();
 const identity = new CypherpostIdentity();
 const postKeys = new CypherpostPostKeys();
@@ -66,69 +64,6 @@ export async function handleCreatePost(req, res) {
   }
 }
 
-// export async function handleGetPosts(req, res) {
-//   const request = parseRequest(req);
-//   try {
-//     const errors = validationResult(req)
-//     if (!errors.isEmpty()) {
-//       throw {
-//         code: 400,
-//         message: errors.array()
-//       }
-//     }
-
-//     const ids_removed = await posts.removeAllExpiredByOwner(req.headers['x-client-pubkey']);
-//     if (ids_removed instanceof Error) throw ids_removed;
-
-//     if (ids_removed.length > 0)
-//       ids_removed.map((id) => {
-//         let status = postKeys.removePostDecryptionKeyById(req.headers['x-client-pubkey'], id);
-//         if (status instanceof Error) {
-//           console.error("ERRORED WHILE DELETING EXPIRED POST KEYS", { status });
-//           throw status
-//         };
-//       });
-
-//     let filtered_posts: UserPost[] = [];
-//     let filtered_keys: PostDecryptionKey[] = [];
-
-//     const filters = request.body.filter;
-
-//     const genesis_filter = request.body['filter']?request.body['filter']['genesis']?request.body['filter']['genesis']:0:0;
-
-//     if (filters['owner']) {
-//       const filtered = await posts.findAllByOwner(filters['owner'], );
-//       if (filtered instanceof Error) throw filtered;
-//       filtered.map((post) => filtered_posts.push(post));
-//     }
-//     if (filters['reciever']) {
-//       const filtered = await postKeys.findPostDecryptionKeyByReciever(filters['reciever']);
-//       if (filtered instanceof Error) throw filtered;
-//       filtered.map((post) => filtered_keys.push(post));
-//     }
-
-//     if (filters['genesis']) {
-//       filtered_posts = filtered_posts.filter((post) => {
-//         if (post.genesis > filters['genesis']) {
-//           return post
-//         }
-//       });
-//     }
-
-//     const response = {
-//       posts: filtered_posts,
-//       keys: filtered_keys
-//     };
-//     respond(200, response, res, request);
-
-//   }
-//   catch (e) {
-//     const result = filterError(e, r_500, request);
-//     respond(result.code, result.message, res, request);
-//   }
-// }
-
-
 export async function handleGetMyPosts(req, res) {
   const request = parseRequest(req);
   try {
@@ -162,7 +97,6 @@ export async function handleGetMyPosts(req, res) {
 
     const response = {
       posts: my_posts,
-      keys: my_posts_keys
     };
     respond(200, response, res, request);
 
@@ -222,7 +156,6 @@ export async function handleGetOthersPosts(req, res) {
     console.log({ posts_and_keys });
     const response = {
       posts: posts_and_keys,
-      keys: reciever_keys
     };
 
     respond(200, response, res, request);
