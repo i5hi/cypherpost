@@ -42,7 +42,7 @@ let cypher_json;
 let post1_id;
 let post2_id;
 let post3_id;
-
+const reference = "NONE";
 /**
  * 
  * UPdate bitcoin ops to use derivation path string
@@ -89,18 +89,18 @@ describe("Initalizing Test: Profile Service", function () {
 
   describe("POST SERVICE OPERATIONS:", async function () {
     it("CREATE a new post (expired)", async function () {
-      const response = await posts.create(xpub,user_post.expiry,cypher_json,derivation_scheme);
+      const response = await posts.create(xpub,user_post.expiry,cypher_json,derivation_scheme, reference);
       expect(response).to.be.a("string");
       post1_id = response;
     });
     it("CREATE a new post (expired)", async function () {
-      const response = await posts.create(xpub,user_post.expiry,cypher_json,derivation_scheme);
+      const response = await posts.create(xpub,user_post.expiry,cypher_json,derivation_scheme, reference);
       expect(response).to.be.a("string");
       post2_id = response;
 
     });
     it("CREATE a new post (not-expired)", async function () {
-      const response = await posts.create(xpub,user_post.expiry + 100000,cypher_json,derivation_scheme);
+      const response = await posts.create(xpub,user_post.expiry + 100000,cypher_json,derivation_scheme, reference);
       expect(response).to.be.a("string");
       post3_id = response;
     });

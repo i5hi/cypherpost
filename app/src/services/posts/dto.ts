@@ -50,7 +50,7 @@ export async function handleCreatePost(req, res) {
       }
     }
 
-    const id = await posts.create(req.headers['x-client-pubkey'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme);
+    const id = await posts.create(req.headers['x-client-pubkey'], req.body.expiry, req.body.cypher_json, req.body.derivation_scheme, req.body.reference);
     if (id instanceof Error) throw id;
 
     const response = {

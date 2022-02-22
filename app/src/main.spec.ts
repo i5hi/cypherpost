@@ -895,7 +895,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
             pubkey: c_key_set.identity_pubkey
           }) as string;
 
-          const c_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
+          const c_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].decryption_key, shared_sercret) as string;
           const c_decrypted_post = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].cypher_json, c_decryption_key) as string;
           expect(JSON.parse(c_decrypted_post)['type']).to.equal(c_post_set.plain.type);
           done();
@@ -920,7 +920,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
             pubkey: a_key_set.identity_pubkey
           }) as string;
 
-          const a_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
+          const a_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].decryption_key, shared_sercret) as string;
           const a_decrypted_post = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].cypher_json, a_decryption_key) as string;
           expect(JSON.parse(a_decrypted_post)['type']).to.equal(a_post_set.plain.type);
           done();
@@ -944,7 +944,7 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
             pubkey: b_key_set.identity_pubkey
           }) as string;
 
-          const b_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['keys'][0].decryption_key, shared_sercret) as string;
+          const b_decryption_key = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].decryption_key, shared_sercret) as string;
           const b_decrypted_post = s5crypto.decryptAESMessageWithIV(res.body['posts'][0].cypher_json, b_decryption_key) as string;
           expect(JSON.parse(b_decrypted_post)['type']).to.equal(b_post_set.plain.type);
           done();
