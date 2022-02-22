@@ -87,15 +87,18 @@ export async function handleGetMyPosts(req, res) {
         };
       });
 
-      const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
+    const genesis_filter = request.query['genesis_filter'] ? request.query['genesis_filter'] : 0;
 
     const my_posts = await posts.findAllByOwner(req.headers['x-client-pubkey'], genesis_filter);
     if (my_posts instanceof Error) throw my_posts;
 
+    my_posts.map((post) => {
+      post.reference = post.reference ? post.reference : "NONE";
+    });
 
     const response = {
-      posts: my_posts.filter(post => post.reference? !post.reference.startsWith('s5'): false),
-      references: my_posts.filter(post => post.reference ? post.reference.startsWith('s5'): false) || []
+      posts: my_posts.filter(post => !post.reference.startsWith('s5')),
+      references: my_posts.filter(post => post.reference.startsWith('s5')) || []
     };
     respond(200, response, res, request);
 
@@ -119,12 +122,12 @@ export async function handleGetOthersPosts(req, res) {
     // find my trusted_by list of xpubs
     // find their posts
 
-    const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
+    const genesis_filter = request.query['genesis_filter'] ? request.query['genesis_filter'] : 0;
 
     const reciever_keys = await postKeys.findPostDecryptionKeyByReciever(req.headers['x-client-pubkey'], genesis_filter);
     if (reciever_keys instanceof Error) throw reciever_keys;
 
-    const posts_recieved = await posts.findManyById(reciever_keys.map(key => key.post_id),  genesis_filter);
+    const posts_recieved = await posts.findManyById(reciever_keys.map(key => key.post_id), genesis_filter);
     if (posts_recieved instanceof Error) throw posts_recieved;
     let expired_ids = [];
 
@@ -147,7 +150,7 @@ export async function handleGetOthersPosts(req, res) {
 
 
     const posts_and_keys = [];
-    
+
     posts_recieved.filter(function (post) {
       const key = reciever_keys.find(key => key.post_id === post.id || key.post_id === post.reference);
       key ? posts_and_keys.push({ ...post, decryption_key: key.decryption_key }) : null;

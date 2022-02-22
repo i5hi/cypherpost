@@ -24,7 +24,13 @@ export class CypherpostPosts implements PostInterface {
       const include_references = await store.readMany([...by_owner.map(post => post.id)], PostStoreIndex.PostId, genesis_filter);
       if(include_references instanceof Error) return include_references
       
-      return include_references;
+      return include_references.map((ref) => {
+        const reference_post = by_owner.find(post => post.id === ref.reference);
+        if(reference_post) {
+          ref.derivation_scheme = reference_post.derivation_scheme;
+        }
+        return ref;
+      });
     }
     catch(e){
       return handleError(e);
