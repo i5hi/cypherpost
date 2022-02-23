@@ -92,13 +92,8 @@ export async function handleGetMyPosts(req, res) {
     const my_posts = await posts.findAllByOwner(req.headers['x-client-pubkey'], genesis_filter);
     if (my_posts instanceof Error) throw my_posts;
 
-    my_posts.map((post) => {
-      post.reference = post.reference ? post.reference : "NONE";
-    });
-
     const response = {
-      posts: my_posts.filter(post => !post.reference.startsWith('s5')),
-      references: my_posts.filter(post => post.reference.startsWith('s5')) || []
+      posts: my_posts
     };
     respond(200, response, res, request);
 
@@ -108,6 +103,7 @@ export async function handleGetMyPosts(req, res) {
     respond(result.code, result.message, res, request);
   }
 }
+
 export async function handleGetOthersPosts(req, res) {
   const request = parseRequest(req);
   try {
@@ -148,18 +144,15 @@ export async function handleGetOthersPosts(req, res) {
         };
       });
 
-
     const posts_and_keys = [];
 
     posts_recieved.filter(function (post) {
-      const key = reciever_keys.find(key => key.post_id === post.id || key.post_id === post.reference);
+      const key = reciever_keys.find(key => key.post_id === post.id);
       key ? posts_and_keys.push({ ...post, decryption_key: key.decryption_key }) : null;
     });
 
-    console.log({ posts_and_keys });
     const response = {
-      posts: posts_and_keys.filter(post => !post.reference.startsWith('s5')),
-      references: posts_and_keys.filter(post => post.reference.startsWith('s5')) || []
+      posts: posts_and_keys,
     };
 
     respond(200, response, res, request);

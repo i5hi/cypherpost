@@ -19,7 +19,8 @@ const checkCreatePost = [
 
 const checkGetPosts=[
   val.check('genesis_filter').optional()
-]
+];
+
 const checkUpdatePutKeys = [
   val.check('decryption_keys').exists().isArray(),
   val.check('post_id').exists()

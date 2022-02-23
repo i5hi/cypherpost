@@ -12,29 +12,9 @@ const store = new MongoPostStore();
 const uuid = new S5UID();
 
 export class CypherpostPosts implements PostInterface {
-  // findByDate(after: number): Promise<UserPost[] | Error> {
-  //   return store.readMany([after.toString()],PostStoreIndex.Genesis);
-  // }
 
   async findAllByOwner(owner: string, genesis_filter: Number): Promise<UserPost[] | Error> {
-    try{
-      const by_owner = await store.readMany([owner], PostStoreIndex.Owner, genesis_filter);
-      if(by_owner instanceof Error) return by_owner
-
-      const include_references = await store.readMany([...by_owner.map(post => post.id)], PostStoreIndex.PostId, genesis_filter);
-      if(include_references instanceof Error) return include_references
-      
-      return include_references.map((ref) => {
-        const reference_post = by_owner.find(post => post.id === ref.reference);
-        if(reference_post) {
-          ref.derivation_scheme = reference_post.derivation_scheme;
-        }
-        return ref;
-      });
-    }
-    catch(e){
-      return handleError(e);
-    }
+    return store.readMany([owner], PostStoreIndex.Owner, genesis_filter);
   }
 
   async create(
@@ -97,7 +77,7 @@ export class CypherpostPosts implements PostInterface {
       }
     }
     catch (e) {
-      console.error({ e });
+      // console.error({ e });
       return handleError(e)
     }
   }
@@ -120,7 +100,7 @@ export class CypherpostPosts implements PostInterface {
       }
     }
     catch (e) {
-      console.error({ e });
+      // console.error({ e });
       return handleError(e)
     }
   }

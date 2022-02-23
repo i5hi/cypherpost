@@ -7,10 +7,9 @@ export interface PostInterface{
   create(owner: string, expiry: number, cypher_json: string, derivation_scheme: string, reference?: string): Promise<string | Error>;
   findManyById(ids: Array<string>, genesis_filter: Number): Promise<Array<UserPost> | Error>;
   findAllByOwner(owner: string, genesis_filter: Number): Promise<Array<UserPost> | Error>; 
-  // findByDate(after: number): Promise<Array<UserPost> | Error>;
 
   removeOneById(id: string, owner: string): Promise<boolean | Error>;
-  removeManyById(ids: string[]): Promise<boolean | Error>
+  removeManyById(ids: string[]): Promise<boolean | Error>;
   removeAllByOwner(owner:string): Promise<Array<string> | Error>;
   removeAllExpired(owner:string): Promise<Array<string> | Error>;
   removeAllExpiredByOwner(owner:string): Promise<Array<string> | Error>;

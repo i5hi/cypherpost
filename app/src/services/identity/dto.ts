@@ -3,6 +3,7 @@ cypherpost.io
 Developed @ Stackmate India
 */
 import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
+import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostBadges } from "../badges/badges";
@@ -16,8 +17,9 @@ const identity = new CypherpostIdentity();
 const badges = new CypherpostBadges();
 const posts = new CypherpostPosts();
 const posts_keys = new CypherpostPostKeys();
-
 const bitcoin = new CypherpostBitcoinOps();
+
+const crypto = new S5Crypto();
 
 export async function identityMiddleware(req, res, next) {
   const request = parseRequest(req);
@@ -37,14 +39,13 @@ export async function identityMiddleware(req, res, next) {
     // console.log({pubkey});
     
     let verified = await bitcoin.verify(message, signature, pubkey);
-    // console.log({verified})
     if (verified instanceof Error) throw verified;
-    if (!verified) throw{
+    else if (!verified) throw{
       code: 401,
       message: "Invalid Request Signature."
     };
-    
     else next();
+    
   }
   catch (e) {
     const result = filterError(e, r_500, request);
@@ -141,6 +142,25 @@ export async function handleDeleteIdentity(req, res) {
     
     const response = {
       status: true
+    };
+
+    respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+}
+
+export async function handleGetServerIdentity(req, res) {
+  const request = parseRequest(req);
+
+  try {
+    const keys = await crypto.readECDHPairFromFile();
+    if(keys instanceof Error) throw keys;
+    
+    const response = {
+      pubkey: keys.pubkey
     };
 
     respond(200, response, res, request);

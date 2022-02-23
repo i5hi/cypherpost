@@ -410,6 +410,30 @@ async function createRevokeTrustRequest(revoke: string, key_set: TestKeySet) {
     pubkey: key_set.identity_pubkey
   }
 }
+async function createDeleteIdentityRequest(key_set: TestKeySet) {
+  const endpoint = "/api/v2/identity";
+  const nonce = Date.now();
+  const body = {};
+  const signature = await bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, key_set.identity_private) as string;
+  return {
+    nonce,
+    endpoint,
+    signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
+async function createServerIdentityRequest(key_set: TestKeySet) {
+  const endpoint = "/api/v2/identity/server";
+  const nonce = Date.now();
+  const body = {};
+  const signature = await bitcoin.sign(`GET ${endpoint} ${JSON.stringify(body)} ${nonce}`, key_set.identity_private) as string;
+  return {
+    nonce,
+    endpoint,
+    signature,
+    pubkey: key_set.identity_pubkey
+  }
+}
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
 
 describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
@@ -1034,60 +1058,77 @@ describe("CYPHERPOST: API BEHAVIOUR SIMULATION", function () {
     })
   });
 
-  describe.skip("GLOBAL", function () {
-    it("DELETES ALL CREATED IDENTITIES AND ALL ASSOCIATIONS", async function (done) {
-      endpoint = "/api/v2/identity";
-      body = {};
-      nonce = Date.now();
-      request_signature = await bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, a_key_set.identity_private);
+  describe("GLOBAL", function () {
+    let request_a,
+      request_b,
+      request_c;
+      
+    it("CREATES SERVER IDENTITY REQUEST", async function () {
+      request_a = await createServerIdentityRequest(a_key_set);
+    });
+    it("GETS SERVER PUBKEY", function (done) {
       chai
         .request(server)
-        .delete(endpoint)
+        .get(request_a.endpoint)
         .set({
-          "x-client-pubkey": a_key_set.identity_pubkey,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
+        })
+        .end((err, res) => {
+          res.should.have.status(200);
+          done();
+        });
+    })
+
+    it("CREATES DELETE REQUEST", async function () {
+      request_a = await createDeleteIdentityRequest(a_key_set);
+      request_b = await createDeleteIdentityRequest(b_key_set);
+      request_c = await createDeleteIdentityRequest(c_key_set);
+    });
+
+    it("DELETES ALL CREATED IDENTITIES AND ALL ASSOCIATIONS", function (done) {
+      chai
+        .request(server)
+        .delete(request_a.endpoint)
+        .set({
+          "x-client-pubkey": request_a.pubkey,
+          "x-nonce": request_a.nonce,
+          "x-client-signature": request_a.signature,
         })
         .send(body)
         .end((err, res) => {
           res.should.have.status(200);
         });
 
-      nonce = Date.now();
-      request_signature = await bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, b_key_set.identity_private);
       chai
         .request(server)
-        .delete(endpoint)
+        .delete(request_b.endpoint)
         .set({
-          "x-client-pubkey": b_key_set.identity_pubkey,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_b.pubkey,
+          "x-nonce": request_b.nonce,
+          "x-client-signature": request_b.signature,
         })
         .send(body)
         .end((err, res) => {
           res.should.have.status(200);
         });
 
-      nonce = Date.now();
-      request_signature = await bitcoin.sign(`DELETE ${endpoint} ${JSON.stringify(body)} ${nonce}`, c_key_set.identity_private);
       chai
         .request(server)
-        .delete(endpoint)
+        .delete(request_c.endpoint)
         .set({
-          "x-client-pubkey": c_key_set.identity_pubkey,
-          "x-nonce": nonce,
-          "x-client-signature": request_signature,
+          "x-client-pubkey": request_c.pubkey,
+          "x-nonce": request_c.nonce,
+          "x-client-signature": request_c.signature,
         })
         .send(body)
         .end((err, res) => {
           res.should.have.status(200);
           done();
         });
+    });
 
-    });
-    it.skip("DUMPS ENTIRE DATABASE", function (done) {
-      done();
-    });
   });
 
 });

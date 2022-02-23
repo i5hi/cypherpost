@@ -7,8 +7,12 @@ ENV USER_ID=1000
 RUN npm install -g typescript mocha ts-node npm@latest
 RUN usermod -u $USER_ID node
 RUN mkdir -p /home/node/cypherpost/app /home/node/.keys
+RUN touch /home/node/.keys/cypherpost
+# COPY /home/ishi/.keys /home/node/.keys
+
 RUN chown -R node /home/node/cypherpost/app /home/node/.keys
 WORKDIR /home/node/cypherpost/app/
+
 #------------------------------------------------------------------------------------
 USER node
 
@@ -18,6 +22,8 @@ ENV DB_IP="database"
 ENV DB_PORT="27017"
 ENV DB_NAME="cypherpost"
 ENV DB_AUTH="cp:secret"
+ENV KEY_PATH="/home/node/.keys/"
+
 
 #------------------------------------------------------------------------------------
 VOLUME ["/home/node/cypherpost/app", "/home/node/.keys"]

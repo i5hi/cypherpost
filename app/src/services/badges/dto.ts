@@ -27,7 +27,7 @@ export async function badgesMiddleware(req, res, next) {
     const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
-    // console.log({message});
+
     const status = await identity.verify(pubkey, message, signature);
     if (status instanceof Error) throw status;
     else next();

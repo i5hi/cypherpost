@@ -74,7 +74,7 @@ export class MongoPostKeyStore implements PostDecryptionKeyStore {
       }
     } catch (e) {
       if (e['code'] && e['code'] == 11000) {
-        console.error({e});
+        // console.error({e});
         return handleError({
           code: 409,
           message: "Duplicate Index."

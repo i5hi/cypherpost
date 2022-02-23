@@ -25,8 +25,8 @@ export class CypherpostBadges implements BadgeInterface {
     try{
   
       const trust_message = `${from}:${to}:${type.toString()}:${nonce}`;
-      console.log({trust_message});
-      console.log({signature});
+      // console.log({trust_message});
+      // console.log({signature});
       const verify = await bitcoin.verify(trust_message, signature,from);
       if (verify instanceof Error) return verify;
       if (!verify) return handleError({
@@ -43,7 +43,7 @@ export class CypherpostBadges implements BadgeInterface {
         signature,
       };
 
-      console.log({badge})
+      // console.log({badge})
       return store.create(badge);
     }catch(e){
       handleError(e);

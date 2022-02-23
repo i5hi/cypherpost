@@ -11,9 +11,11 @@ export interface CryptoInterface {
  getECDHPair(): ECDHPair | Error;
  encryptAESMessageWithIV(text: string, key_hex: string): string  | Error;
  decryptAESMessageWithIV(iv_text_crypt: string, key_hex: string): string  | Error;
+
+ readECDHPairFromFile():Promise<ECDHPair | Error>;
 }
 
 export interface  ECDHPair{
- private_key: string;
- public_key: string;
+ privkey: string;
+ pubkey: string;
 }

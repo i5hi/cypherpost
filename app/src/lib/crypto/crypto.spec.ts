@@ -19,8 +19,8 @@ const rsa_filename = "crypto-test-secret";
 const rsa_fixed = "sats_sig";
 const key_hex = "9870aa5092c44767f7a0d60cfb4dde81abc66ed8ac71bc2d466ed8b6e0323fd4";
 let ecdh: ECDHPair = {
-  private_key: "shhhHH!",
-  public_key: "oh, hi! :)"
+  privkey: "shhhHH!",
+  pubkey: "oh, hi! :)"
 }
 let ivcrypt_message;
 const key = "supersecret";
@@ -33,6 +33,14 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
     done();
   });
 
+  describe("readECDHPairFromFile", function () {
+    it("SHOULD read an ECDH pair from file or create one if non-existent", async function () {
+      const response = await crypto.readECDHPairFromFile();
+      if (response instanceof Error) throw response;
+
+      expect(response).to.have.property('pubkey');
+    });
+  });
   describe("createRSAPairFile", function () {
     it("SHOULD create an RSA Key Pair as a File", async function () {
       const response = await crypto.createRSAPairFile(rsa_filename);

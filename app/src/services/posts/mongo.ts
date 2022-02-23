@@ -28,6 +28,7 @@ const post_schema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
+      default: "NONE"
     },
     // no filters
     expiry: {
@@ -36,9 +37,11 @@ const post_schema = new mongoose.Schema(
     },
     cypher_json: {
       type: String,
+      required: true
     },
     derivation_scheme: {
       type: String,
+      required: true
     },
   },
   {
@@ -104,8 +107,8 @@ export class MongoPostStore implements PostStore {
     try {
       const query = (index_type == PostStoreIndex.Owner)
         ? { owner: { $in: indexes }, genesis: { "$gte": genesis_filter } }
-        : { $or: [{ id: { $in: indexes } }, { reference: { $in: indexes } }], genesis: { "$gte": genesis_filter } };
-
+        : { id: { $in: indexes } , genesis: { "$gte": genesis_filter } };
+        
       const docs = await postStore.find(query).sort({ "genesis": -1 }).exec();
       if (docs.length > 0) {
         if (docs instanceof mongoose.Error) {
@@ -133,7 +136,11 @@ export class MongoPostStore implements PostStore {
 
   async readAll(genesis_filter: Number): Promise<Array<UserPost> | Error> {
     try {
-      const docs = await postStore.find({ genesis: { "$gte": genesis_filter } }).sort({ "genesis": -1 }).exec();
+      const docs = await postStore
+      .find({ genesis: { "$gte": genesis_filter } })
+      .sort({ "genesis": -1 })
+      .exec();
+      
       if (docs.length > 0) {
         if (docs instanceof mongoose.Error) {
           return handleError(docs);
