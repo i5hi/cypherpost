@@ -50,8 +50,8 @@
       <br/>
       <h3>Portable Accounts</h3>
       
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> uses ECDSA keys and leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee and client authentication.</p>
-      <p>Auth does not require usernames, passwords, emails or phone numbers since clients are expected to hold ECDSA keys with more entropy than a password could have. </p>
+      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> uses ECDH keys and leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee and client authentication.</p>
+      <p>Auth does not require usernames, passwords, emails or phone numbers since clients are expected to hold ECDH keys with more entropy than a password could have. </p>
       <p>Authentication is simply providing a signature with every request using the client's identity key with the message being the request data and a nonce.</p>
       <p>This allows users to back-up a single mnemonic as they are used to with Bitcoin - with which they can recover their entire account on any device without complicated device registrations and old authentication methods that rely on access tokens that live beyond each individual request.</p>
       <br/>
@@ -70,8 +70,8 @@
 <hr>
       <h2>Mechanism</h2>
       <br/>
-      <h3>ECDSA Shared Secret</h3>
-      <p>At the core of the e2ee model is the ECDSA shared secret.</p>
+      <h3>ECDH Shared Secret</h3>
+      <p>At the core of the e2ee model is the ECDH shared secret.</p>
       <p>All clients must implement a primary 'identity' key pair comprised of a public key and private key.</p>
       <p>Given two users, Alice and Bob; both can compute the same shared secret with their private key and the other's public key.</p>
       <p>This shared secret is used to encrypt the key that is used to encrypt/decrypt cypher_json posts.</p>

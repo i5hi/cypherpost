@@ -4,34 +4,21 @@ Developed @ Stackmate India
 */
 
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
+import * as secp from '@noble/secp256k1';
 import crypto from "crypto";
 import fs from "fs";
-import path from "path";
 import util from "util";
 import { handleError } from "../errors/e";
 // import { S5ReponseHeaders } from "./handlers";
 // import { logger } from "../aux/logger";
 import { CryptoInterface, ECDHPair } from "./interface";
 
+
+
 const key_path = process.env.KEY_PATH;
 
 export class S5Crypto implements CryptoInterface {
-  async readECDHPairFromFile(): Promise<ECDHPair | Error> {
-    try {
-      const string = fs.readFileSync(path.join(key_path,"cypherpost"), "utf8");
-      if (string) {
-        const json = JSON.parse(string);
-        return {
-          pubkey: json.pubkey,
-          privkey: json.privkey
-        }
-      }
-      else return handleError({code: 404, message:"No Keys found"});
-    }
-    catch (e) {
-      return handleError(e);
-    }
-  }
+ 
   signS256Message(message: string, private_key: string): string | Error {
     try {
       const signer = crypto.createSign('SHA256');
@@ -98,16 +85,14 @@ export class S5Crypto implements CryptoInterface {
       return handleError(e);
     }
   }
-  getECDHPair(): ECDHPair | Error {
+  async getECDHPair(): Promise<ECDHPair | Error> {
     try {
-      const ecdh = crypto.createECDH("secp256k1");
-      ecdh.generateKeys("hex");
-      const private_key = ecdh.getPrivateKey("hex");
-      const public_key = ecdh.getPublicKey("hex");
+      const privateKey = secp.utils.randomPrivateKey();
+      const publicKey = secp.schnorr.getPublicKey(privateKey);
 
-      return {
-        privkey: private_key,
-        pubkey: public_key
+      return{
+        privkey: Buffer.from(privateKey).toString('hex'),
+        pubkey: Buffer.from(publicKey).toString('hex')
       };
     }
     catch (e) {

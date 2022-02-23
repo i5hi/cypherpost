@@ -2,14 +2,17 @@
 cypherpost.io
 Developed @ Stackmate India
 */
+
+const SERVER_PUBKEY = "ceaf836b3d29dfd686be0a02e3c36ca7f00bc5ed013f92cd176989424eb82574";
+
 import { CypherpostBitcoinOps } from "../../lib/bitcoin/bitcoin";
-import { S5Crypto } from "../../lib/crypto/crypto";
 import { r_500 } from "../../lib/logger/winston";
 import { filterError, parseRequest, respond } from "../../lib/server/handler";
 import { CypherpostBadges } from "../badges/badges";
 import { CypherpostPostKeys } from "../posts/keys/post_keys";
 import { CypherpostPosts } from "../posts/posts";
 import { CypherpostIdentity } from "./identity";
+
 
 const { validationResult } = require('express-validator');
 
@@ -18,8 +21,6 @@ const badges = new CypherpostBadges();
 const posts = new CypherpostPosts();
 const posts_keys = new CypherpostPostKeys();
 const bitcoin = new CypherpostBitcoinOps();
-
-const crypto = new S5Crypto();
 
 export async function identityMiddleware(req, res, next) {
   const request = parseRequest(req);
@@ -156,11 +157,9 @@ export async function handleGetServerIdentity(req, res) {
   const request = parseRequest(req);
 
   try {
-    const keys = await crypto.readECDHPairFromFile();
-    if(keys instanceof Error) throw keys;
-    
+ 
     const response = {
-      pubkey: keys.pubkey
+      pubkey: SERVER_PUBKEY
     };
 
     respond(200, response, res, request);
