@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
   <meta property="og:site_name" content="cypherpost">
-  <meta property="og:description" content="An end-to-end encrypted social network facilitating escrow-free, trusted p2p exchange.">
+  <meta property="og:description"
+    content="An end-to-end encrypted social network facilitating escrow-free, trusted p2p exchange.">
   <meta property="og:image" itemprop="image" content="/img/owl.png">
   <meta property="og:type" content="website">
 
@@ -39,61 +40,106 @@
     <div class="container">
       <h1>Protocol</h1>
       <hr>
-      
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> is a centralized end-to-end encrypted social network and data storage protocol to selectively share posts among peers.</p>
-      <p>Since all data is e2ee, servers have no incentive to censor or deny service to any specific user.</p>
-      <p>Its first application; implemented by this reference client, allows inviduals to discover trusted peers and post Bitcoin BUY/SELL advertisements in a private and pure peer-to-peer fashion.</p>
-      <p>Other clients can define their own use-cases enforced on the client-side while cypherpost servers are unaware of how clients are using the data being posted.</p>
+
+      <p><a href="https://cypherpost.io">cypherpost</a> is a trust-minimized, end-to-end encrypted, data storage & sharing protocol.</p>
+      <p>Data is stored & shared through a central server, and since all data is e2ee, server admins have no incentive to
+        censor or deny service to any specific user. Users can also chose to run their own cypherpost servers with
+        minimal effort if they so chose.</p>
+      <p>Servers offer dumb data storage facility and network discovery, while clients define their application specific data models and how to use it.</p>
+      <p>Its first application; implemented by this reference client, allows inviduals to discover peers and post
+        Bitcoin BUY/SELL advertisements in a private and pure peer-to-peer fashion.</p>
+      <p>Other clients can define their own use-cases enforced on the client-side; while cypherpost servers are unaware
+        of how clients are using the data being posted.</p>
       <hr>
 
       <h2>Features</h2>
-      <br/>
+      <br />
       <h3>Portable Accounts</h3>
-      
-      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> uses ECDH keys and leverages the flexibility of the <b>BIP32</b> HD Key standard and simiplicity of <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee and client authentication.</p>
-      <p>Auth does not require usernames, passwords, emails or phone numbers since clients are expected to hold ECDH keys with more entropy than a password could have. </p>
-      <p>Authentication is simply providing a signature with every request using the client's identity key with the message being the request data and a nonce.</p>
-      <p>This allows users to back-up a single mnemonic as they are used to with Bitcoin - with which they can recover their entire account on any device without complicated device registrations and old authentication methods that rely on access tokens that live beyond each individual request.</p>
-      <br/>
+
+      <p><a href="https://github.com/i5hi/cypherpost">cypherpost</a> uses ECDH keys and leverages the simiplicity of
+        <b>BIP39</b> mnemonic word master key; to achieve a more portable form of e2ee and client authentication.
+      </p>
+      <p>Auth does not require passwords, emails or phone numbers since clients are expected to hold ECDH keys; which have more
+        entropy than 99.9% of passwords currently in use.</p>
+      <p>Authentication is simply providing a signature with every request using the client's identity key; with the
+        message being the request data and a nonce.</p>
+      <p>This allows users to back-up a single mnemonic as they are used to with Bitcoin - with which they can recover
+        their entire account on any device; without complicated device registrations and old authentication methods that
+        rely on weak passwrds, third-parties and ultimately access tokens that live beyond each individual request.</p>
+      <p>It also uses <b>BIP32</b> HD Key standard to easily rotate keys per post; where forward secrecy is required.</p>
+      <br />
 
       <h3>Badges</h3>
-      <p>Reputation and classification of users on <a href="https://github.com/i5hi/cypherpost">cypherpost</a> is achieved through issuance of badges. </p>
-      <p>Giving someone a 'Trusted' badge, not only adds to their overall reputation but also specifically allows users to classify others into groups and more easily set visibility of their data.</p>
-      <p>The value of a badge is subjective. If a user has 100 Trusted badges and only 10 of them are from users that you have given a badge to, then these 10 badges are more meaningful than the remaining 90.</p>
+      <p>Reputation and classification of users on <a href="https://cypherpost.io">cypherpost</a> is
+        achieved through issuance of badges. </p>
+      <p>Giving someone a 'Trusted' badge, not only adds to their overall reputation but also specifically allows users
+        to classify others into groups and more easily set visibility of their data.</p>
+      <p>The value of a badge is subjective. If a user has 100 Trusted badges and only 10 of them are from users that
+        you have given a badge to, then these 10 badges are more meaningful than the remaining 90.</p>
       <p>Cypherpost currently supports 3 badges: Trusted, Scammer & MetInPerson.</p>
-      <p>When a user gives another user a badge, a special signature and nonce is required in addition to auth, that all clients can view and verify, to ensure that network reputation is legitimate.</p>
-      <br/>
+      <p>When a user gives another user a badge, a special signature and nonce is required in addition to auth, that all
+        clients can view and verify, to ensure that network reputation is legitimate.</p>
+        <p>Badges allow users to more easily discover each other and build a web of trust.</p>
 
-      <h3>Muting Users</h3>
-      <p>If many users have 'Trusted' you, you will have a lot of posts on your feed. You have the ability to 'Mute' users that are flooding your feed with unwanted and unproductive posts.</p>
-      <br/>
-<hr>
+      <br />
+
+      <h3>Client-side Verification</h3>
+      <p>Clients of cypherpost chose their data models and store them as encrypted stringified JSON. They simply PUT, GET or DELETE this JSON from servers.</p>p
+      <p>This radically changes the client-server relationship that we are used to in the web we use today - where clients
+        hand over all their data in plain-text to servers to do various computational work on.</p>
+      <p>With cypherpost, clients are enabled with basic cryptographic tools to truly own their data and create an
+        application protocol without servers needing to know any specific details.</p>
+
+      <hr>
       <h2>Mechanism</h2>
-      <br/>
+      <br />
       <h3>ECDH Shared Secret</h3>
       <p>At the core of the e2ee model is the ECDH shared secret.</p>
       <p>All clients must implement a primary 'identity' key pair comprised of a public key and private key.</p>
-      <p>Given two users, Alice and Bob; both can compute the same shared secret with their private key and the other's public key.</p>
+      <p>Given two users, Alice and Bob; both can compute the same shared secret with their private key and the other's
+        public key.</p>
       <p>This shared secret is used to encrypt the key that is used to encrypt/decrypt cypher_json posts.</p>
-      <p>If a user is trusting 10 other users, they only encrypt their data with a single key; and then, encrypt this key with a shared secret computed for each of their trusted users (creating 10 copies of encrypted keys) and share the encrypted key with each of them; which they can each use to decrypt on their end and use to view the cypherdata.</p>
-      <br/>
+      <p>If a user is trusting 10 other users, they only encrypt their data with a single key; and then, encrypt this
+        key with a shared secret computed for each of their trusted users (creating 10 copies of encrypted keys) and
+        share the encrypted key with each of them; which they can each use to decrypt on their end and use to view the
+        cypherdata.</p>
+      <br />
       <h3>Bitcoin Keys</h3>
-      <p>The BIP32 key derivation model is used to derive an infinite amount of child keys that are used to encrypt/decrypt all data flowing through cypherpost. This is done by deriving a new key from the user's master key which is derived from a BIP39 seed.</p>
-      <p>We use the following path standard:  <span class=""><b>m/purpose'/network'/usecase'/index'/revoke'</b></span></p>
+      <p>The BIP32 key derivation model is used to derive an infinite amount of child keys that are used to
+        encrypt/decrypt all data flowing through cypherpost. This is done by deriving a new key from the user's master
+        key which is derived from a BIP39 seed.</p>
+      <p>We use the following path standard: <span class=""><b>m/purpose'/network'/usecase'/index'/revoke'</b></span>
+      </p>
       <p>This reference client defines 3 use-cases:</p>
       <ul>
         <li>Identity: Used to sign requests (authentication) and compute shared secrets.</li>
-        <li>Preference: Used to encrypt/decrypt preferences. We store our mute list and last_used_derivation_paths here to ensure we rotate keys consistently.</li>
+        <li>Preference: Used to encrypt/decrypt preferences. We store our mute list and last_used_derivation_paths here
+          to ensure we rotate keys consistently.</li>
         <li>Trade: Used to encrypt/decrypt trades.</li>
       </ul>
-      <p>More information can be found at <a href="https://github.com/i5hi/cypherpost/blob/main/docs/KeyManagement.md">KeyManagement in cypherpost.</a></p>
+      <p>More information can be found at <a
+          href="https://github.com/i5hi/cypherpost/blob/main/docs/KeyManagement.md">KeyManagement in cypherpost.</a></p>
       <h3>CypherJSON</h3>
       <p>Users post data to cypherpost as encrypted stringified JSON.</p>
-      <p>By specifying a `type` field in this JSON, client applications can store their own data models for whatever use case they require.</p>
-      <p>Each different `type` should also use a dedicated key derivation path at the `usecase` path; to encrypt/decrypt and rotate encryption keys.</p>
+      <p>Clients define their own fields, usually with a common `type` field. This allows them to differentiate different types of models.</p>
+      <p>Each different `type` should also use a dedicated key derivation path at the `usecase` path; to encrypt/decrypt
+        and rotate encryption keys.</p>
       <p>When a client decrypts cypher_json it first checks the type and then accordingly updates its state.</p>
-      <p>This makes cypherpost a dumb data store, off-loading all the computational work onto clients.</p>
-      <p></p>
+      <hr>
+      <h2>Known-Issues</h2>
+      <br>
+      <h3>Spam Accounts</h3>
+      <p>One advantae of using emails or phone numbers is in preventing spam. Since cypherpost does not use these
+        authentication methods and uses a more open pubkey and signature based system, it is more vulnerable to spam
+        accounts.</p>
+      <p>The way this is resolved is by server admins charging a registration fee in satoshis. Users can chose to run
+        their own servers if this fee is not justified.</p>
+      <h3>Spam Posts</h3>
+      <p>Since post visibility is set by the creator of the post and not the reciever, one can be spammed with posts
+        from other users.</p>
+      <p>To overcome this, clients must maintain a 'PREFERENCE' post type, where they can keep a list of 'Muted'
+        pubkeys, and ignore posts from these users.</p>
+      <hr>
     </div>
     </div>
 
@@ -103,15 +149,15 @@
   <!-- Footer -->
   <footer class="page-footer font-small">
 
-      <div class="footer-copyright text-center">
+    <div class="footer-copyright text-center">
 
-        <a href="https://cypherpost.io"> cypherpost.io</a> 2022
-        <br>
+      <a href="https://cypherpost.io"> cypherpost.io</a> 2022
+      <br>
 
-        <i class="fab fa-bitcoin"></i>
-        <i class="fab fa-linux"></i>
-        <i class="fab fa-creative-commons"></i>
-      </div>
+      <i class="fab fa-bitcoin"></i>
+      <i class="fab fa-linux"></i>
+      <i class="fab fa-creative-commons"></i>
+    </div>
     <!-- Copyright -->
     <br>
   </footer>
