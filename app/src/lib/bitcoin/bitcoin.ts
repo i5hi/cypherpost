@@ -167,7 +167,11 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
       return status;
     }
     catch (e) {
-      return handleError(e);
+      console.error({e});
+      return handleError({
+        code: 401,
+        message: "Invalid signature"
+      });
     }
   }
 }
