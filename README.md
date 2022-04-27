@@ -1,13 +1,14 @@
 # cypherpost
 
-## A centralized encrypted data store, enabling client-side applications that require end-to-end encryption and selective visibility of content.
+## A centralized, end-to-end encrypted messaging service; providing bitcoin based client-side verification standards.
 
 - Your identity on the platform is a `username:pubkey`
 - All your posts are encrypted custom json strings.
 - Posts can be decrypted only by the identities you give visibility to.
 - You give identities visibility by sharing decryption keys with them.
-- ECDSA Shared Secrets are used per identity, to encrypt decryption keys in transit.
+- ECDH Shared Secrets are used between identities, to encrypt decryption keys in transit.
 - Badges form a reputation system and help build a trusted network.
+- Badges are signed public strings. They have a limit of 16 characters. Example: Trusted,Human,Scammer,FastTrader
 - Value of badges are subjective and based on who the givers are.
 - Issuance of badges can be verified by all clients
 =======
