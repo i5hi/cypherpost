@@ -111,7 +111,7 @@ export class S5Crypto implements CryptoInterface {
       encrypted = Buffer.concat([encrypted, cipher.final()]);
 
       const encrypted_text =
-        iv.toString("hex") + ":" + encrypted.toString("hex");
+        iv.toString("hex") + ":" + encrypted.toString("base64");
 
       return encrypted_text;
     }
@@ -127,7 +127,7 @@ export class S5Crypto implements CryptoInterface {
       const IV_LENGTH = 16; // For AES, this is always 16
       const text_parts = iv_text_crypt.split(":");
       const iv = Buffer.from(text_parts.shift(), "hex");
-      const encrypted_text = Buffer.from(text_parts.join(":"), "hex");
+      const encrypted_text = Buffer.from(text_parts.join(":"), "base64");
       const decipher = crypto.createDecipheriv(algorithm, Buffer.from(key), iv);
 
       let decrypted = decipher.update(encrypted_text);

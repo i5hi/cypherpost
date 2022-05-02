@@ -104,6 +104,23 @@ describe("Initalizing Test: Profile Service", function () {
       expect(response).to.be.a("string");
       post3_id = response;
     });
+
+    it("FIND ONE new post BY ID (un-edited)", async function () {
+      const response = await posts.findManyById([post3_id], genesis_filter);
+      if(response instanceof Error) throw response;
+      expect(response[0]['edited']).to.equal(false);
+    });
+    it("EDIT POST", async function () {
+      const response = await posts.editOne(post3_id,xpub,cypher_json) as boolean;
+      expect(response).to.equal(true);
+    });
+    it("FIND ONE new post BY ID (edited)", async function () {
+      const response = await posts.findManyById([post3_id], genesis_filter);
+      if(response instanceof Error) throw response;
+      // console.log({response})
+      expect(response[0]['edited']).to.equal(true);
+    });
+    
     it("FIND new posts BY ID", async function () {
       const response = await posts.findManyById([post1_id,post2_id,post3_id], genesis_filter);
       if(response instanceof Error) throw response;

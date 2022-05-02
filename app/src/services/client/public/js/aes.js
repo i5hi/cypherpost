@@ -8,12 +8,10 @@ function encrypt(text, key_hex) {
     const key = Buffer.from(key_hex, "hex");
     const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(key), iv);
-
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
-
     const cipher_text =
-      iv.toString("hex") + ":" + encrypted.toString("hex");
+      iv.toString("hex") + ":" + encrypted.toString("base64");
     return cipher_text;
   }
   catch (e) {
@@ -26,11 +24,9 @@ function decrypt(cipher_text, key_hex) {
   try {
     const key = Buffer.from(key_hex, "hex");
     const text_parts = cipher_text.split(":");
-    const iv = Buffer.from(text_parts.shift(), "hex");
-
-    const encrypted_text = Buffer.from(text_parts.join(":"), "hex");
+    const iv = Buffer.from(text_parts[0], "hex");
+    const encrypted_text = Buffer.from(text_parts[1], "base64");
     const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(key), iv);
-
     let plain_text = decipher.update(encrypted_text);
     plain_text = Buffer.concat([plain_text, decipher.final()]);
     return plain_text.toString();
@@ -39,7 +35,6 @@ function decrypt(cipher_text, key_hex) {
     console.error({ e })
     return null
   }
-
 }
 
 module.exports = {

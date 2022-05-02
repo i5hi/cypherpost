@@ -152,7 +152,6 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
 
   async sign(message: string, private_key: string): Promise<string | Error> {
     try {
-
       const signature = await secp256k1.schnorr.sign(crypto.createHash('sha256').update(message).digest('hex'), private_key);
       return Buffer.from(signature).toString('hex');
     }
@@ -171,7 +170,7 @@ export class CypherpostBitcoinOps implements BitcoinKeyOperations {
       return handleError({
         code: 401,
         message: "Invalid signature"
-      });
+      });    
     }
   }
 }

@@ -3,7 +3,7 @@
     "target": "es5",
     "module": "commonjs",
     "lib": ["dom", "es6"],
-    "allowJs": true,
+    "allowJs": false,
     "sourceMap": true,
     "outDir": "dist",
     "rootDir": "src",
@@ -14,8 +14,13 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": [],
   },
   "include": ["src", "src/.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "./node_modules",
+    "./node_modules/*",
+  ]
 }

@@ -43,6 +43,9 @@ const post_schema = new mongoose.Schema(
       type: String,
       required: true
     },
+    edited: {
+      type: Boolean,
+    }
   },
   {
     strict: true
@@ -123,6 +126,7 @@ export class MongoPostStore implements PostStore {
             reference: doc['reference'] || "NONE",
             cypher_json: doc["cypher_json"],
             derivation_scheme: doc["derivation_scheme"],
+            edited: doc["edited"] || false
           }
         });
         return posts;
@@ -154,12 +158,29 @@ export class MongoPostStore implements PostStore {
             reference: doc['reference'] || "NONE",
             cypher_json: doc["cypher_json"],
             derivation_scheme: doc["derivation_scheme"],
+            edited: doc["edited"] || false
           }
         });
         return posts;
       } else {
         return [];
       }
+    } catch (e) {
+      return handleError(e);
+    }
+  }
+  async updateOne(id: string, owner: string, cypher_json: string): Promise<boolean | Error> {
+    try {
+      const q = { id, owner };
+      const u = { $set: { cypher_json, edited: true } };
+      // console.log({q,u})
+
+      const status = await postStore.updateOne(q, u);
+      if (status instanceof mongoose.Error) {
+        return handleError(status);
+      };
+      
+      return status.modifiedCount > 0;
     } catch (e) {
       return handleError(e);
     }

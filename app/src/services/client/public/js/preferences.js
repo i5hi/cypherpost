@@ -54,7 +54,7 @@ function displayProfile() {
 
   document.getElementById("profile_trust_intersection").innerHTML = `Trust Intersection: <span class="contact_info">${populate_trust_intersection}</span>`;
 
-  const mute_list = store.getMyPreferences()['plain_json']['mute_list'];
+  const mute_list = store.getMyPreferences()?store.getMyPreferences()['plain_json']['mute_list']:[];
   document.getElementById("profile_mute_list").innerHTML = "";
 
   if(!mute_list || mute_list.length===0){
@@ -117,8 +117,11 @@ async function initProfileState() {
 function peekSeed() {
   const pass = document.getElementById("peek_seed_password_input").value;
   document.getElementById("peek_seed_password_input").value = "";
-  const mnemonic = store.getMnemonic(pass);
-  return mnemonic;
+  const access_key = store.getAccessCode(pass);
+  if(!access_key) {
+    alert("Bad Password!")
+  }
+  return access_key;
 }
 
 // EVENT LISTENERS

@@ -12,6 +12,9 @@ const store = new MongoPostStore();
 const uuid = new S5UID();
 
 export class CypherpostPosts implements PostInterface {
+  editOne(id: string, owner: string, cypher_json: string): Promise<boolean | Error> {
+    return store.updateOne(id, owner, cypher_json);
+  }
 
   async findAllByOwner(owner: string, genesis_filter: Number): Promise<UserPost[] | Error> {
     return store.readMany([owner], PostStoreIndex.Owner, genesis_filter);
@@ -31,7 +34,8 @@ export class CypherpostPosts implements PostInterface {
       expiry,
       cypher_json,
       derivation_scheme,
-      reference: reference || "NONE"
+      reference: reference || "NONE",
+      edited: false,
     }
 
     const status = await store.createOne(post);

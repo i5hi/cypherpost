@@ -51,14 +51,14 @@ let xkeys = {
 
 let expected_ecdsa_pair =  {
   private_key: "3c842fc0e15f2f1395922d432aafa60c35e09ad97c363a37b637f03e7adcb1a7",
-  public_key: "02dfbbf1979269802015da7dba4143ff5935ea502ef3a7276cc650be0d84a9c882",
+  public_key: "dfbbf1979269802015da7dba4143ff5935ea502ef3a7276cc650be0d84a9c882",
 };
 
 const alice_pair = expected_ecdsa_pair;
 
 const bob_pair =  {
   private_key: "d5f984d2ab332345dbf7ddff9f47852125721b2025329e6981c4130671e237d0",
-  public_key: "023946267e8f3eeeea651b0ea865b52d1f9d1c12e851b0f98a3303c15a26cf235d",
+  public_key: "3946267e8f3eeeea651b0ea865b52d1f9d1c12e851b0f98a3303c15a26cf235d",
 };
 
 let expected_shared_secret = "49ab8cb9ba741c6083343688544861872e3b73b3d094b09e36550cf62d06ef1e";
@@ -71,14 +71,7 @@ let expected_shared_secret = "49ab8cb9ba741c6083343688544861872e3b73b3d094b09e36
 // }; 
 
 // ------------------ ┌∩┐(◣_◢)┌∩┐ ------------------
-describe("Initalizing Test: S5Crypto Lib ", function () {
-
-  after(function (done) {
-   
-    done();
-  });
-
-  describe("Bitcoin Operations TEST", function () {
+describe("Initalizing Test:Bitcoin Operations TEST ", function () {
     it("should generate a 12 word mnemonic phrase", async function () {
       let mnemonic = bitcoin.generate_mnemonic();
       if (mnemonic instanceof Error) throw mnemonic;
@@ -98,7 +91,6 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
       expect(key_pair.xprv).to.equal(expected_hardened_master.xprv);
       expect(key_pair.xpub).to.equal(expected_hardened_master.xpub);
     });
-
 
 
     it("should derive_hardened pair at m/0h/0h/0h for hardened recipient/index/revoke", async function () {
@@ -128,10 +120,6 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
     });
     
 
-
- 
-
-
     it("should extract_ecdsa_pair from extended key pair", async function () {
       let key_pair = await bitcoin.extract_ecdsa_pair(xkeys);
       if (key_pair instanceof Error) throw key_pair;
@@ -149,7 +137,7 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
 
     let message = `"hello 123 {}"`;
     let signature;
-    it.only("should sign and verify a message with ecdsa keys", async function () {
+    it("should sign and verify a message with ecdsa keys", async function () {
       console.log(alice_pair.public_key);
       signature = await  bitcoin.sign(message,alice_pair.private_key);
       if (signature instanceof Error) throw signature;
@@ -159,7 +147,8 @@ describe("Initalizing Test: S5Crypto Lib ", function () {
       expect(status).to.equal(true);
     });
 
-  });
+    //test volume update
+    // ranjesh
 
 });
 

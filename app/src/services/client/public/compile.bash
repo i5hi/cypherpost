@@ -1,12 +1,12 @@
 #!/bin/bash
 
-rm -rf ./js/bundles
-mkdir -p ./js/bundles
+rm -rf $(pwd)/js/bundles
+mkdir -p $(pwd)/js/bundles
 
-unzip ./js/mdb.min.zip -d ./js/bundles
+unzip $(pwd)/js/mdb.min.zip -d $(pwd)/js/bundles
 
-browserify ./js/auth.js > ./js/bundles/auth_bundle.js
-browserify ./js/notifications.js > ./js/bundles/notifications_bundle.js
-browserify ./js/preferences.js > ./js/bundles/preferences_bundle.js
-browserify ./js/network.js > ./js/bundles/network_bundle.js
-browserify ./js/posts.js > ./js/bundles/posts_bundle.js
+browserify $(pwd)/js/auth.js > $(pwd)/js/bundles/auth_bundle.js
+browserify $(pwd)/js/notifications.js > $(pwd)/js/bundles/notifications_bundle.js
+browserify $(pwd)/js/preferences.js > $(pwd)/js/bundles/preferences_bundle.js
+browserify $(pwd)/js/network.js > $(pwd)/js/bundles/network_bundle.js
+browserify $(pwd)/js/posts.js > $(pwd)/js/bundles/posts_bundle.js

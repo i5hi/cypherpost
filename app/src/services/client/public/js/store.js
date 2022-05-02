@@ -19,8 +19,7 @@
 
 const { encrypt, decrypt } = require("./aes");
 const crypto = require("crypto");
-const bitcoin = require("./bitcoin");
-
+const bitcoin = require("./keys");
 
 function getIdentities() {
   const identities = sessionStorage.getItem("all_identities");
@@ -107,19 +106,21 @@ function setMyBadges(my_badges) {
 
 }
 
-function setMnemonic(mnemonic, password) {
+function setAccessCode(mnemonic, password) {
   const encryption_key = crypto.createHash("sha256")
     .update(password)
     .digest("hex");
-  localStorage.setItem(`my_mnemonic`, encrypt(mnemonic, encryption_key));
+  localStorage.setItem(`master_key`, encrypt(mnemonic, encryption_key));
   return true;
 }
 
-function getMnemonic(password) {
+function getAccessCode(password) {
+
   const encryption_key = crypto.createHash("sha256")
     .update(`${password}`)
     .digest("hex");
-  const mnemonic_crypt = localStorage.getItem(`my_mnemonic`);
+  const mnemonic_crypt = localStorage.getItem(`master_key`);
+  console.log({mnemonic_crypt})
   try {
     return mnemonic_crypt ? decrypt(mnemonic_crypt, encryption_key) : null;
   }
@@ -137,6 +138,20 @@ function getMyProfile() {
   return (profile) ? JSON.parse(profile) : null
 }
 
+function setServerIdentity(id) {
+  sessionStorage.setItem(`server_identity`, JSON.stringify(id));
+  return true;
+}
+function getServerIdentity() {
+  try{
+  const id = sessionStorage.getItem("server_identity");
+  return (id) ? JSON.parse(id) : null
+  }
+  catch(e){
+    return null;
+  }
+}
+
 
 function setMyPreferences(preferences) {
   sessionStorage.setItem(`my_preferences`, JSON.stringify(preferences));
@@ -144,8 +159,13 @@ function setMyPreferences(preferences) {
 }
 
 function getMyPreferences() {
+  try{
   const preferences = sessionStorage.getItem("my_preferences");
   return (preferences) ? JSON.parse(preferences) : null;
+  }
+  catch(e){
+    return null;
+  }
 
 }
 
@@ -171,6 +191,27 @@ function setMyTrades(trades) {
     })
     sessionStorage.setItem(`my_trades`, JSON.stringify(existing));
   }
+  return true;
+}
+
+function getMyMessages() {
+  const posts = sessionStorage.getItem("my_messages");
+  return (posts) ? JSON.parse(posts) : [];
+}
+
+function setMyMessages(msgs) {
+  sessionStorage.setItem(`my_messages`, JSON.stringify(msgs));
+  return true;
+}
+
+function getOthersMessages() {
+  const posts = sessionStorage.getItem("others_messages");
+  return (posts) ? JSON.parse(posts) : [];
+
+}
+
+function setOthersMessages(msgs) {
+  sessionStorage.setItem(`others_messages`, JSON.stringify(msgs));
   return true;
 }
 
@@ -330,16 +371,20 @@ module.exports = {
   getMyProfile,
   setMyKeyChain,
   getMyKeyChain,
-  // setOthersProfiles,
-  // getOthersProfiles,
+  setServerIdentity,
+  getServerIdentity,
+  setOthersMessages,
+  getOthersMessages,
   setMyTrades,
   getMyTrades,
   setOthersTrades,
   getOthersTrades,
-  setMnemonic,
-  getMnemonic,
+  setAccessCode,
+  getAccessCode,
   setMyPreferences,
   getMyPreferences,
+  getMyMessages,
+  setMyMessages,
   setMyBadges,
   checkMnemonic,
   updateSelectedIdentity,
@@ -355,5 +400,5 @@ module.exports = {
   getMyUsername,
   getLocalPrice,
   setLocalPrice,
-  getMyBadges
+  getMyBadges,
 }

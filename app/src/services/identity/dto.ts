@@ -12,9 +12,13 @@ import { CypherpostBadges } from "../badges/badges";
 import { CypherpostPostKeys } from "../posts/keys/post_keys";
 import { CypherpostPosts } from "../posts/posts";
 import { CypherpostIdentity } from "./identity";
+import { RegistrationType } from "./interface";
 
 
 const { validationResult } = require('express-validator');
+
+const TYPE = process.env.TYPE;
+const INVITE_CODE = process.env.SECRET;
 
 const identity = new CypherpostIdentity();
 const badges = new CypherpostBadges();
@@ -32,21 +36,21 @@ export async function identityMiddleware(req, res, next) {
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
-    const body = request.body ? JSON.stringify(request.body) : "{}";
+    const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
-    console.log({ message });
-    console.log({ signature });
-    console.log({ pubkey });
-
+    // console.log({message});
+    // console.log({signature});
+    // console.log({pubkey});
+    
     let verified = await bitcoin.verify(message, signature, pubkey);
     if (verified instanceof Error) throw verified;
-    else if (!verified) throw {
+    else if (!verified) throw{
       code: 401,
       message: "Invalid Request Signature."
     };
     else next();
-
+    
   }
   catch (e) {
     const result = filterError(e, r_500, request);
@@ -65,9 +69,20 @@ export async function handleRegistration(req, res) {
       }
     }
 
-    let status = await identity.register(request.body.username, request.headers['x-client-pubkey']);
+    const registration_type = TYPE.toLowerCase().includes("pub") ? 
+      RegistrationType.Payment : RegistrationType.Invite;
+  
+    if (registration_type===RegistrationType.Invite){
+      if (request.headers['x-client-invite-code'] != INVITE_CODE){
+        throw {
+          code: 401,
+          message: "Incorrect Invite Code"
+        }
+      }
+    }
+    let status = await identity.register(request.body.username, request.headers['x-client-pubkey'], registration_type);
     if (status instanceof Error) throw status;
-
+    
     const response = {
       status
     };
@@ -93,7 +108,7 @@ export async function handleGetAllIdentities(req, res) {
       }
     }
 
-    const genesis_filter = request.query['genesis_filter'] ? request.query['genesis_filter'] : 0;
+    const genesis_filter = request.query['genesis_filter']?request.query['genesis_filter']:0;
     const identities = await identity.all(genesis_filter);
     if (identities instanceof Error) throw identities;
 
@@ -130,7 +145,7 @@ export async function handleDeleteIdentity(req, res) {
     // identities
 
     const rm_posts = await posts.removeAllByOwner(request.headers['x-client-pubkey']);
-    if (rm_posts instanceof Error) throw rm_posts;
+    if(rm_posts instanceof Error) throw rm_posts;
 
     const rm_post_keys = await posts_keys.removeAllPostDecryptionKeyOfUser(request.headers['x-client-pubkey']);
     if (rm_post_keys instanceof Error) throw rm_post_keys;
@@ -140,7 +155,7 @@ export async function handleDeleteIdentity(req, res) {
 
     const rm_identity = await identity.remove(request.headers['x-client-pubkey']);
     if (rm_identity instanceof Error) throw rm_identity;
-
+    
     const response = {
       status: true
     };
@@ -157,9 +172,10 @@ export async function handleGetServerIdentity(req, res) {
   const request = parseRequest(req);
 
   try {
-
+ 
     const response = {
-      pubkey: SERVER_PUBKEY
+      type: TYPE,
+      pubkey: SERVER_PUBKEY,
     };
 
     respond(200, response, res, request);

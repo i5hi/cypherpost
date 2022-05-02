@@ -23,10 +23,10 @@ export async function postMiddleware(req, res, next) {
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
-    const body = request.body ? JSON.stringify(request.body) : "{}";
+    const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
-    const status = await identity.verify(pubkey, message, signature);
+    const status = await identity.authenticate(pubkey, message, signature);
     // console.log({pubkey,signature,message,status})
 
     if (status instanceof Error) throw status;
@@ -210,6 +210,32 @@ export async function handlePutKeys(req, res) {
     });
 
     const status = await postKeys.addPostDecryptionKeys(request.headers['x-client-pubkey'], req.body.post_id, decryption_keys);
+    if (status instanceof Error) throw status;
+
+    const response = {
+      status
+    };
+    respond(200, response, res, request);
+  }
+  catch (e) {
+    const result = filterError(e, r_500, request);
+    respond(result.code, result.message, res, request);
+  }
+}
+
+
+export async function handleEditPost(req, res) {
+  const request = parseRequest(req);
+  try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      throw {
+        code: 400,
+        message: errors.array()
+      }
+    }
+
+    const status = await posts.editOne(req.body.post_id, request.headers['x-client-pubkey'], req.body.cypher_json);
     if (status instanceof Error) throw status;
 
     const response = {

@@ -1,6 +1,7 @@
 const PROFILE = "PROFILE";
 const PREFERENCES = "PREFERENCES";
 const TRADE = "BITCOIN-TRADE";
+const MESSAGE = "MESSAGE";
 
 const TRUST = "TRUST";
 const SCAMMER = "SCAMMER";
@@ -11,8 +12,6 @@ const PREFERENCES_DS = "m/2h/0h/0h";
 const api = require("./api");
 const util = require("./util");
 const store = require("./store");
-const { stat } = require("fs");
-
 
 async function downloadAllIdentities(identity_parent) {
   const response = await api.getAllIdentities(identity_parent);
@@ -25,11 +24,13 @@ async function downloadAllIdentities(identity_parent) {
 }
 
 async function downloadAllIdentitiesAndBadges(identity_parent) {
-  
+
   const identities = await api.getAllIdentities(identity_parent)
   if (identities instanceof Error) return identities;
   const id_store = store.setIdentities(identities);
+  console.log({id_store})
   const local_ids = store.getIdentities();
+  console.log({local_ids})
 
   const my_identity = local_ids.find((identity) => identity.pubkey == identity_parent.pubkey);
   store.setMyUsername(my_identity.username);
@@ -62,8 +63,9 @@ async function downloadAllMyPosts(identity_parent) {
   // const profile = store.setMyProfile(segregated.profile);
   const trades = store.setMyTrades(segregated.trades);
   const preferences = store.setMyPreferences(latest_preference);
+  const messages = store.setMyMessages(segregated.messages);
 
-  return trades && preferences;
+  return trades && preferences && messages;
 }
 
 async function downloadAllPostsForMe(identity_parent) {
@@ -77,14 +79,14 @@ async function downloadAllPostsForMe(identity_parent) {
   const segregated = util.segregatePlainPostsForMe(plain_json_posts);
   // const profiles = store.setOthersProfiles(segregated.profiles);
   const trades = store.setOthersTrades(segregated.trades);
+  const messages = store.setOthersMessages(segregated.messages);
 
-  return trades;
+  return trades & messages;
 }
 
 function removeDuplicatePreferences(identity_parent, prefs) {
   // const sorted_prefs = util.sortObjectByProperty(prefs,"genesis",false,true);
   // console.log({sorted_prefs});
-
 
   const latest_preference = prefs.pop();
   const prefs_delete_statuses = prefs.map(async (preference) => {
@@ -213,6 +215,57 @@ async function createCypherTradePost(
   return trade_id;
 };
 
+async function createCypherMessagePost(
+  expiry,
+  message,
+  selected_pubkeys
+) {
+  const preferences = store.getMyPreferences().plain_json;
+  // USE ONLY LATEST PREFERENCE
+  // CURRENTLY ASSUMING
+  console.log({ preferences });
+  const trade_derivation_scheme = util.rotatePath(preferences.last_trade_derivation_scheme);
+  const mute_list = (preferences.mute_list) ? preferences.mute_list : [];
+  const plain_trade = {
+    type: MESSAGE,
+    message,
+  };
+  const keys = store.getMyKeyChain();
+  const cypher_trade = util.createCypherJSON(
+    store.getMyKeyChain().cypherpost,
+    trade_derivation_scheme,
+    plain_trade
+  );
+  const reference = "onlyallowreferenceexistingid";
+  const trade_id = await api.createPost(keys.identity, cypher_trade.cypher_json, trade_derivation_scheme, expiry, reference);
+  if (trade_id instanceof Error) return trade_id;
+  // preferences.plain_json.last_trade_derivation_scheme = trade_derivation_scheme;
+  // store.setMyPreferences(preferences);
+  const plain_preferences = {
+    type: PREFERENCES,
+    last_trade_derivation_scheme: trade_derivation_scheme,
+    mute_list: mute_list,
+  };
+  const cypher_preferences = util.createCypherJSON(
+    keys.cypherpost,
+    PREFERENCES_DS,
+    plain_preferences
+  );
+  const preferences_id = await api.createPost(keys.identity, cypher_preferences.cypher_json, PREFERENCES_DS, 0, reference);
+  if (preferences_id instanceof Error) return preferences_id;
+
+  const removeOldPrefs = await api.deletePost(keys.identity, preferences.id);
+  if (removeOldPrefs instanceof Error) return removeOldPrefs;
+
+  const decryption_keys = selected_pubkeys.length === 0 ?[]:util.createDecryptionKeys(keys.identity, cypher_trade.primary_key, selected_pubkeys);
+  
+  if (decryption_keys.length===0) return trade_id;
+
+  const status = await api.setPostVisibility(keys.identity, trade_id, decryption_keys);
+  if (status instanceof Error) return status;
+
+  return trade_id;
+};
 function getMyTrustedIdentities() {
   const trusted_badges = store
     .getMyBadges()['given']
@@ -286,6 +339,7 @@ module.exports = {
   createCypherTradePost,
   getBadgesByPubkey,
   trustPubkey,
-  revokeTrustPubkey
+  revokeTrustPubkey,
+  createCypherMessagePost
 }
 

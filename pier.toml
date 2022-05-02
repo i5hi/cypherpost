@@ -1,0 +1,93 @@
+[scripts.dev-setup]
+alias="devset"
+command="cd ./compose/dev/ && ./setup.sh; cd -"
+description = "Setup compose/dev environment"
+
+[scripts.dev-start]
+alias="devstart"
+command="cd ./compose/dev/ && ./start.sh; cd -"
+description = "Start compose/dev environment"
+
+[scripts.dev-test]
+alias="devtest"
+command="cd ./compose/dev/ && ./test.sh; cd -"
+description = "Check status of compose/dev environment"
+
+[scripts.dev-stop]
+alias="devstop"
+command="cd ./compose/dev/ && ./stop.sh; cd -"
+description = "Stops compose/dev environment"
+
+
+[scripts.dev-status]
+alias="devstat"
+command="cd ./compose/dev && docker-compose -p cypherpost-development ps; cd -"
+description = "Check status of compose/dev environment"
+
+[scripts.dev-log]
+alias="devlog"
+command="if [[ $1 == 'all' ]];then docker-compose -p cypherpost-development logs ; else docker-compose -p cypherpost-development logs -f $1; fi"
+description = "Log compose/dev environment"
+
+
+[scripts.bash]
+alias="execsh"
+command="docker exec -it $1 bash"
+description = "Execute bash inside a container (application/database/server)"
+
+[scripts.restart]
+alias="restart"
+command="docker restart $1"
+description = "Restarts a container (application/database/server)"
+
+[scripts.dev-rebuild]
+alias="devreb"
+command="cd ./compose/dev/ && docker-compose -p cypherpost-development up --force-recreate --build node ; docker-compose -p cypherpost-development down; docker-compose -p cypherpost-development up -d; cd -"
+description = "Restart application container in compose"
+
+[scripts.browserify]
+alias="compjs"
+command="cd ./app/src/services/client/public && bash compile.bash; cd -"
+description = "Compiles browser JS for Client. Use while updating client code."
+
+[scripts.tsc]
+alias="compts"
+command="cd ./app/src && tsc; cd -"
+description = "Compiles main TS code. Use while updating server code."
+
+[scripts.delvols]
+alias="delvols"
+command="bash ./compose/delete_volumes.sh"
+description = "Deletes docker volume mappings (not any mounted volume data). "
+
+
+[scripts.prod-setup]
+alias="prodset"
+command="cd ./compose/prod/ && ./setup.sh; cd -"
+description = "Setup compose/prod environment"
+
+[scripts.prod-ssl]
+alias="prodssl"
+command="cd ./compose/prod/ && ./issue_ssl.sh; cd -"
+description = "Issue SSL cerrificate for compose/prod environment. Run setup.sh first to ensure the right domain is used."
+
+[scripts.prod-start]
+alias="prodstart"
+command="cd ./compose/prod/ && ./start.sh; cd -"
+description = "Start compose/prod environment"
+
+[scripts.prod-appsync]
+alias="prodsync"
+command="git stash ; git pull && cd ./compose/prod/ && docker-compose up -d --force-recreate --build node; cd -"
+description = "Sync cypherpost with github repo and update app container."
+
+[scripts.prod-stop]
+alias="prodstop"
+command="cd ./compose/prod/ && ./stop.sh; cd -"
+description = "Stops compose/prod environment"
+
+[scripts.prod-status]
+alias="prodstat"
+command="cd ./compose/prod/ && docker-compose -f ./compose/prod/docker-compose.yaml ps; cd -"
+description = "Check status of compose/prod environment"
+

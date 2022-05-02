@@ -4,36 +4,60 @@
  */
 const crypto = require("crypto");
 const store = require('./store');
-const bitcoin = require("./bitcoin");
+const keynos = require("./keys");
 const { request } = require('./request');
 
 const VERSION_PREFIX = "/api/v2";
 const api_url = ((document.domain === 'localhost') ? "http://localhost" : `https://cypherpost.io`) + VERSION_PREFIX;
 
+const TEST_INVITE_CODE="";
 
-function createRequestHeaders(identity_parent, nonce, signature) {
+function createRequestHeaders(identity_parent, nonce, signature, invite_code) {
+  // console.log({
+  //   "x-client-pubkey": identity_parent['pubkey'],
+  //   "x-nonce": nonce,
+  //   "x-client-signature": signature,
+  //   "x-client-invite-code": invite_code? invite_code : TEST_INVITE_CODE
+  // })
   return {
     "x-client-pubkey": identity_parent['pubkey'],
     "x-nonce": nonce,
     "x-client-signature": signature,
+    "x-client-invite-code": invite_code? invite_code : TEST_INVITE_CODE
   };
+
 }
 
 async function createRequestSignature(method, resource, body, identity_parent, nonce) {
   const request_message = `${method} ${VERSION_PREFIX}${resource} ${JSON.stringify(body)} ${nonce}`;
   console.log({ request_message })
-  return await bitcoin.sign(request_message, identity_parent.privkey);
+  return await keynos.schnorrSign(request_message, identity_parent.privkey);
 };
 
 async function createBadgeSignature(identity_parent, reciever_pubkey, type, nonce) {
   const badge_message = `${identity_parent.pubkey}:${reciever_pubkey}:${type}:${nonce}`;
   console.log({ badge_message })
-  return await bitcoin.sign(badge_message, identity_parent.privkey);
+  return await keynos.schnorrSign(badge_message, identity_parent.privkey);
+}
+async function getServerIdentity(identity_parent) {
+
+  const nonce = Date.now();
+  const resource = "/identity/server";
+  const url = api_url + resource;
+  const method = "GET";
+  const body = {};
+
+  const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
+  const headers = createRequestHeaders(identity_parent, nonce, signature);
+
+  const response = await request(method, url, headers, body);
+  if (response instanceof Error) return response;
+
+  return response;
+
 }
 
-
-
-async function registerIdentity(identity_parent, username) {
+async function registerIdentity(identity_parent, username, invite_code) {
   const nonce = Date.now();
   const resource = "/identity";
   const url = api_url + resource;
@@ -43,7 +67,7 @@ async function registerIdentity(identity_parent, username) {
   };
 
   const signature = await createRequestSignature(method, resource, body, identity_parent, nonce);
-  const headers = createRequestHeaders(identity_parent, nonce, signature);
+  const headers = createRequestHeaders(identity_parent, nonce, signature, invite_code);
 
   console.log({ headers, body, signature });
   const response = await request(method, url, headers, body);
@@ -272,6 +296,7 @@ async function deletePost(identity_parent, post_id) {
 
 
 module.exports = {
+  getServerIdentity,
   registerIdentity,
   getAllIdentities,
   getMyPosts,
@@ -283,5 +308,5 @@ module.exports = {
   setPostVisibility,
   deletePost,
   getMyBadges,
-  revokeBadge
+  revokeBadge,
 }

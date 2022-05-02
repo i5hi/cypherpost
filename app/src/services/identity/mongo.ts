@@ -5,7 +5,7 @@ Developed @ Stackmate India
 // ---------------- ┌∩┐(◣_◢)┌∩┐ -----------------
 import mongoose from "mongoose";
 import { handleError } from "../../lib/errors/e";
-import { IdentityIndex, IdentityStore, UserIdentity } from "./interface";
+import { IdentityIndex, IdentityStore, UserIdentity, VerificationStatus } from "./interface";
 
 // ---------------- ┌∩┐(◣_◢)┌∩┐ -----------------
 
@@ -27,15 +27,18 @@ const identity_schema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    status: {
+      type: String,
+      required: true,
+      default: "PENDING"
+    }
   }
 );
 // ------------------ '(◣ ◢)' ---------------------
 const identityStore = mongoose.model("identity", identity_schema);
 // ------------------ '(◣ ◢)' ---------------------
 export class MongoIdentityStore implements IdentityStore {
-  readMany(usernames: string[]): Promise<UserIdentity[] | Error> {
-    throw new Error("Method not implemented.");
-  }
+
   async createOne(identity: UserIdentity): Promise<boolean | Error> {
     try {
       await identityStore.syncIndexes();
@@ -83,6 +86,7 @@ export class MongoIdentityStore implements IdentityStore {
           genesis: doc["genesis"],
           username: doc["username"],
           pubkey: doc["pubkey"],
+          status: doc["status"],
         };
 
         return out;
@@ -109,6 +113,7 @@ export class MongoIdentityStore implements IdentityStore {
           genesis: doc["genesis"],
           username: doc["username"],
           pubkey: doc["pubkey"],
+          status: doc["status"],
         };
       });
       return identities;
@@ -116,46 +121,23 @@ export class MongoIdentityStore implements IdentityStore {
       return handleError(e);
     }
   }
+  async updateOne(pubkey: string, status: VerificationStatus): Promise<boolean | Error> {
+    try {
+      const q = { pubkey };
+      const u = { $set: { status: status.toString() } };
+      // console.log({q,u})
+
+      const result = await identityStore.updateOne(q, u);
+      if (result instanceof mongoose.Error) {
+        return handleError(result);
+      };
+      console.log({result})
+      return result.modifiedCount > 0 || result.matchedCount >0;
+      // if verified if true the document is not updated and will return modifiedCount = 0 
+      // watchout
+    } catch (e) {
+      return handleError(e);
+    }
+  }
 }
-
-// async function ensureUnique(identity: UserIdentity): Promise<boolean | Error> {
-//   try {
-//     const doc = await identityStore.findOne({ username: identity.username }).exec();
-//     if (doc === null) return true;
-
-//     if (doc) {
-//       const err = doc.validateSync();
-//       if (err instanceof mongoose.Error) {
-//         return handleError(err);
-//       }
-
-//       return handleError({
-//         code: 409,
-//         message:
-//           "Username Exists"
-//       });
-//     } else {
-//       const doc = await identityStore.findOne({ pubkey: identity.pubkey }).exec();
-//       if (doc === null) return true;
-
-//       if (doc) {
-//         const err = doc.validateSync();
-//         if (err instanceof mongoose.Error) {
-//           return handleError(err);
-//         }
-
-//         return handleError({
-//           code: 409,
-//           message:
-//             "Public Key Exists"
-//         });
-//       } else return true;
-
-//     }
-
-
-//   } catch (e) {
-//     return handleError(e);
-//   }
-// }
 // ------------------° ̿ ̿'''\̵͇̿̿\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ °------------------

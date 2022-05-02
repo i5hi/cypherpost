@@ -26,8 +26,6 @@ ENV MOLTRES_PORT="3021"
 ENV DB_IP="database"
 ENV DB_PORT="27017"
 ENV DB_NAME="cypherpost"
-ENV DB_AUTH="cp:secret"
-
 ENV KEY_PATH="/home/node/.keys/"
 
 #------------------------------------------------------------------------------------

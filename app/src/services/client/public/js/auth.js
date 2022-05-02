@@ -1,23 +1,33 @@
 const INIT_TRADE_DS = "m/3h/0h/0h";
 const {
-  generateMnemonic
-} = require("./bitcoin");
+  generateAccessKey,
+  addSpaces,
+  removeSpaces,
+} = require("./keys");
 const {
   registerIdentity,
+  getServerIdentity
 } = require("./api");
 const store = require("./store");
 const util = require("./util");
 const comps = require("./composites");
+const crypto = require("crypto");
 
-function displayMnemonic(mnemonic) {
+function displayAccessCode(code) {
   document.getElementById("welcome").classList.add("hidden");
   document.getElementById("seedgen").classList.remove("hidden");
-  document.getElementById('mnemonic').textContent = mnemonic;
+  document.getElementById('mnemonic_l1').textContent = addSpaces(code.substring(0,16));
+  document.getElementById('mnemonic_l2').textContent = addSpaces(code.substring(16,32));
+
   return true;
 }
 function displayRegistration() {
   document.getElementById("seedgen").classList.add("hidden");
   document.getElementById("registration").classList.remove("hidden");
+  return true;
+}
+function displayInvitation(){
+  document.getElementById("invite_code").classList.remove("hidden");
   return true;
 }
 
@@ -32,7 +42,10 @@ async function completeRegistration() {
   });
   if (username_availability.length > 0) return false;
   const keys = store.getMyKeyChain();
-  const response = await registerIdentity(keys.identity, username.toLowerCase());
+  const server_identity = store.getServerIdentity();
+  const invite_code = (server_identity.type==="priv")?document.getElementById('invite_code').value:null;
+  console.log({invite_code})
+  const response = await registerIdentity(keys.identity, username.toLowerCase(),invite_code);
   if (response instanceof Error) {
     console.error(response.message);
     return false;
@@ -43,16 +56,20 @@ async function completeRegistration() {
   }
 }
 async function completeReset() {
-  const mnemonic = document.getElementById("reset_seed").value;
+  const access_key = document.getElementById("reset_seed").value;
+  const passphrase = document.getElementById("reset_passphrase").value;
+
   const password = document.getElementById("reset_pass").value;
   const confirm = document.getElementById("reset_confirm_pass").value;
 
   document.getElementById("reset_seed").value = "";
+  document.getElementById("reset_passphrase").value = "";
+  
   document.getElementById("reset_pass").value = "";
   document.getElementById("reset_confirm_pass").value = "";
 
   if (password === confirm) {
-    const keys = await initKeyChain(mnemonic);
+    const keys = await initKeyChain(access_key, passphrase);
     if (keys instanceof Error) {
       console.error({status: keys});
       return false;
@@ -66,10 +83,11 @@ async function completeReset() {
       .getIdentities()
       .filter(identity => identity.pubkey === keys.identity['pubkey']);
 
-    if (identity_matches.length === 1)
-      return store.setMnemonic(mnemonic, password);
-    else
-      console.error({ identity_matches })
+    if (identity_matches.length === 1){
+      const full = removeSpaces(access_key) + (passphrase.length>0?`-${passphrase}`:"");
+      return store.setAccessCode(full, password);
+    }
+    else console.error({ identity_matches })
     alert("No identity matches! Redirecting to Register...");
     window.location.href = "registration"
     return false;
@@ -81,13 +99,13 @@ async function completeReset() {
 async function completeLogin() {
   const password = document.getElementById("login_pass").value;
   document.getElementById("login_pass").value = "";
-  const mnemonic = store.getMnemonic(password);
-  if (mnemonic instanceof Error) {
-    console.error({status: mnemonic});
+  const access_key = store.getAccessCode(password);
+  if (access_key instanceof Error) {
+    console.error({status: access_key});
     return false;
   }
-  if (mnemonic) {
-    const keys = await initKeyChain(mnemonic);
+  if (access_key) {
+    const keys = await initKeyChain(access_key);
     if (keys instanceof Error) {
       console.error({status: keys});
       return false;
@@ -95,31 +113,40 @@ async function completeLogin() {
     return true;
   }
   else {
-    alert("No encrypted mnemonic found. Import mnemonic through reset.");
+    alert("No encrypted access key found. Import access key through reset.");
     return false;
   };
 }
 
 // HELPERS
-async function initKeyChain(mnemonic) {
-  const keys = await util.createRootKeyChain(mnemonic);
+async function initKeyChain(access_code, passphrase) {
+  const keys = await util.createRootKeyChain(access_code,passphrase);
+  
   if (keys instanceof Error)
-    alert("Could not initialize Key Chain! Re-enter mnemonic.")
+    alert("Could not initialize Key Chain! Re-enter access_code.")
   else
     store.setMyKeyChain(keys);
   return keys;
 }
-async function confirmAndStoreMnemonic() {
-  const mnemonic = document.getElementById("mnemonic").textContent;
+async function confirmAndStoreAccessCode() {
+  const access_key = document.getElementById("mnemonic_l1").textContent + document.getElementById("mnemonic_l2").textContent;
+  const key_nonce = document.getElementById("mnemonic_nonce").value || "";
+  const key_nonce_confirm = document.getElementById("mnemonic_nonce_confirm").value || "";
   const password = document.getElementById("mnemonic_pass").value;
   const confirm = document.getElementById("mnemonic_confirm_pass").value;
-  console.log({ mnemonic, password, confirm });
   document.getElementById("mnemonic_pass").value = "";
   document.getElementById("mnemonic_confirm_pass").value = "";
   if (password === confirm) {
-    const keys = await initKeyChain(mnemonic);
-    store.setMnemonic(mnemonic, password);
-    document.getElementById("mnemonic").textContent = "";
+    if(key_nonce!==key_nonce_confirm){
+      alert("Passphrases do not match!")
+      // window.location.href = "registration";
+      return false;
+    }
+    const keys = await initKeyChain(access_key,key_nonce);
+    const full = removeSpaces(access_key) + (key_nonce.length>0?`-${key_nonce}`:"");
+    store.setAccessCode(full, password);
+    document.getElementById("mnemonic_l1").textContent = "";
+    document.getElementById("mnemonic_l2").textContent = "";
     return keys;
   } else {
     alert("Passwords do not match!");
@@ -171,22 +198,29 @@ async function loadAuthEvents() {
     case "registration":
       document.getElementById("show_mnemonic_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        displayMnemonic(generateMnemonic());
+        displayAccessCode(generateAccessKey(crypto.randomBytes(512)));
       });
       
       document.getElementById("mnemonic_confirm_button").addEventListener("click", async (event) => {
         event.preventDefault();
-        const keys = await confirmAndStoreMnemonic();
+        const keys = await confirmAndStoreAccessCode();
         if (!keys) {
           return false;
         }
         else {
+          const server = await getServerIdentity(keys.identity);
+          console.log(server)
+          store.setServerIdentity(server);
+          console.log(store.getServerIdentity());
+
           const status = await comps.downloadAllIdentities(keys.identity);
           if (status instanceof Error) {
             alert("Error getting identities!")
             return false;
           };
           displayRegistration();
+          if (server.type==="priv") displayInvitation();
+
         }
       });
 

@@ -22,10 +22,13 @@ const {getLocalPrice} = require("./local");
 
 // // DISPLAY
 
-function populateOthersTrades(others_posts) {
-  const localPrice = store.getLocalPrice()?store.getLocalPrice():LOCAL_DEFAULT_PRICE;
-  const preferences = store.getMyPreferences().plain_json;
-  const mute_list = preferences.mute_list?preferences.mute_list:[];
+function populateOthersMessages(others_posts) {
+  let preferences = store.getMyPreferences();
+  let mute_list = [];
+  if (preferences){
+    preferences = preferences.plain_json;
+    mute_list  = preferences.mute_list?preferences.mute_list:[];
+  }
 
   document.getElementById('others_posts_list').innerHTML = ``;
   if (others_posts.length > 0) {
@@ -33,9 +36,7 @@ function populateOthersTrades(others_posts) {
       if(mute_list.includes(post.owner)) return;
 
       const owner_username = store.getIdentities().find((id)=>id.pubkey === post.owner).username;
-      const order_class = (post.plain_json.order===BUY)
-      ?"liquid-color":"cold-color";
-
+  
       if (post.expiry != 0) {
         let expiry_time;
         if ((post.expiry - Date.now()) / (1000 * 60 * 60) >= 24)
@@ -45,10 +46,10 @@ function populateOthersTrades(others_posts) {
         else
           expiry_time = `${Math.round((post.expiry - Date.now()) / (1000 * 60))} minutes`;
 
-        document.getElementById('others_posts_list').innerHTML += `<div class=" outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline cypherpost-color row post_message">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax">Min-Max: ${post.plain_json.minimum}-${post.plain_json.maximum}</div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method">Fiat Method: ${post.plain_json.payment_methods.toString()}</div><div id="post_networks_${post.id}" class="post_networks outline row">Networks: ${post.plain_json.networks.toString()}</div><div id="post_price_${post.id}" class=" outline row post_price">${commafy( Math.round(parseFloat((1 + (post.plain_json.reference_percent)/100) ) * localPrice ))} INR</div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent">${parseFloat(post.plain_json.reference_percent)}% on LocalBitcoins.</div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Expires in: ${expiry_time}</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme ${order_class}">${post.plain_json.order.toUpperCase()}</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="mute_post_${post.id}" class="outline delete-color centerme">Mute</div></div><br></div></div><br>`;
+        document.getElementById('others_posts_list').innerHTML += `<div class="outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline cypherpost-color row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline  row post_price">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax"></div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method"></div><div id="post_networks_${post.id}" class="post_networks outline row"></div><div id="post_price_${post.id}" class=" outline row post_price"></div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent"></div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Expires in: ${expiry_time}</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme liquid-color">x</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="mute_post_${post.id}" class="outline delete-color centerme">Mute</div></div><br></div></div><br>`;
       }
       else {
-        document.getElementById('others_posts_list').innerHTML += `<div class=" outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline cypherpost-color row post_message">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax">Min-Max: ${post.plain_json.minimum}-${post.plain_json.maximum}</div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method">Fiat Method: ${post.plain_json.payment_methods.toString()}</div><div id="post_networks_${post.id}" class="post_networks outline row">Networks: ${post.plain_json.networks.toString()}</div><div id="post_price_${post.id}" class=" outline row post_price">${commafy( Math.round(parseFloat((1 + (post.plain_json.reference_percent)/100) ) * localPrice ))} INR</div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent">${parseFloat(post.plain_json.reference_percent)}% on LocalBitcoins.</div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Never Expires.</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme ${order_class}">${post.plain_json.order.toUpperCase()}</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="mute_post_${post.id}" class="outline delete-color centerme">Mute</div></div><br></div></div><br>`;
+        document.getElementById('others_posts_list').innerHTML += `<div class="outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline cypherpost-color row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline  row post_price">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax"></div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method"></div><div id="post_networks_${post.id}" class="post_networks outline row"></div><div id="post_price_${post.id}" class=" outline row post_price"></div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent"></div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Never Expires.</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme liquid-color">x</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="mute_post_${post.id}" class="outline delete-color centerme">Mute</div></div><br></div></div><br>`;
       }
     });
   }
@@ -57,15 +58,12 @@ function populateOthersTrades(others_posts) {
 
 }
 
-function populateMyTrades(my_posts) {
-  const localPrice = store.getLocalPrice()?store.getLocalPrice():LOCAL_DEFAULT_PRICE;
+function populateMyMessages(my_posts) {
 
   const owner_username = store.getMyUsername();
   document.getElementById('my_posts_list').innerHTML = ``;
   if (my_posts.length > 0) {
     my_posts.map((post) => {
-      const order_class = (post.plain_json.order===BUY)
-        ?"liquid-color":"cold-color";
 
       if (post.expiry != 0) {
         let expiry_time;
@@ -76,10 +74,10 @@ function populateMyTrades(my_posts) {
         else
           expiry_time = `${Math.round((post.expiry - Date.now()) / (1000 * 60))} minutes`;
         console.log({post});
-          document.getElementById('my_posts_list').innerHTML += `<div class=" outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline cypherpost-color row post_message">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax">Min-Max: ${post.plain_json.minimum}-${post.plain_json.maximum}</div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method">Fiat Methods: Fiat Method: ${post.plain_json.payment_methods.toString()}</div><div id="post_networks_${post.id}" class="post_networks outline row">Networks: ${post.plain_json.networks.toString()}</div><div id="post_price_${post.id}" class=" outline row post_price">${commafy( Math.round(parseFloat((1 + (post.plain_json.reference_percent)/100) ) * localPrice ))} INR</div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent">${parseFloat(post.plain_json.reference_percent)}% on LocalBitcoins.</div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Expires in: ${expiry_time}</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme ${order_class}">${post.plain_json.order.toUpperCase()}</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="delete_post_${post.id}" class="outline delete-color centerme">Delete</div></div><br></div></div></div><br>`;
+          document.getElementById('my_posts_list').innerHTML += `<div class=" outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline cypherpost-color row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline row post_price">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax"></div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method"></div><div id="post_networks_${post.id}" class="post_networks outline row"></div><div id="post_price_${post.id}" class=" outline row post_price"></div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent">Don't trust verify.</div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Expires in: ${expiry_time}</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme>x</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="delete_post_${post.id}" class="outline delete-color centerme">x</div></div><br></div></div></div><br>`;
         }
       else {
-        document.getElementById('my_posts_list').innerHTML += `<div class=" outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline cypherpost-color row post_message">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax">Min-Max: ${post.plain_json.minimum}-${post.plain_json.maximum}</div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method">Fiat Methods: Fiat Method: ${post.plain_json.payment_methods.toString()}</div><div id="post_networks_${post.id}" class="post_networks outline row">Networks: ${post.plain_json.networks.toString()}</div><div id="post_price_${post.id}" class=" outline row post_price">${commafy( Math.round(parseFloat((1 + (post.plain_json.reference_percent)/100) ) * localPrice ))} INR</div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent">${parseFloat(post.plain_json.reference_percent)}% on LocalBitcoins.</div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Never Expires.</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme ${order_class}">${post.plain_json.order.toUpperCase()}</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="delete_post_${post.id}" class="outline delete-color centerme">Delete</div></div><br></div></div></div><br>`;
+        document.getElementById('my_posts_list').innerHTML += `<div class=" outline container border outline"><br><div class=" outline container"><div class=" outline row"><div class=" outline col-8"><div id="post_nickname_${post.id}" class=" outline cypherpost-color row post_nickname">@${owner_username}</div><div id="post_message_${post.id}" class=" outline row post_price">${post.plain_json.message}</div><div id="post_message_${post.id}" class=" outline row post_minmax"></div><div id="post_payment_method_${post.id}" class=" outline row post_payment_method"></div><div id="post_networks_${post.id}" class="post_networks outline row"></div><div id="post_price_${post.id}" class=" outline row post_price"></div><div id="post_reference_percent_${post.id}" class=" outline row post_reference_percent"></div><hr><div id="post_genesis_${post.id}" class=" outline row post_genesis">Created on: ${new Date(post.genesis)}</div><div id="post_expiry_${post.id}" class=" outline row post_expiry">Never Expires.</div></div><div class=" outline col-4"><div id="post_type_${post.id}" class=" outline row post_order centerme>X</div></div></div><div class=" outline row"><div class=" outline col-8"></div><div class=" outline col-4"><div id="delete_post_${post.id}" class="outline delete-color centerme">x</div></div><br></div></div></div><br>`;
       }
     });
   }
@@ -130,24 +128,8 @@ async function getUpdatedIdsAndBadges() {
 
 
 function savePostContents() {
-  let networks =  [document.querySelector("#bitcoin:checked")?document.getElementById("bitcoin").value:undefined, document.querySelector("#lightning:checked")?document.getElementById("lightning").value:undefined, document.querySelector("#liquid:checked")?document.getElementById("liquid").value:undefined];
-  networks = networks.filter(network=>!network===undefined);
-  let payment_methods =  [document.querySelector("#cash:checked")?document.getElementById("cash").value:undefined, document.querySelector("#aangadiya:checked")?document.getElementById("aangadiya").value:undefined, document.querySelector("#upi:checked")?document.getElementById("upi").value:undefined, document.querySelector("#imps:checked")?document.getElementById("imps").value:undefined];
-  payment_methods = payment_methods.filter(payment_method=>!payment_method===undefined);
-
-  console.log({payment_methods});
-  
-
   const plain_post = {
     message: document.getElementById("post_message_input").value,
-    order: document.getElementById("post_order_input").value,
-    networks: networks?networks:["Bitcoin"],
-    minimum: document.getElementById("post_minimum_input").value,
-    maximum: document.getElementById("post_maximum_input").value,
-    payment_methods:payment_methods?payment_methods:["ANY"],
-    reference_exchange: LOCAL,
-    reference_percent: document.getElementById("post_percentage_input").value,
-    expiry: document.getElementById("post_expiry_input").value,
   };
   console.log({ plain_post });
   store.setLatestPost(plain_post);
@@ -239,11 +221,11 @@ async function loadPostsEvents() {
   document.getElementById(`my_posts_menu`).addEventListener("click", async (event) => {
     event.preventDefault();
     await comps.downloadAllMyPosts(keys.identity);
-    populateMyTrades(store.getMyTrades());
+    populateMyMessages(store.getMyMessages());
     document.getElementById("my_posts_list").classList.remove("hidden");
     document.getElementById("others_posts_list").classList.add("hidden");
 
-    store.getMyTrades().map((post) => {
+    store.getMyMessages().map((post) => {
       document.getElementById(`delete_post_${post.id}`).addEventListener("click", async (event) => {
         event.preventDefault();
         const confirmation = confirm(`Delete Post?`);
@@ -259,13 +241,13 @@ async function loadPostsEvents() {
   document.getElementById(`others_posts_menu`).addEventListener("click", async (event) => {
     event.preventDefault();
     await comps.downloadAllPostsForMe(keys.identity);
-    populateOthersTrades(store.getOthersTrades());
+    populateOthersMessages(store.getOthersMessages());
     document.getElementById("others_posts_list").classList.remove("hidden");
     document.getElementById("my_posts_list").classList.add("hidden");
-    const preferences = store.getMyPreferences().plain_json;
+    const preferences = store.getMyPreferences()?store.getMyPreferences().plain_json:{};
     const mute_list = preferences.mute_list?preferences.mute_list:[];
   
-    store.getOthersTrades().map((post) => {
+    store.getOthersMessages().map((post) => {
       if(mute_list.includes(post.owner)) return;
 
       document.getElementById(`mute_post_${post.id}`).addEventListener("click", async (event) => {
@@ -285,16 +267,9 @@ async function loadPostsEvents() {
     event.preventDefault();
     // const message = document.getElementById("post_message_input").value;
     const plain_post = store.getLatestPost();
-    const post_id = await comps.createCypherTradePost(
+    const post_id = await comps.createCypherMessagePost(
       expiryStringtoTimestamp(plain_post.expiry),
       plain_post.message,
-      plain_post.networks,
-      plain_post.order,
-      plain_post.minimum,
-      plain_post.maximum,
-      plain_post.payment_methods,
-      plain_post.reference_exchange,
-      plain_post.reference_percent,
       store.getSelectedIdentities().map((identity) => { return identity.pubkey })
     );
 

@@ -50,17 +50,17 @@
           <!-- Default form login -->
 
           <div id="welcome" class="text-center" action="#!">
-            <h4 class="h4 mb-4">Welcome</p>
+            <h4 class="h4 mb-4">Registration</h4>
+            <h6 id="server_type" class="h6 mb-4"></h6>
 
               <p id="invitation" class="stat"></p>
 
-              <p id="seed_note_0" class="stathead warning-color">A 12 word mnemonic will be generated as the master key to your account.
-               <span><br/><br/></span> This seed will be used to generate keys used for authentication and end-to-end encryption services on cypherpost.</p>
+              <p id="seed_note_0" class="stathead warning-color">A 32 character key will be generated as your master account code.
+               <span><br/><br/></span> This code will be used to generate child keys used for authentication and end-to-end encryption services on cypherpost.</p>
               <br>
               <p id="seed_note_1" class="stathead warning-color">Please read before proceeding.</p>
               <!-- Sign in button -->
               <button id="show_mnemonic_button" class="btn centerme" type="submit">Next</button>
-
 
           </div>
           <!-- Default form login -->
@@ -80,20 +80,33 @@
           <!-- Default form login -->
 
           <div class="text-center" action="#!">
-            <h4 class="h4 mb-4">Mnemonic</p>
-              <p id="seed_note_1" class="stathead warning-color">Write it down or Copy into an encrypted storage medium.</p>
+            <h4 class="h4 mb-4">Master Key</h4>
+              <p id="mnemonic_l1" class="stat liquid-color"></p>
+              <p id="mnemonic_l2" class="stat liquid-color"></p>
+
+              <br>
+              <p id="seed_note_1" class="stathead warning-color">Add an OPTIONAL passphrase for a stronger key.</p>
+
+              <input type="password" id="mnemonic_nonce" class="" placeholder="Passphrase">
+              <input type="password" id="mnemonic_nonce_confirm" class="" placeholder="Confirm Passphrase">
+              <br>
+              <p id="seed_note_1" class="stathead warning-color">Write it all down, store it in a password manager or copy into an encrypted storage medium.</p>
+              <p id="seed_note_1" class="stathead warning-color">Recommended not to write down the passphrase. Keep it easy to remember or avoid using it.</p>
+
               <p id="seed_note_1" class="stathead warning-color">Try Signal's "Note to self" feature while testing.</p>
 
-              <p id="mnemonic" class="stat"></p>
-              <br>
-              
-              <p id="seed_note_1" class="stathead warning-color">Password is only used to locally encrypt/decrypt your master key.</p>
-              <p id="seed_note_1" class="stathead warning-color">You can change this at anytime by importing your seed and setting a new password.</p>
+              <a href="">For more about application master keys.</a>
+            
+              <hr>
+              <p id="seed_note_1" class="stathead cold-color">Password/PIN is only used to locally encrypt/decrypt your master access code.</p>
+              <p id="seed_note_1" class="stathead cold-color">You can change this at anytime by importing your code and setting a new password.</p>
   
-              <input type="password" id="mnemonic_pass" class="" placeholder="Password">
+              <input type="password" id="mnemonic_pass" class="" placeholder="Password/PIN">
               <br>
-              <input type="password" id="mnemonic_confirm_pass" class="" placeholder="Confirm Password">
+              <input type="password" id="mnemonic_confirm_pass" class="" placeholder="Confirm Password/PIN">
               <br>
+
+
 
               <button id="mnemonic_confirm_button" class="btn centerme" type="submit">Next</button>
 
@@ -122,6 +135,14 @@
             <input type="text" id="register_username" class="" placeholder="Username">
             <!-- Secret -->
             <br>
+            <!-- <div id="invitation" class="hidden">
+              <p class="h4 mb-4">Private Invite Code</p>
+              <p> You are on a private server.</p>
+              <p> You need an invite code to register.</p> -->
+
+              <input type="text" id="invite_code" class="hidden" placeholder="Invite Code">
+               <br>
+          <!--  </div> -->
             <!-- REGISTER button -->
             <button id="register_button" class="btn centerme" type="submit">Next</button>
 

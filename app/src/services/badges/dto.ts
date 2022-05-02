@@ -24,11 +24,11 @@ export async function badgesMiddleware(req, res, next) {
     const nonce = request.headers['x-nonce'];
     const method = request.method;
     const resource = request.resource;
-    const body = request.body ? JSON.stringify(request.body) : "{}";
+    const body = JSON.stringify(request.body);
     const message = `${method} ${resource} ${body} ${nonce}`;
 
 
-    const status = await identity.verify(pubkey, message, signature);
+    const status = await identity.authenticate(pubkey, message, signature);
     if (status instanceof Error) throw status;
     else next();
   }

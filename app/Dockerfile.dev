@@ -3,12 +3,13 @@ FROM node:14.5.0-buster
 #------------------------------------------------------------------------------------
 USER root
 ENV USER_ID=1000
+RUN apt-get update
+RUN apt-get install -y coreutils build-essential software-properties-common cmake apt-transport-https ca-certificates curl gnupg dirmngr unzip expect jq
 
 RUN npm install -g typescript mocha ts-node npm@latest
+
 RUN usermod -u $USER_ID node
 RUN mkdir -p /home/node/cypherpost/app /home/node/.keys
-RUN touch /home/node/.keys/cypherpost
-# COPY /home/ishi/.keys /home/node/.keys
 
 RUN chown -R node /home/node/cypherpost/app /home/node/.keys
 WORKDIR /home/node/cypherpost/app/
@@ -17,14 +18,16 @@ WORKDIR /home/node/cypherpost/app/
 USER node
 
 ENV MOLTRES_PORT="3021"
-
 ENV DB_IP="database"
 ENV DB_PORT="27017"
 ENV DB_NAME="cypherpost"
 ENV DB_AUTH="cp:secret"
 ENV KEY_PATH="/home/node/.keys/"
-
-
+# ENV CYPHERNODE_API_KEY_ID=3
+ENV CYPHERNODE_API_KEY="034aa8fa6b7e85c957c1b5ababef8f30f7b57d592bec125bfa015fc49bbeed34"
+ENV CYPHER_GATEWAY_URL="https://gatekeeper:2009/v0/"
+ENV CYPHERNODE_GATEKEEPER_CERT_CA="$(cat /home/node/.keys/cert.pem)"
+ENV CYPHERNODE_FINGERPRINT="cn-apr2020-m1"
 #------------------------------------------------------------------------------------
 VOLUME ["/home/node/cypherpost/app", "/home/node/.keys"]
 EXPOSE $APP_PORT

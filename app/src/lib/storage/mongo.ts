@@ -25,7 +25,7 @@ export class MongoDatabase implements Database {
           autoIndex: false, // Don't build indexes
           serverSelectionTimeoutMS: 9000, // Keep trying to send operations for 5 seconds
           socketTimeoutMS: 21000, // Close sockets after 21 seconds of inactivity
-          family: 4 // Use IPv4, skip trying IPv6
+          family: 4, // Use IPv4, skip trying IPv6,
         };
 
         const database = mongoose

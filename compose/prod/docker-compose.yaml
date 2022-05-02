@@ -1,0 +1,115 @@
+version: '3.7'
+
+services:
+  node:
+    build:
+      context: ../../app
+      dockerfile: Dockerfile.main
+    image: cypherpost-node-ts
+    container_name: application
+    restart: unless-stopped
+    environment:
+      - APP_PORT=3021
+      - TYPE=$TYPE
+      - SECRET=$SECRET
+      - DB_AUTH="$DB_USER:$DB_PASS"
+    volumes:
+      - cp-server-keys:/home/node/.keys
+      - cp-server-logs:/home/node/winston
+    networks:
+      - cypherpostnetwork
+
+  mongo:
+    build:
+      context: ../../infra/mongo
+      dockerfile: Dockerfile.main
+    image: cypherpost-mongo
+    container_name: database
+    restart: unless-stopped
+    volumes:
+      - cp-datadb:/data/db
+      - cp-configdb:/data/configdb    
+    environment:
+      - MONGO_INITDB_DATABASE=$INITDB_NAME
+      - MONGO_INITDB_ROOT_USERNAME=$INITDB_ROOT_USER
+      - MONGO_INITDB_ROOT_PASSWORD=$INITDB_ROOT_PASS
+      - DB_USER=$DB_USER
+      - DB_PASS=$DB_PASS
+    networks:
+      - cypherpostnetwork
+    command: -f /etc/mongod.conf
+
+  nginx:
+    build:
+      context: ../../infra/nginx
+      dockerfile: Dockerfile
+    image: cypherpost-nginx
+    container_name: server
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - web-root:/var/www/html
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ../../infra/nginx/prod/nginx-conf:/etc/nginx/conf.d
+      - dhparam:/etc/ssl/certs
+    depends_on:
+      - node
+    environment:
+      - DOMAIN=$DOMAIN
+    networks:
+      - cypherpostnetwork
+
+  certbot:
+    image: certbot/certbot
+    container_name: certificate-authority
+    volumes:
+      - web-root:/var/www/html
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+    depends_on:
+      - nginx
+    command: certonly --webroot --webroot-path=/var/www/html --email $EMAIL --agree-tos --no-eff-email --dry-run -d $DOMAIN
+    networks:
+      - cypherpostnetwork
+
+volumes:
+  cp-server-keys:
+    driver: local
+    driver_opts:
+      type: none
+      device: $NODE_VOLUME/.keys
+      o: bind
+  cp-server-logs:
+    driver: local
+    driver_opts:
+      type: none
+      device: $NODE_VOLUME/winston
+      o: bind
+  cp-datadb:
+    driver: local
+    driver_opts:
+      type: none
+      device: $MONGO_VOLUME/data/db
+      o: bind
+  cp-configdb:
+    driver: local
+    driver_opts:
+      type: none
+      device: $MONGO_VOLUME/configdb
+      o: bind
+  web-root:
+  certbot-etc:
+  certbot-var:
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: $CERTS_VOLUME
+      o: bind
+
+networks:
+  cypherpostnetwork:
+    driver: bridge

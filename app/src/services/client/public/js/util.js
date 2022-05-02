@@ -1,16 +1,16 @@
 const PROFILE = "PROFILE";
 const PREFERENCES = "PREFERENCES";
 const TRADE = "BITCOIN-TRADE";
-
+const MESSAGE = "MESSAGE";
 const crypto = require("crypto");
-const bitcoin = require("./bitcoin");
+const keynos = require("./keys");
 
 const { encrypt, decrypt } = require("./aes");
 
-function verifyBadges(badges) {
-  const bad_badges = badges.filter((badge) => {
+async function verifyBadges(badges) {
+  const bad_badges = await badges.filter(async (badge) => {
     const message = `${badge.giver}:${badge.reciever}:${badge.type}:${badge.nonce}`;
-    const verify = bitcoin.verify(message, badge.signature, badge.giver);
+    const verify = await keynos.schnorrVerify(message, badge.signature, badge.giver);
     if (!verify) {
       console.error("BADGE SIGNATURE FAILED:");
       console.error({ badge });
@@ -20,6 +20,7 @@ function verifyBadges(badges) {
   if (bad_badges.length > 0) return { bad_badges };
   return true;
 }
+
 function mergeIdentitiesWithBadges(identities, badges) {
   return identities.map((identity) => {
     const recieved = badges.filter(badge => badge.reciever === identity.pubkey);
@@ -36,7 +37,7 @@ function decryptCypherPostsFromOthers(identity_parent, posts_from_others) {
       privkey: identity_parent.privkey,
       pubkey: post.owner
     };
-    const shared_secret = bitcoin.calculate_shared_secret(shared_ecdsa_pair); 
+    const shared_secret = keynos.computeSharedSecret(shared_ecdsa_pair); 
 
     const primary_key = decrypt(post.decryption_key, shared_secret);
     const plain_json_string = decrypt(post.cypher_json, primary_key);
@@ -50,7 +51,7 @@ function decryptMyCypherPosts(cypherpost_parent, my_posts) {
   let plain_json_posts = [];
   my_posts.map((post) => {
     const decryption_key = crypto.createHash("sha256")
-      .update(bitcoin.derive_hardened_str(cypherpost_parent, post.derivation_scheme).xprv)
+      .update(keynos.deriveHardended3x(cypherpost_parent, post.derivation_scheme).xprv)
       .digest("hex");
     console.log({ds: post.derivation_scheme,key: decryption_key})
 
@@ -64,28 +65,38 @@ function decryptMyCypherPosts(cypherpost_parent, my_posts) {
 }
 
 function segregatePlainPostsForMe(plain_json_posts) {
+  console.log({plain_json_posts})
   return {
     profiles: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
     trades: plain_json_posts.filter(post => post.plain_json.type === TRADE),
+    messages: plain_json_posts.filter(post => post.plain_json.type === MESSAGE)
   }
 }
+
 function segregateMyPlainPosts(plain_json_posts) {
+  console.log({plain_json_posts})
+
   return {
     // profile: plain_json_posts.filter(post => post.plain_json.type === PROFILE),
+    messages: plain_json_posts.filter(post => post.plain_json.type === MESSAGE),
     trades: plain_json_posts.filter(post => post.plain_json.type === TRADE),
     preferences: plain_json_posts.filter(post => post.plain_json.type === PREFERENCES),
   }
 }
 
-async function createRootKeyChain(mnemonic) {
+async function createRootKeyChain(access_code,passphrase) {
   try {
-    const seed_root = await bitcoin.seed_root(mnemonic);
-    console.log({ seed_root })
-    const cypherpost_parent = bitcoin.derive_parent_128(seed_root);
+    const seed = await keynos.generateSeed(access_code,passphrase);
+    console.log({ seed })
+    const root = keynos.generateRootXPrv(seed);
+    console.log({ root })
+
+    const cypherpost_parent = keynos.deriveHardended2x(root,"m/128h/0h");
     const keys = {
       cypherpost: cypherpost_parent.xprv,
-      identity: bitcoin.extract_ecdsa_pair(bitcoin.derive_identity_parent(cypherpost_parent.xprv))
+      identity: keynos.extractECDHKeys(keynos.deriveHardended3x(cypherpost_parent.xprv,"m/128h/0h/0h"))
     };
+    console.log({keys})
     return keys;
   }
   catch (e) {
@@ -132,7 +143,7 @@ function rotatePath(derivation_scheme) {
 }
 
 function createPrimaryKey(cypherpost_parent, derivation_scheme) {
-  const xkeys = bitcoin.derive_hardened_str(cypherpost_parent, derivation_scheme);
+  const xkeys = keynos.deriveHardended3x(cypherpost_parent, derivation_scheme);
   if(xkeys instanceof Error) {
     console.error({xkeys})
     return xkeys;
@@ -149,7 +160,7 @@ function createDecryptionKeys(identity_parent, primary_key, pubkeys) {
       privkey: identity_parent.privkey,
       pubkey
     };
-    const shared_secret = bitcoin.calculate_shared_secret(shared_ecdsa_pair);
+    const shared_secret = keynos.computeSharedSecret(shared_ecdsa_pair);
 
     const decryption_key = {
       reciever: pubkey,

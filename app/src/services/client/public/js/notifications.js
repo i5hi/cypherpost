@@ -16,6 +16,7 @@ async function loadInitialState() {
   // IDENTITIES
   try {
     const keys = store.getMyKeyChain();
+  
     const ids_badges = await comps.downloadAllIdentitiesAndBadges(keys.identity);
     if(ids_badges instanceof Error){
       console.error({ids_badges});
@@ -61,11 +62,14 @@ async function checkInitialState() {
 
   const my_profile = store.getMyProfile();
   const my_trades = store.getMyTrades();
+  const my_messages = store.getMyMessages();
   const others_trades = store.getOthersTrades();
+  const others_msgs = store.getOthersMessages();
 
   const has_profile = (my_profile && my_profile.type === PROFILE);
   const has_trades = (my_trades && my_trades.length > 0);
   const has_others_trades = (others_trades && others_trades.length > 0);
+  const has_others_messages = (others_msgs && others_msgs.length > 0);
   const has_network = (my_network.length > 0);
   // const has others_profile = (others_profile.profiles.length);
   let notifications = {
@@ -76,7 +80,7 @@ async function checkInitialState() {
       msg: `You are connected to ${my_network.length} users.`,
     },
     trades: {
-      msg: `You have ${others_trades.length} live posts.`,
+      msg: `You have ${others_trades.length + others_msgs.length} live posts.`,
     }
   };
 
